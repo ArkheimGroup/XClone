@@ -13,7 +13,7 @@ CREATE TABLE users(
     # Personal Information
     biography VARCHAR(160),
     date_of_birth DATE,
-    pfp_url TEXT DEFAULT 'uploads/profile_pictures/default_pfp.png',
+    pfp_url VARCHAR(255) DEFAULT 'uploads/profile_pictures/default_pfp.png',
 
     # Server side Information
     follower_count BIGINT DEFAULT 0,
@@ -21,9 +21,7 @@ CREATE TABLE users(
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     # etc.
-    pinned_post_id BINARY(16),
-
-    FOREIGN KEY (pinned_post_id) REFERENCES posts(id)
+    pinned_post_id BINARY(16)
 );
 
 # --------Posts table--------
@@ -40,6 +38,9 @@ CREATE TABLE posts(
     FOREIGN KEY (repost_post_id) REFERENCES posts(id),
     FOREIGN KEY (author_username) REFERENCES users(username)
 );
+
+ALTER TABLE users
+    ADD FOREIGN KEY (pinned_post_id) REFERENCES posts(id);
 
 # --------Media--------
 CREATE TABLE media(
