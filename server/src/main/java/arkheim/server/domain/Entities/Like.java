@@ -26,4 +26,16 @@ public class Like {
         this.postId = postId;
         this.createdAt = createdAt;
     }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public UUID getPostId() {
+        return postId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

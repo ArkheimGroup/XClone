@@ -42,4 +42,32 @@ public class Media {
         this.uploadedBy = uploadedBy;
         this.createdAt = createdAt;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public UUID getUploadedBy() {
+        return uploadedBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
