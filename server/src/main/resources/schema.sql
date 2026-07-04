@@ -1,8 +1,8 @@
-# This is a template file for database schema; should be run initially.
+-- This is a template file for database schema; should be run initially.
 
-# --------Users table--------
+-- --------Users table--------
 CREATE TABLE users(
-    # Credentials
+    -- Credentials
     id BINARY(16) PRIMARY KEY,
     username VARCHAR(15) NOT NULL UNIQUE ,
     CHECK (CHAR_LENGTH(username) >= 4),
@@ -10,21 +10,21 @@ CREATE TABLE users(
     email VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255),
 
-    # Personal Information
+    -- Personal Information
     biography VARCHAR(160),
     date_of_birth DATE,
     pfp_url VARCHAR(255) DEFAULT 'uploads/profile_pictures/default_pfp.png',
 
-    # Server side Information
+    -- Server side Information
     follower_count BIGINT DEFAULT 0,
     following_count BIGINT DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    # etc.
+    -- etc.
     pinned_post_id BINARY(16)
 );
 
-# --------Posts table--------
+-- --------Posts table--------
 CREATE TABLE posts(
     id BINARY(16) PRIMARY KEY,
     author_username VARCHAR(15) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE posts(
 ALTER TABLE users
     ADD FOREIGN KEY (pinned_post_id) REFERENCES posts(id);
 
-# --------Media--------
+-- --------Media--------
 CREATE TABLE media(
     id BINARY(16) PRIMARY KEY,
     url TEXT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE media(
     FOREIGN KEY (uploaded_by) REFERENCES users(id)
 );
 
-# --------Post media--------
+-- --------Post media--------
 
 CREATE TABLE post_media(
     post_id BINARY(16) NOT NULL,
@@ -66,13 +66,13 @@ CREATE TABLE post_media(
     FOREIGN KEY (media_id) REFERENCES media(id)
 );
 
-# --------Hashtags--------
+-- --------Hashtags--------
 CREATE TABLE hashtags(
     id BINARY(16) PRIMARY KEY,
     name varchar(50) NOT NULL UNIQUE
 );
 
-# --------Post Hashtag--------
+-- --------Post Hashtag--------
 CREATE TABLE post_hashtags(
     hashtag_id BINARY(16) NOT NULL,
     post_id BINARY(16) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE post_hashtags(
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
 
-# --------Like--------
+-- --------Like--------
 CREATE TABLE likes(
     user_id BINARY(16) NOT NULL,
     post_id BINARY(16) NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE likes(
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
 
-# --------Follows--------
+-- --------Follows--------
 CREATE TABLE follows(
     follower_id BINARY(16) NOT NULL,
     following_id BINARY(16) NOT NULL,
