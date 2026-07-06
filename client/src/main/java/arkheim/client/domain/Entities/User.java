@@ -19,8 +19,29 @@ public class User {
     private UUID pinnedPostId;
 
     /**
+     * Used for registrations of new users
+     * @param username the unique username chosen by the user
+     * @param name user's display name
+     * @param email valid email
+     * @param dateOfBirth user's date of birth
+     * */
+    public User(String username, String name, String email, LocalDateTime dateOfBirth) {
+        this.username = username;
+        this.name = name;
+        this.email = email;
+        this.dateOfBirth = dateOfBirth;
+
+        this.id = UUID.randomUUID();
+        this.biography = "";
+        this.createdAt = LocalDateTime.now();
+        this.pfpUrl = "uploads/profile_pictures/default_pfp.png";
+        this.followerCount = 0;
+        this.followingCount = 0;
+        this.pinnedPostId = null;
+    }
+
+    /**
      * Used for already registered users,
-     * user creation cannot be done in Client layers.
      * */
     public User(UUID id, String username, String name, String email, String biography, LocalDateTime dateOfBirth, String pfpUrl, int followerCount, int followingCount, LocalDateTime createdAt, UUID pinnedPostId){
         this.id = id;

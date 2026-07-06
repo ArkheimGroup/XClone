@@ -8,6 +8,15 @@ public class Hashtag {
     private String name;
 
     /**
+     * Creates new hashtag
+     * @param name Name of the hashtag
+     * */
+    public Hashtag(String name) {
+        this.name = name;
+        this.id = UUID.randomUUID();
+    }
+
+    /**
      * Used for already exiting hashtags
      * */
     public Hashtag(UUID id, String name) {

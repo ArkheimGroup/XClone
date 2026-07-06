@@ -13,9 +13,25 @@ public class Post implements Comparable<Post> {
     private UUID repostPostId;
 
     /**
-     * Used for posts that already exist in database.
-     * Post creation cannot be done in Client layers.
-     */
+     * Creates a new post authored by user
+     * @param authorUsername username of the author
+     * @param description description of the post
+     * @param repostPostId the reposted post's id (if exists)
+     * @param replyPostId the replied post's id (if exists)
+     * */
+    public Post(String authorUsername, String description, UUID replyPostId, UUID repostPostId) {
+        this.authorUsername = authorUsername;
+        this.description = description;
+        this.replyPostId = replyPostId;
+        this.repostPostId = repostPostId;
+
+        this.id = UUID.randomUUID();
+        this.createdAt = LocalDateTime.now();
+    }
+
+    /**
+     * Used for posts that already exit in database
+     * */
     public Post(UUID id, String authorUsername, LocalDateTime createdAt, String description, UUID replyPostId, UUID repostPostId) {
         this.id = id;
         this.authorUsername = authorUsername;
