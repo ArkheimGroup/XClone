@@ -8,6 +8,7 @@ import java.util.UUID;
 public interface PostRepository {
     Post findById(UUID id);
     List<Post> findByAuthorUsername(String username);
+    List<Post> findByWord(String word);
     List<Post> findReplies(UUID postId);
     List<Post> findReposts(UUID postId);
     List<Post> findFeedForUser(UUID userId);
