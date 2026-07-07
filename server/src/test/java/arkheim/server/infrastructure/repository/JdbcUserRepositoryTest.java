@@ -1,6 +1,6 @@
 // AI GENERATED TEST
 
-package arkheim.server.infrastructure.Repository;
+package arkheim.server.infrastructure.repository;
 
 import arkheim.server.domain.Entities.User;
 import org.junit.jupiter.api.BeforeEach;

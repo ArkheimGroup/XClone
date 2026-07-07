@@ -1,4 +1,4 @@
-package arkheim.server.infrastructure.Utils;
+package arkheim.server.infrastructure.utils;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
