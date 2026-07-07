@@ -1,10 +1,10 @@
-package arkheim.server.infrastructure.Repository;
+package arkheim.server.infrastructure.repository;
 
 import arkheim.server.domain.Entities.Hashtag;
 import arkheim.server.domain.Entities.Post;
 import arkheim.server.domain.Repository.HashtagRepository;
-import static arkheim.server.infrastructure.Utils.UuidBinaryConvertor.bytesToUuid;
-import static arkheim.server.infrastructure.Utils.UuidBinaryConvertor.uuidToBytes;
+import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
+import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -20,9 +20,11 @@ import java.util.UUID;
 public class JdbcHashtagRepository implements HashtagRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final JdbcPostRepository jdbcPostRepository;
 
-    public JdbcHashtagRepository(JdbcTemplate jdbcTemplate){
+    public JdbcHashtagRepository(JdbcTemplate jdbcTemplate, JdbcPostRepository jdbcPostRepository){
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcPostRepository = jdbcPostRepository;
     }
 
     private Hashtag mapRow(ResultSet rs) throws SQLException {
@@ -62,16 +64,24 @@ public class JdbcHashtagRepository implements HashtagRepository {
                 "JOIN post_hashtags ph ON ph.post_id = p.id " +
                 "JOIN hashtags h ON h.id = ph.hashtag_id " +
                 "WHERE h.name=?";
-        return jdbcTemplate.query(sql)
+        return jdbcTemplate.query(sql, jdbcPostRepository.getPostRowMapper(), name);
     }
 
     @Override
     public Hashtag findOrCreate(String name) {
-        return null;
+        Hashtag hashtag = findByName(name);
+        if (hashtag != null) {
+            return hashtag;
+        }
+        Hashtag newHashtag = new Hashtag(name);
+        String sql = "INSERT INTO hashtags (id, name) VALUES (?, ?)";
+        jdbcTemplate.update(sql, uuidToBytes(newHashtag.getId()), newHashtag.getName());
+        return newHashtag;
     }
 
     @Override
     public void linkToPost(UUID postId, UUID hashtagId) {
-
+        String sql = "INSERT INTO post_hashtags (hashtag_id, post_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, uuidToBytes(hashtagId), uuidToBytes(postId));
     }
 }

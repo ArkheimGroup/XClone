@@ -1,9 +1,9 @@
-package arkheim.server.infrastructure.Repository;
+package arkheim.server.infrastructure.repository;
 
 import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.UserRepository;
-import static arkheim.server.infrastructure.Utils.UuidBinaryConvertor.uuidToBytes;
-import static arkheim.server.infrastructure.Utils.UuidBinaryConvertor.bytesToUuid;
+import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
+import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -130,31 +130,29 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public void incrementFollowerCount(UUID userId) {
-        jdbcTemplate.update(
-                "UPDATE users SET follower_count = follower_count + 1 WHERE id = ?",
-                (Object) uuidToBytes(userId));
+        String sql = "UPDATE users SET follower_count = follower_count + 1 WHERE id = ?";
+        jdbcTemplate.update(sql, (Object) uuidToBytes(userId));
     }
 
     @Override
     public void decrementFollowerCount(UUID userId) {
-        jdbcTemplate.update(
-                "UPDATE users SET follower_count = follower_count - 1 WHERE id = ?",
-                (Object) uuidToBytes(userId));
+        String sql = "UPDATE users SET follower_count = follower_count - 1 WHERE id = ?";
+        jdbcTemplate.update(sql, (Object) uuidToBytes(userId));
     }
 
     @Override
     public void incrementFollowingCount(UUID userId) {
-        jdbcTemplate.update(
-                "UPDATE users SET following_count = following_count + 1 WHERE id = ?",
-                (Object) uuidToBytes(userId));
+        String sql = "UPDATE users SET following_count = following_count + 1 WHERE id = ?";
+        jdbcTemplate.update(sql, (Object) uuidToBytes(userId));
     }
 
     @Override
     public void decrementFollowingCount(UUID userId) {
-        jdbcTemplate.update(
-                "UPDATE users SET following_count = following_count - 1 WHERE id = ?",
-                (Object) uuidToBytes(userId));
+        String sql = "UPDATE users SET following_count = following_count - 1 WHERE id = ?";
+        jdbcTemplate.update(sql, (Object) uuidToBytes(userId));
     }
 
-
+    public RowMapper<User> getUserRowMapper(){
+        return userRowMapper;
+    }
 }
