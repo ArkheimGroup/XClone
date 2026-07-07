@@ -53,6 +53,13 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
+    public List<Post> findByWord(String word) {
+        String sql = "SELECT * FROM posts WHERE description LIKE ?";
+        String pattern = "%" + word + "%";
+        return jdbcTemplate.query(sql, postRowMapper, pattern);
+    }
+
+    @Override
     public List<Post> findReplies(UUID postId) {
         String sql = "SELECT * FROM posts WHERE reply_post_id=?";
         return jdbcTemplate.query(sql, postRowMapper, postId);
