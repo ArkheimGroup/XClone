@@ -2,6 +2,9 @@ package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.UpdateProfileRequest;
 import arkheim.server.application.dtos.responses.UserProfileResponse;
+import arkheim.server.domain.Entities.Post;
+import arkheim.server.domain.Entities.User;
+import arkheim.server.domain.Repository.PostRepository;
 import arkheim.server.domain.Repository.UserRepository;
 
 import java.util.UUID;
@@ -16,31 +19,63 @@ public class UserService {
     /**
      * Retrieves the profile of a user by their UUID
      * @param userId user's UUID
-     * @return UserProfileResponse details
+     * @return {@link UserProfileResponse} details
      */
     public UserProfileResponse getUserProfileById(UUID userId) {
-        // TODO: Fetch user by id using userRepository, map to UserProfileResponse and return.
-        return null;
+        // Fetch user by id.
+        User user = userRepository.findById(userId);
+        if(user == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        return new UserProfileResponse(user);
     }
 
     /**
      * Retrieves the profile of a user by their unique username
      * @param username user's username
-     * @return UserProfileResponse details
+     * @return {@link UserProfileResponse} details
      */
     public UserProfileResponse getUserProfileByUsername(String username) {
-        // TODO: Fetch user by username using userRepository, map to UserProfileResponse and return.
-        return null;
+        // Fetch user by username.
+        User user = userRepository.findByUsername(username);
+        if(user == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        return new UserProfileResponse(user);
     }
 
     /**
      * Updates the user's profile details
-     * @param request UpdateProfileRequest object containing new profile details
-     * @return Updated UserProfileResponse details
+     * @param request {@link UpdateProfileRequest} object containing new profile details
+     * @return Updated {@link UserProfileResponse} details
      */
     public UserProfileResponse updateProfile(UpdateProfileRequest request) {
-        // TODO: Fetch user, apply changes, call userRepository.updateProfile(user), and return updated response.
-        return null;
+        // Fetch user by id
+        User user = userRepository.findById(request.userId());
+        if(user == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // Update user
+        User updatedUser = new User(
+                request.userId(),
+                user.getUsername(),
+                user.getPasswordHash(),
+                request.name(),
+                user.getEmail(),
+                request.biography(),
+                user.getCreatedAt(),
+                request.pfpUrl(),
+                user.getFollowerCount(),
+                user.getFollowingCount(),
+                user.getPinnedPostId(),
+                request.dateOfBirth()
+        );
+        userRepository.updateProfile(updatedUser);
+
+        return new UserProfileResponse(updatedUser);
     }
 
     /**
@@ -49,7 +84,11 @@ public class UserService {
      * @param postId post's UUID to pin
      */
     public void pinPost(UUID userId, UUID postId) {
-        // TODO: Update the user's pinned post using userRepository.updatePinnedPost(userId, postId)
+        if(userRepository.findById(userId) == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        userRepository.updatePinnedPost(userId, postId);
     }
 
     /**
@@ -57,7 +96,11 @@ public class UserService {
      * @param userId user's UUID
      */
     public void unpinPost(UUID userId) {
-        // TODO: Set pinned post to null using userRepository.updatePinnedPost(userId, null)
+        if(userRepository.findById(userId) == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        userRepository.updatePinnedPost(userId, null);
     }
 
     /**
@@ -65,6 +108,10 @@ public class UserService {
      * @param userId user's UUID
      */
     public void deleteUser(UUID userId) {
-        // TODO: Delete user using userRepository.delete(userId)
+        if(userRepository.findById(userId) == null){
+            throw new IllegalArgumentException("User not found");
+        }
+
+        userRepository.delete(userId);
     }
 }

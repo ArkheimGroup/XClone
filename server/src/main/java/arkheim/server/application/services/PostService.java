@@ -10,11 +10,8 @@ import arkheim.server.domain.Repository.MediaRepository;
 import arkheim.server.domain.Repository.PostRepository;
 import arkheim.server.domain.Repository.UserRepository;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-// TEMP: Complete implementation as an example
 public class PostService {
     private final PostRepository postRepository;
     private final MediaRepository mediaRepository;
@@ -73,7 +70,7 @@ public class PostService {
 
     /**
      * @param createPostRequest Request data containing content, media, author, and parent post ID
-     * @return PostResponse of the created post
+     * @return {@link PostResponse} of the created post
      */
     public PostResponse createPost(CreatePostRequest createPostRequest) {
         User author = userRepository.findById(createPostRequest.authorId());

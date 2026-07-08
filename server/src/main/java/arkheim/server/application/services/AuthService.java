@@ -8,7 +8,6 @@ import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.UserRepository;
 
 
-// TEMP: Complete implementation as an example
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoderPort passwordEncoderPort;
@@ -18,6 +17,10 @@ public class AuthService {
         this.passwordEncoderPort = passwordEncoderPort;
     }
 
+    /**
+     * @param loginRequest request data containing email and raw password
+     * @return {@link UserResponse} of the logged-in user
+     */
     public UserResponse login(UserLoginRequest loginRequest) {
         // Fetch user using userRepository
         User user = userRepository.findByEmail(loginRequest.email());
@@ -35,6 +38,10 @@ public class AuthService {
         return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getName());
     }
 
+    /**
+     * @param registerRequest request data containing username, name, email, raw password and dat of birth
+     * @return {@link UserResponse} of the created/registered user
+     */
     public UserResponse register(UserRegisterRequest registerRequest) {
         // Check if username already exists
         if (userRepository.findByUsername(registerRequest.username()) != null) {
