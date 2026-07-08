@@ -1,5 +1,7 @@
 package arkheim.server.application.dtos.responses;
 
+import arkheim.server.domain.Entities.User;
+
 import java.util.UUID;
 
 /**
@@ -11,6 +13,15 @@ public record UserResponse(
         String email,
         String name
 ) {
+    public UserResponse(User user){
+        this(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getName()
+        );
+    }
+
     public UserResponse(UUID id, String username, String email, String name) {
         this.id = id;
         this.username = username;
