@@ -1,12 +1,17 @@
 package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.responses.PostResponse;
+import arkheim.server.domain.Entities.Media;
+import arkheim.server.domain.Entities.Post;
+import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.LikeRepository;
 import arkheim.server.domain.Repository.MediaRepository;
 import arkheim.server.domain.Repository.PostRepository;
 import arkheim.server.domain.Repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class TimelineService {
@@ -26,53 +31,96 @@ public class TimelineService {
     /**
      * Retrieves the home feed timeline for a user (posts from users they follow).
      * @param userId the user retrieving the feed
-     * @return List of PostResponse representing the feed
+     * @return List of {@link PostResponse} representing the feed
      */
     public List<PostResponse> getHomeFeed(UUID userId) {
-        // TODO: Retrieve posts from postRepository.findFeedForUser(userId)
-        //  For each post, construct PostResponse:
-        //  - Fetch author details using userRepository
-        //  - Fetch associated media URLs using mediaRepository
-        //  - Compute likeCount using likeRepository.countLikesForPost
-        //  - Compute replyCount and repostCount from postRepository
-        //  - Determine if liked by user (isLikedByMe) using likeRepository.isLikedByUser
-        //  - Determine if retweeted (isRetweetedByMe) by checking reposts
-        return null;
+        List<Post> feedPosts = postRepository.findFeedForUser(userId);
+
+        List<PostResponse> responses = new ArrayList<>();
+
+        for(Post post : feedPosts){
+            responses.add(toPostResponse(post, userId));
+        }
+
+        return responses;
     }
 
     /**
      * Retrieves a user's profile timeline (posts created by the user).
      * @param username the username of the profile owner
-     * @param requesterId the user who is viewing the timeline (for calculating isLikedByMe/isRetweetedByMe)
-     * @return List of PostResponse representing the user's posts
+     * @param requesterId the user who is viewing the timeline (for calculating isLikedByMe/isRepostedByMe)
+     * @return List of {@link PostResponse} representing the user's posts
      */
     public List<PostResponse> getUserTimeline(String username, UUID requesterId) {
-        // TODO: Retrieve posts by author using postRepository.findByAuthorUsername(username)
-        //  Map each post to PostResponse using the repository helper queries.
-        return null;
+        List<Post> posts = postRepository.findByAuthorUsername(username);
+
+        List<PostResponse> responses = new ArrayList<>();
+
+        for(Post post : posts){
+            responses.add(toPostResponse(post, requesterId));
+        }
+
+        return responses;
     }
 
     /**
      * Retrieves a single post's details.
      * @param postId the post to retrieve
      * @param requesterId the user who is viewing the post
-     * @return PostResponse of the target post
+     * @return {@link PostResponse} of the target post
      */
     public PostResponse getPostDetails(UUID postId, UUID requesterId) {
-        // TODO: Retrieve post by id using postRepository.findById(postId)
-        //  Map to PostResponse using repository helper queries.
-        return null;
+        Post post = postRepository.findById(postId);
+        return toPostResponse(post, requesterId);
     }
 
     /**
      * Retrieves replies to a specific post.
      * @param postId the parent post id
      * @param requesterId the user who is viewing the replies
-     * @return List of PostResponse representing replies
+     * @return List of {@link PostResponse} representing replies
      */
     public List<PostResponse> getPostReplies(UUID postId, UUID requesterId) {
-        // TODO: Retrieve reply posts using postRepository.findReplies(postId)
-        //  Map each reply post to PostResponse.
-        return null;
+        List<Post> replies = postRepository.findReplies(postId);
+
+        List<PostResponse> responses = new ArrayList<>();
+
+        for(Post post : replies){
+            responses.add(toPostResponse(post, requesterId));
+        }
+
+        return responses;
+    }
+
+    /**
+     * Maps a {@link Post} entity to a {@link PostResponse} DTO,
+     * resolving all the data needed (author details, media URLs, like/repost counts, isLikedByMe/isRepostedByMe).
+     * @param post the post to map
+     * @param requesterId the ID of the user requesting the response (for calculating isLikedByMe/isRepostedByMe)
+     * @return a {@link PostResponse} for the given post
+     */
+    public PostResponse toPostResponse(Post post, UUID requesterId){
+        User author = userRepository.findByUsername(post.getAuthorUsername());
+        List<Post> reposts = postRepository.findReposts(post.getId());
+        List<Media> medias = mediaRepository.findByPostId(post.getId());
+        int likeCount = likeRepository.countLikesForPost(post.getId());
+        boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
+        int repostCount = reposts.size();
+        String requesterUsername = userRepository.findById(requesterId).getUsername();
+        boolean isRepostedByMe = reposts.stream()
+                .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername)); // True if a post from reposts is found that has the same username as the requester
+        int replyCount = postRepository.findReplies(post.getId()).size();
+
+        return new PostResponse(
+                post,
+                author,
+                medias,
+                likeCount,
+                repostCount,
+                replyCount,
+                post.getRepostPostId() != null ? post.getRepostPostId() : post.getReplyPostId(), // The post is eather reply or repost, or none so the value would be null anyway
+                isLikedByMe,
+                isRepostedByMe
+        );
     }
 }

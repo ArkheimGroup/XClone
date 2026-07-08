@@ -1,9 +1,11 @@
 package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.responses.UserResponse;
+import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.FollowRepository;
 import arkheim.server.domain.Repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +24,9 @@ public class FollowUserService {
      * @param followingId target user to be followed
      */
     public void followUser(UUID followerId, UUID followingId) {
-        // TODO: Follow target user using followRepository.
-        //  Also increment following count for followerId and follower count for followingId in userRepository.
+        followRepository.follow(followerId, followingId);
+        userRepository.incrementFollowingCount(followerId);
+        userRepository.incrementFollowerCount(followingId);
     }
 
     /**
@@ -32,8 +35,9 @@ public class FollowUserService {
      * @param followingId target user to be unfollowed
      */
     public void unfollowUser(UUID followerId, UUID followingId) {
-        // TODO: Unfollow target user using followRepository.
-        //  Also decrement following count for followerId and follower count for followingId in userRepository.
+        followRepository.unfollow(followerId, followingId);
+        userRepository.decrementFollowingCount(followerId);
+        userRepository.decrementFollowerCount(followingId);
     }
 
     /**
@@ -43,27 +47,38 @@ public class FollowUserService {
      * @return true if followerId is following followingId, false otherwise
      */
     public boolean isFollowing(UUID followerId, UUID followingId) {
-        // TODO: Check if followerId is following followingId using followRepository
-        return false;
+        return followRepository.isFollowing(followerId, followingId);
     }
 
     /**
      * Retrieves the list of users following the specified user.
      * @param userId target user id
-     * @return List of UserResponse of the followers
+     * @return List of {@link UserResponse} of the followers
      */
     public List<UserResponse> getFollowers(UUID userId) {
-        // TODO: Find followers using followRepository and map them to UserResponse DTOs
-        return null;
+        List<User> followers = followRepository.findFollowers(userId);
+
+        List<UserResponse> responses = new ArrayList<>();
+        for(User follower : followers){
+            responses.add(new UserResponse(follower));
+        }
+
+        return responses;
     }
 
     /**
      * Retrieves the list of users the specified user is following.
      * @param userId target user id
-     * @return List of UserResponse of users being followed
+     * @return List of {@link UserResponse} of users being followed
      */
     public List<UserResponse> getFollowing(UUID userId) {
-        // TODO: Find following using followRepository and map them to UserResponse DTOs
-        return null;
+        List<User> followings = followRepository.findFollowing(userId);
+
+        List<UserResponse> responses = new ArrayList<>();
+        for(User following : followings){
+            responses.add(new UserResponse(following));
+        }
+
+        return responses;
     }
 }
