@@ -8,6 +8,7 @@ import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.UserRepository;
 
 
+
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoderPort passwordEncoderPort;
@@ -45,12 +46,12 @@ public class AuthService {
     public UserResponse register(UserRegisterRequest registerRequest) {
         // Check if username already exists
         if (userRepository.findByUsername(registerRequest.username()) != null) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new IllegalStateException("Username already exists");
         }
 
         // Check if email already exists
         if (userRepository.findByEmail(registerRequest.email()) != null) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new IllegalStateException("Email already exists");
         }
 
         // Hash the password
