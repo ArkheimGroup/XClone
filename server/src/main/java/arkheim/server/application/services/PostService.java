@@ -35,17 +35,17 @@ public class PostService {
     public void deletePost(UUID postId, UUID requesterId) {
         Post post = postRepository.findById(postId);
         if (post == null) {
-            throw new IllegalArgumentException("Post not found");
+            throw new NoSuchElementException("Post not found");
         }
 
         User requester = userRepository.findById(requesterId);
         if (requester == null) {
-            throw new IllegalArgumentException("User not found");
+            throw new NoSuchElementException("User not found");
         }
 
         // Verify the requester is the owner of the post
         if (!post.getAuthorUsername().equals(requester.getUsername())) {
-            throw new IllegalStateException("User is not authorized to delete this post");
+            throw new SecurityException("User is not authorized to delete this post");
         }
 
         // Unlink the post's media
@@ -75,7 +75,7 @@ public class PostService {
     public PostResponse createPost(CreatePostRequest createPostRequest) {
         User author = userRepository.findById(createPostRequest.authorId());
         if (author == null) {
-            throw new IllegalArgumentException("Author user not found");
+            throw new NoSuchElementException("Author user not found");
         }
 
         UUID replyPostId = null;
@@ -84,7 +84,7 @@ public class PostService {
         if (createPostRequest.parentPostId() != null) {
             Post parentPost = postRepository.findById(createPostRequest.parentPostId());
             if (parentPost == null) {
-                throw new IllegalArgumentException("Parent post not found");
+                throw new NoSuchElementException("Parent post not found");
             }
             // If the content is blank/empty, it's considered a retweet/repost, else it's a comment/reply
             if (createPostRequest.content() == null || createPostRequest.content().trim().isEmpty()) {
@@ -138,12 +138,12 @@ public class PostService {
     public void toggleLike(UUID userId, UUID postId) {
         Post post = postRepository.findById(postId);
         if (post == null) {
-            throw new IllegalArgumentException("Post not found");
+            throw new NoSuchElementException("Post not found");
         }
 
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new IllegalArgumentException("User not found");
+            throw new NoSuchElementException("User not found");
         }
 
         if (likeRepository.isLikedByUser(userId, postId)) {
