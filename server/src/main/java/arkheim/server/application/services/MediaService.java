@@ -4,6 +4,7 @@ import arkheim.server.domain.Entities.Media;
 import arkheim.server.domain.Repository.MediaRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class MediaService {
@@ -42,7 +43,7 @@ public class MediaService {
      */
     public void linkMediaToPost(UUID postId, UUID mediaId) {
         if(mediaRepository.findById(mediaId) == null){
-            throw new IllegalArgumentException("Media not found");
+            throw new NoSuchElementException("Media not found");
         }
 
         mediaRepository.linkToPost(postId, mediaId);
@@ -55,7 +56,7 @@ public class MediaService {
      */
     public void unlinkMediaFromPost(UUID postId, UUID mediaId) {
         if(mediaRepository.findById(mediaId) == null){
-            throw new IllegalArgumentException("Media not found");
+            throw new NoSuchElementException("Media not found");
         }
 
         mediaRepository.unLinkFromPost(postId, mediaId);
