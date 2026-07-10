@@ -4,7 +4,7 @@ module arkheim.client {
 
     requires org.kordamp.bootstrapfx.core;
 
-    opens arkheim.client.Presentation to javafx.fxml;
-    exports arkheim.client.Presentation;
+    opens arkheim.client.presentation to javafx.fxml;
+    exports arkheim.client.presentation;
     exports arkheim.client;
 }

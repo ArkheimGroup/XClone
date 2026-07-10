@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.UserRepository;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.UserRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import org.springframework.jdbc.core.JdbcTemplate;

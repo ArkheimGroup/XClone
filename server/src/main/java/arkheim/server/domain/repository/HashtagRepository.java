@@ -1,7 +1,7 @@
-package arkheim.server.domain.Repository;
+package arkheim.server.domain.repository;
 
-import arkheim.server.domain.Entities.Hashtag;
-import arkheim.server.domain.Entities.Post;
+import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.entities.Post;
 
 import java.util.List;
 import java.util.UUID;

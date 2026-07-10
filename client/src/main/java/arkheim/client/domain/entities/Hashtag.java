@@ -1,4 +1,4 @@
-package arkheim.client.domain.Entities;
+package arkheim.client.domain.entities;
 
 import java.util.UUID;
 

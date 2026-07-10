@@ -2,7 +2,7 @@ package arkheim.server.infrastructure.api.controllers;
 
 import arkheim.server.application.dtos.responses.PostResponse;
 import arkheim.server.application.services.HashtagService;
-import arkheim.server.domain.Entities.Hashtag;
+import arkheim.server.domain.entities.Hashtag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,7 +1,6 @@
 package arkheim.client;
 
-import arkheim.client.Presentation.Controller;
-import arkheim.client.Presentation.MainApplication;
+import arkheim.client.presentation.MainApplication;
 import javafx.application.Application;
 
 public class Launcher {

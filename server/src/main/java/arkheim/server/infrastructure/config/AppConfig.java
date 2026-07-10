@@ -2,7 +2,7 @@ package arkheim.server.infrastructure.config;
 
 import arkheim.server.application.ports.PasswordEncoderPort;
 import arkheim.server.application.services.*;
-import arkheim.server.domain.Repository.*;
+import arkheim.server.domain.repository.*;
 import arkheim.server.infrastructure.utils.BCryptPasswordEncoderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,9 +1,9 @@
 package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.responses.UserResponse;
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.FollowRepository;
-import arkheim.server.domain.Repository.UserRepository;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.FollowRepository;
+import arkheim.server.domain.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;

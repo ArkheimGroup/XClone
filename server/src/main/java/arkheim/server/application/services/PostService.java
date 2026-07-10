@@ -2,13 +2,13 @@ package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.CreatePostRequest;
 import arkheim.server.application.dtos.responses.PostResponse;
-import arkheim.server.domain.Entities.Media;
-import arkheim.server.domain.Entities.Post;
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.LikeRepository;
-import arkheim.server.domain.Repository.MediaRepository;
-import arkheim.server.domain.Repository.PostRepository;
-import arkheim.server.domain.Repository.UserRepository;
+import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.LikeRepository;
+import arkheim.server.domain.repository.MediaRepository;
+import arkheim.server.domain.repository.PostRepository;
+import arkheim.server.domain.repository.UserRepository;
 
 import java.util.*;
 

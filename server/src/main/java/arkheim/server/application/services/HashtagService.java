@@ -1,11 +1,11 @@
 package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.responses.PostResponse;
-import arkheim.server.domain.Entities.Hashtag;
-import arkheim.server.domain.Entities.Media;
-import arkheim.server.domain.Entities.Post;
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.*;
+import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.*;
 
 import java.util.*;
 import java.util.regex.Matcher;

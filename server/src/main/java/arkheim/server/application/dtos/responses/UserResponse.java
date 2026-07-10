@@ -1,6 +1,6 @@
 package arkheim.server.application.dtos.responses;
 
-import arkheim.server.domain.Entities.User;
+import arkheim.server.domain.entities.User;
 
 import java.util.UUID;
 

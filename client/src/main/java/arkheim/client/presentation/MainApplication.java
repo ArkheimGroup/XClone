@@ -1,4 +1,4 @@
-package arkheim.client.Presentation;
+package arkheim.client.presentation;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

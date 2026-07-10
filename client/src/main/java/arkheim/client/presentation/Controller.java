@@ -1,4 +1,4 @@
-package arkheim.client.Presentation;
+package arkheim.client.presentation;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

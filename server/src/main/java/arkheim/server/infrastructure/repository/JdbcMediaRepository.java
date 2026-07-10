@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.Entities.Media;
-import arkheim.server.domain.Repository.MediaRepository;
+import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.repository.MediaRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 

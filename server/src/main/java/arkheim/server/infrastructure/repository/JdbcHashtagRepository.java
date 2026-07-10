@@ -1,8 +1,8 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.Entities.Hashtag;
-import arkheim.server.domain.Entities.Post;
-import arkheim.server.domain.Repository.HashtagRepository;
+import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.repository.HashtagRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 

@@ -1,13 +1,12 @@
 package arkheim.server.application.dtos.responses;
 
-import arkheim.server.domain.Entities.Media;
-import arkheim.server.domain.Entities.Post;
-import arkheim.server.domain.Entities.User;
+import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public record PostResponse(

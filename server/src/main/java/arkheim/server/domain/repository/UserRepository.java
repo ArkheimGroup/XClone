@@ -1,8 +1,7 @@
-package arkheim.server.domain.Repository;
+package arkheim.server.domain.repository;
 
-import arkheim.server.domain.Entities.User;
+import arkheim.server.domain.entities.User;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserRepository {

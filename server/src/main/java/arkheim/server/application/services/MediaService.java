@@ -1,7 +1,7 @@
 package arkheim.server.application.services;
 
-import arkheim.server.domain.Entities.Media;
-import arkheim.server.domain.Repository.MediaRepository;
+import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.repository.MediaRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;

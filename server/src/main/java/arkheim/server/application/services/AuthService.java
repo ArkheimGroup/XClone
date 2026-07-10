@@ -4,8 +4,8 @@ import arkheim.server.application.dtos.UserLoginRequest;
 import arkheim.server.application.dtos.UserRegisterRequest;
 import arkheim.server.application.dtos.responses.UserResponse;
 import arkheim.server.application.ports.PasswordEncoderPort;
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.UserRepository;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.UserRepository;
 
 
 

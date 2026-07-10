@@ -1,8 +1,8 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.Entities.Hashtag;
-import arkheim.server.domain.Entities.Post;
-import arkheim.server.domain.Entities.User;
+import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

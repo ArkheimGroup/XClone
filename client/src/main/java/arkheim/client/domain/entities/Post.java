@@ -1,4 +1,4 @@
-package arkheim.client.domain.Entities;
+package arkheim.client.domain.entities;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

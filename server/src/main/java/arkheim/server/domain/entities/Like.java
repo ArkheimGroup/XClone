@@ -1,11 +1,9 @@
-package arkheim.client.domain.Entities;
+package arkheim.server.domain.entities;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Like {
-
     private final UUID userId;
     private final UUID postId;
     private final LocalDateTime createdAt;
@@ -28,29 +26,6 @@ public class Like {
         this.postId = postId;
         this.createdAt = createdAt;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Like)) return false;
-        Like other = (Like) o;
-        return userId.equals(other.userId) && postId.equals(other.postId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId, postId);
-    }
-
-    @Override
-    public String toString() {
-        return "LikeModel{" +
-                "userId=" + userId +
-                ", postId=" + postId +
-                '}';
-    }
-
-    // Getters
 
     public UUID getUserId() {
         return userId;

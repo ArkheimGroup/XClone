@@ -1,6 +1,6 @@
-package arkheim.server.domain.Repository;
+package arkheim.server.domain.repository;
 
-import arkheim.server.domain.Entities.Media;
+import arkheim.server.domain.entities.Media;
 
 import java.util.List;
 import java.util.UUID;

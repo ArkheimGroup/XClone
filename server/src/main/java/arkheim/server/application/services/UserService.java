@@ -2,8 +2,8 @@ package arkheim.server.application.services;
 
 import arkheim.server.application.dtos.UpdateProfileRequest;
 import arkheim.server.application.dtos.responses.UserProfileResponse;
-import arkheim.server.domain.Entities.User;
-import arkheim.server.domain.Repository.UserRepository;
+import arkheim.server.domain.entities.User;
+import arkheim.server.domain.repository.UserRepository;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;

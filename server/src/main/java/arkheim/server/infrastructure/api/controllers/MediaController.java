@@ -2,7 +2,7 @@ package arkheim.server.infrastructure.api.controllers;
 
 import arkheim.server.application.dtos.RegisterMediaRequest;
 import arkheim.server.application.services.MediaService;
-import arkheim.server.domain.Entities.Media;
+import arkheim.server.domain.entities.Media;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
