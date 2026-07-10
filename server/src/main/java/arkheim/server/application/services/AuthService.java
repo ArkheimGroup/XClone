@@ -7,6 +7,8 @@ import arkheim.server.application.ports.PasswordEncoderPort;
 import arkheim.server.domain.Entities.User;
 import arkheim.server.domain.Repository.UserRepository;
 
+
+
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoderPort passwordEncoderPort;
