@@ -33,7 +33,7 @@ public class SocketFeedServer implements CommandLineRunner {
     */
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
-    @Value("${socket.feed.port:8082}")
+    @Value("${socket.feed.port:8082}") // Configurable in application.properties
     private int port;
 
     public SocketFeedServer(TimelineService timelineService) {
