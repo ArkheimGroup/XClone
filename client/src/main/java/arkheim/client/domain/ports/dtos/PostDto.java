@@ -1,5 +1,6 @@
 package arkheim.client.domain.ports.dtos;
 
+import com.google.gson.annotations.SerializedName;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,6 @@ public record PostDto(
         int repostCount,
         int replyCount,
         UUID parentPostId,
-        boolean likedByMe,
-        boolean repostedByMe
+        @SerializedName("isLikedByMe") boolean likedByMe,
+        @SerializedName("isRepostedByMe") boolean repostedByMe
 ) {}
