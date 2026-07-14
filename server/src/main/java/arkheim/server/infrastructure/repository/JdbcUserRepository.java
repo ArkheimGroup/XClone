@@ -117,7 +117,7 @@ public class JdbcUserRepository implements UserRepository {
     public void updatePinnedPost(UUID userId, UUID postId) {
         String sql = "UPDATE users SET pinned_post_id =? WHERE id=?";
         jdbcTemplate.update(sql,
-                uuidToBytes(postId),
+                postId != null ? uuidToBytes(postId) : null,
                 uuidToBytes(userId)
         );
     }
