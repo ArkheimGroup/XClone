@@ -62,13 +62,13 @@ public class JdbcPostRepository implements PostRepository {
     @Override
     public List<Post> findReplies(UUID postId) {
         String sql = "SELECT * FROM posts WHERE reply_post_id=?";
-        return jdbcTemplate.query(sql, postRowMapper, postId);
+        return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 
     @Override
     public List<Post> findReposts(UUID postId) {
         String sql = "SELECT * FROM posts WHERE repost_post_id=?";
-        return jdbcTemplate.query(sql, postRowMapper, postId);
+        return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 
     @Override
