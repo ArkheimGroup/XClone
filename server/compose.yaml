@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: x_clone
+      MYSQL_USER: arkheim
+      MYSQL_PASSWORD: "12345678"
+      MYSQL_ROOT_PASSWORD: "rootpassword"
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+      interval: 5s
+
+  server:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+      - "8082:8082"
+    environment: # Used for spring application.properties
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=x_clone
+      - DB_USER=arkheim
+      - DB_PASSWORD=12345678
+      - SPRING_SQL_INIT_MODE=always # This forces spring to always use schema.sql to initialize the Database
+      - SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+
+
