@@ -82,6 +82,12 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
+    public List<Post> getAllPosts() {
+        String sql = "SELECT * FROM posts";
+        return jdbcTemplate.query(sql, postRowMapper);
+    }
+
+    @Override
     public void save(Post post) {
         String sql = "INSERT INTO posts (id, author_username, created_at, description, reply_post_id, repost_post_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
