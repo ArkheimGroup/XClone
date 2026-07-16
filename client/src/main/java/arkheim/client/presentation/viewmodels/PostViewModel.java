@@ -4,6 +4,7 @@ import arkheim.client.domain.ports.PostPort;
 import arkheim.client.domain.ports.dtos.PostDto;
 import javafx.beans.property.*;
 import javafx.collections.*;
+import java.util.function.UnaryOperator;
 
 import java.util.List;
 import java.util.UUID;
@@ -87,15 +88,15 @@ public class PostViewModel {
      * Loads a user's timeline via {@link PostPort#getUserTimeline} and
      * replaces the contents of {@link #timelineProperty()}.
      */
-    public void loadUserTimeline(String username, UUID requesterId){
-        errorMessage.set("");
-        try {
-            List<PostDto> posts = postPort.getUserTimeline(username, requesterId);
-            timeline.setAll(posts);
-        } catch (Exception e) {
-            errorMessage.set(e.getMessage());
-        }
-    }
+//    public void loadUserTimeline(String username, UUID requesterId){
+//        errorMessage.set("");
+//        try {
+//            List<PostDto> posts = postPort.getUserTimeline(username, requesterId);
+//            timeline.setAll(posts);
+//        } catch (Exception e) {
+//            errorMessage.set(e.getMessage());
+//        }
+//    }
 
     /**
      * Loads a single post's details via {@link PostPort#getPostDetails}
@@ -161,7 +162,7 @@ public class PostViewModel {
      * it currently appears among {@link #currentPostProperty()},
      * {@link #timelineProperty()}, and {@link #repliesProperty()}.
      */
-    private void replaceWherePresent(UUID postId, java.util.function.UnaryOperator<PostDto> transform) {
+    private void replaceWherePresent(UUID postId, UnaryOperator<PostDto> transform) {
         PostDto current = currentPost.get();
         if (current != null && current.id().equals(postId)) {
             currentPost.set(transform.apply(current));
@@ -169,7 +170,7 @@ public class PostViewModel {
         replaceInList(timeline, postId, transform);
         replaceInList(replies, postId, transform);
     }
-    private void replaceInList(ObservableList<PostDto> list, UUID postId, java.util.function.UnaryOperator<PostDto> transform) {
+    private void replaceInList(ObservableList<PostDto> list, UUID postId, UnaryOperator<PostDto> transform) {
         for (int i = 0; i < list.size(); i++) {
             if (list.get(i).id().equals(postId)) {
                 list.set(i, transform.apply(list.get(i)));
