@@ -66,7 +66,7 @@ public class JdbcPostRepositoryTest {
         );
 
         // Get feed for A
-        List<Post> feed = postRepository.findFeedForUser(userA.getId());
+        List<Post> feed = postRepository.findFollowingsPosts(userA.getId());
 
         // Assert
         assertNotNull(feed);
