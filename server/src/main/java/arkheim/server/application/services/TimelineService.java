@@ -34,7 +34,7 @@ public class TimelineService {
      * @return List of {@link PostResponse} representing the feed
      */
     public List<PostResponse> getHomeFeed(UUID userId) {
-        List<Post> feedPosts = postRepository.findFeedForUser(userId);
+        List<Post> feedPosts = postRepository.findFollowingsPosts(userId);
 
         List<PostResponse> responses = new ArrayList<>();
 

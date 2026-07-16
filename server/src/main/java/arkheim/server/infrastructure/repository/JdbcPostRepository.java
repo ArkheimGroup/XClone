@@ -72,7 +72,7 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public List<Post> findFeedForUser(UUID userId) {
+    public List<Post> findFollowingsPosts(UUID userId) {
         String sql = "SELECT p.* FROM posts p " +
                 "JOIN users u ON p.author_username = u.username " +
                 "JOIN follows f ON u.id = f.following_id " +

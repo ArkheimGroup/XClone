@@ -11,7 +11,8 @@ public interface PostRepository {
     List<Post> findByWord(String word);
     List<Post> findReplies(UUID postId);
     List<Post> findReposts(UUID postId);
-    List<Post> findFeedForUser(UUID userId);
+    List<Post> findFollowingsPosts(UUID userId);
+    List<Post> getAllPosts();
     void save(Post post);
     void delete(UUID id);
 }
