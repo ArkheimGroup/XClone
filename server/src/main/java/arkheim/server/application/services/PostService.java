@@ -152,4 +152,43 @@ public class PostService {
             likeRepository.like(userId, postId);
         }
     }
+
+    /**
+     * searchs throw all the posts and finds ones containing a curtain word in their description.
+     * @param word the word to be found in posts
+     * @param requesterId UUID of the user who requested to find the posts
+     * @return a List of {@link PostResponse} containing the received word
+     */
+    public List<PostResponse> findPostsByWord(String word, UUID requesterId){
+        List<Post> posts = postRepository.findByWord(word);
+
+        List<PostResponse> responses = new ArrayList<>();
+
+        for(Post post : posts){
+            User author = userRepository.findByUsername(post.getAuthorUsername());
+            List<Post> reposts = postRepository.findReposts(post.getId());
+            List<Media> medias = mediaRepository.findByPostId(post.getId());
+            int likeCount = likeRepository.countLikesForPost(post.getId());
+            boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
+            int repostCount = reposts.size();
+            String requesterUsername = userRepository.findById(requesterId).getUsername();
+            boolean isRepostedByMe = reposts.stream()
+                    .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername)); // True if a post from reposts is found that has the same username as the requester
+            int replyCount = postRepository.findReplies(post.getId()).size();
+
+            responses.add(new PostResponse(
+                    post,
+                    author,
+                    medias,
+                    likeCount,
+                    repostCount,
+                    replyCount,
+                    post.getRepostPostId() != null ? post.getRepostPostId() : post.getReplyPostId(), // The post is eather reply or repost, or none so the value would be null anyway
+                    isLikedByMe,
+                    isRepostedByMe
+            ));
+        }
+
+        return responses;
+    }
 }
