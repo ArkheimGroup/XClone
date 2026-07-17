@@ -74,14 +74,13 @@ public class PostController {
     /**
      * Retrieves a specific user's timeline (reposts and posts created by them).
      * HTTP Method: GET
-     * Endpoint: /api/posts/user/{username}
-     * @param username the username of the user whose timeline is being queried
+     * Endpoint: /api/posts/timeline
      * @param requesterId the UUID of the user viewing the timeline (for status context check)
      * @return {@link ResponseEntity} containing a list of {@link PostResponse} representing the user timeline
      */
-    @GetMapping("/user/{username}")
-    public ResponseEntity<List<PostResponse>> getUserTimeline(@PathVariable String username, @RequestParam UUID requesterId) {
-        List<PostResponse> timeline = feedService.getUserTimeline(username, requesterId);
+    @GetMapping("/timeline")
+    public ResponseEntity<List<PostResponse>> getUserTimeline(@RequestParam UUID requesterId) {
+        List<PostResponse> timeline = feedService.getUserTimeline(requesterId);
         return ResponseEntity.ok(timeline);
     }
 
