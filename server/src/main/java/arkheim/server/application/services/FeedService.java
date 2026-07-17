@@ -14,14 +14,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class TimelineService {
+public class FeedService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final MediaRepository mediaRepository;
 
-    public TimelineService(PostRepository postRepository, UserRepository userRepository,
-                           LikeRepository likeRepository, MediaRepository mediaRepository) {
+    public FeedService(PostRepository postRepository, UserRepository userRepository,
+                       LikeRepository likeRepository, MediaRepository mediaRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
@@ -31,9 +31,9 @@ public class TimelineService {
     /**
      * Retrieves the home feed timeline for a user (posts from users they follow).
      * @param userId the user retrieving the feed
-     * @return List of {@link PostResponse} representing the feed
+     * @return List of {@link PostResponse} of posts that users followings have created
      */
-    public List<PostResponse> getHomeFeed(UUID userId) {
+    public List<PostResponse> getFollowingsFeed(UUID userId) {
         List<Post> feedPosts = postRepository.findFollowingsPosts(userId);
 
         List<PostResponse> responses = new ArrayList<>();
@@ -47,12 +47,11 @@ public class TimelineService {
 
     /**
      * Retrieves a user's profile timeline (posts created by the user).
-     * @param username the username of the profile owner
      * @param requesterId the user who is viewing the timeline (for calculating isLikedByMe/isRepostedByMe)
-     * @return List of {@link PostResponse} representing the user's posts
+     * @return List of {@link PostResponse} of created posts
      */
-    public List<PostResponse> getUserTimeline(String username, UUID requesterId) {
-        List<Post> posts = postRepository.findByAuthorUsername(username);
+    public List<PostResponse> getUserTimeline(UUID requesterId) {
+        List<Post> posts = postRepository.getAllPosts();
 
         List<PostResponse> responses = new ArrayList<>();
 
