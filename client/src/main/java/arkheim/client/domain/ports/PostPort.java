@@ -44,4 +44,9 @@ public interface PostPort {
      * HTTP: GET /api/posts/{postId}/replies?requesterId={requesterId}
      */
     List<PostDto> getPostReplies(UUID postId, UUID requesterId);
+    
+    /**
+     * HTTP: GET /api/posts/{word}
+     */
+    List<PostDto> findPostsByWord(String word);
 }
