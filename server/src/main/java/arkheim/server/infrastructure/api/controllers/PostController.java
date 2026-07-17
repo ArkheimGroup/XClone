@@ -111,4 +111,19 @@ public class PostController {
         List<PostResponse> replies = feedService.getPostReplies(postId, requesterId);
         return ResponseEntity.ok(replies);
     }
+
+
+    /**
+     * Retrieves any posts containing the word
+     * HTTP Method: GET
+     * Endpoint: /api/posts/byword/{word}
+     * @param requesterId the UUID of the user retrieving replies
+     * @param word searching word
+     * @return {@link ResponseEntity} containing a list of {@link PostResponse} representing the posts
+     */
+    @GetMapping("/byword/{word}")
+    public ResponseEntity<List<PostResponse>> getPostsByWord(@PathVariable String word, @RequestParam UUID requesterId){
+        List<PostResponse> posts = postService.findPostsByWord(word, requesterId);
+        return ResponseEntity.ok(posts);
+    }
 }
