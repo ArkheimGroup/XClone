@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.socket;
 
 import arkheim.server.application.dtos.responses.PostResponse;
-import arkheim.server.application.services.TimelineService;
+import arkheim.server.application.services.FeedService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class SocketFeedServer implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(SocketFeedServer.class);
 
-    private final TimelineService timelineService;
+    private final FeedService feedService;
     private final Gson gson;
 
     /* executerService is used to benefit from thread pool
@@ -36,8 +36,8 @@ public class SocketFeedServer implements CommandLineRunner {
     @Value("${socket.feed.port:8082}") // Configurable in application.properties
     private int port;
 
-    public SocketFeedServer(TimelineService timelineService) {
-        this.timelineService = timelineService;
+    public SocketFeedServer(FeedService feedService) {
+        this.feedService = feedService;
         this.gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX") // Set gson date format to java date format
                 .create();
     }
@@ -91,7 +91,7 @@ public class SocketFeedServer implements CommandLineRunner {
                 return;
             }
 
-            List<PostResponse> feed = timelineService.getHomeFeed(userId);
+            List<PostResponse> feed = feedService.getFollowingsFeed(userId);
             String jsonFeed = gson.toJson(feed);
             writer.println(jsonFeed);
 

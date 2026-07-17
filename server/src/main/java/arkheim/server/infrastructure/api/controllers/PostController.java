@@ -4,7 +4,7 @@ import arkheim.server.application.dtos.CreatePostRequest;
 import arkheim.server.application.dtos.responses.PostResponse;
 import arkheim.server.application.services.HashtagService;
 import arkheim.server.application.services.PostService;
-import arkheim.server.application.services.TimelineService;
+import arkheim.server.application.services.FeedService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +19,12 @@ import java.util.UUID;
 public class PostController {
 
     private final PostService postService;
-    private final TimelineService timelineService;
+    private final FeedService feedService;
     private final HashtagService hashtagService;
 
-    public PostController(PostService postService, TimelineService timelineService, HashtagService hashtagService) {
+    public PostController(PostService postService, FeedService feedService, HashtagService hashtagService) {
         this.postService = postService;
-        this.timelineService = timelineService;
+        this.feedService = feedService;
         this.hashtagService = hashtagService;
     }
 
@@ -81,7 +81,7 @@ public class PostController {
      */
     @GetMapping("/user/{username}")
     public ResponseEntity<List<PostResponse>> getUserTimeline(@PathVariable String username, @RequestParam UUID requesterId) {
-        List<PostResponse> timeline = timelineService.getUserTimeline(username, requesterId);
+        List<PostResponse> timeline = feedService.getUserTimeline(username, requesterId);
         return ResponseEntity.ok(timeline);
     }
 
@@ -95,7 +95,7 @@ public class PostController {
      */
     @GetMapping("/{postId}")
     public ResponseEntity<PostResponse> getPostDetails(@PathVariable UUID postId, @RequestParam UUID requesterId) {
-        PostResponse details = timelineService.getPostDetails(postId, requesterId);
+        PostResponse details = feedService.getPostDetails(postId, requesterId);
         return ResponseEntity.ok(details);
     }
 
@@ -109,7 +109,7 @@ public class PostController {
      */
     @GetMapping("/{postId}/replies")
     public ResponseEntity<List<PostResponse>> getPostReplies(@PathVariable UUID postId, @RequestParam UUID requesterId) {
-        List<PostResponse> replies = timelineService.getPostReplies(postId, requesterId);
+        List<PostResponse> replies = feedService.getPostReplies(postId, requesterId);
         return ResponseEntity.ok(replies);
     }
 }
