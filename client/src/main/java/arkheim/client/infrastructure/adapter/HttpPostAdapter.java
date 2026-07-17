@@ -86,4 +86,14 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
 
         return send(request, POST_LIST_TYPE, "Post");
     }
+
+    @Override
+    public List<PostDto> findPostsByWord(String word, UUID requesterId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/posts/byword/" + word + "?requesterId=" + requesterId))
+                .GET()
+                .build();
+
+        return send(request, POST_LIST_TYPE, "Post");
+    }
 }

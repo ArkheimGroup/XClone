@@ -187,10 +187,10 @@ public class PostViewModel {
      * {@link PostPort#findPostsByWord} and stores the results in
      * {@link #searchResultsProperty()}.
      */
-    public void findPostsByWord(String word) {
+    public void findPostsByWord(String word, UUID requesterId) {
         errorMessage.set("");
         try {
-            List<PostDto> results = postPort.findPostsByWord(word);
+            List<PostDto> results = postPort.findPostsByWord(word, requesterId);
             searchResults.setAll(results);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());

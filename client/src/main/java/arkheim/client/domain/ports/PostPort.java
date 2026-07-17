@@ -48,5 +48,5 @@ public interface PostPort {
     /**
      * HTTP: GET /api/posts/byword/{word}
      */
-    List<PostDto> findPostsByWord(String word);
+    List<PostDto> findPostsByWord(String word, UUID requesterId);
 }
