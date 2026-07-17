@@ -31,7 +31,7 @@ public interface PostPort {
     void toggleLike(UUID postId, UUID userId);
 
     /**
-     * HTTP: GET /api/posts/user/{username}?requesterId={requesterId}
+     * HTTP: GET /api/posts/timeline?requesterId={requesterId}
      */
     List<PostDto> getUserTimeline(UUID requesterId);
 
@@ -46,7 +46,7 @@ public interface PostPort {
     List<PostDto> getPostReplies(UUID postId, UUID requesterId);
     
     /**
-     * HTTP: GET /api/posts/{word}
+     * HTTP: GET /api/posts/byword/{word}
      */
     List<PostDto> findPostsByWord(String word);
 }

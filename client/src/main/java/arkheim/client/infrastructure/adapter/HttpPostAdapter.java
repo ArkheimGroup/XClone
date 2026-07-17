@@ -58,9 +58,9 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
     }
 
     @Override
-    public List<PostDto> getUserTimeline(String username, UUID requesterId) {
+    public List<PostDto> getUserTimeline(UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/api/posts/user/" + username + "?requesterId=" + requesterId))
+                .uri(URI.create(baseUrl + "/api/posts/timeline" + "?requesterId=" + requesterId))
                 .GET()
                 .build();
 
