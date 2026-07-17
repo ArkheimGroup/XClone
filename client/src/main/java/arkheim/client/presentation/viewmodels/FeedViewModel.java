@@ -18,7 +18,7 @@ public class FeedViewModel {
     private final FeedPort feedPort;
 
     // --- loaded feed ---
-    private final ObservableList<PostDto> homeFeed = FXCollections.observableArrayList();
+    private final ObservableList<PostDto> followingsFeed = FXCollections.observableArrayList();
 
     // --- shared UI state ---
     private final StringProperty errorMessage = new SimpleStringProperty("");
@@ -28,14 +28,14 @@ public class FeedViewModel {
     }
 
     /**
-     * Loads the home feed for the given user via {@link FeedPort#getHomeFeed}
-     * and replaces the contents of {@link #homeFeedProperty()}.
+     * Loads the followings feed for the given user via {@link FeedPort#getHomeFeed}
+     * and replaces the contents of {@link #followingsFeedProperty()}.
      */
-    public void loadHomeFeed(UUID userId) {
+    public void loadFollowingsFeed(UUID userId) {
         errorMessage.set("");
         try {
             List<PostDto> loaded = feedPort.getHomeFeed(userId);
-            homeFeed.setAll(loaded);
+            followingsFeed.setAll(loaded);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
         }
@@ -44,7 +44,7 @@ public class FeedViewModel {
     // Getters
 
     // --- collection getter ---
-    public ObservableList<PostDto> homeFeedProperty() { return homeFeed; }
+    public ObservableList<PostDto> followingsFeedProperty() { return followingsFeed; }
 
     // --- shared state getter ---
     public StringProperty errorMessageProperty() { return errorMessage; }
