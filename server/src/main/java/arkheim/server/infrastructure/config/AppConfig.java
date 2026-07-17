@@ -57,12 +57,12 @@ public class AppConfig {
     }
 
     @Bean
-    public TimelineService timelineService(
+    public FeedService timelineService(
             PostRepository postRepository,
             UserRepository userRepository,
             LikeRepository likeRepository,
             MediaRepository mediaRepository
     ) {
-        return new TimelineService(postRepository, userRepository, likeRepository, mediaRepository);
+        return new FeedService(postRepository, userRepository, likeRepository, mediaRepository);
     }
 }
