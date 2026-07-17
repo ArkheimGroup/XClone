@@ -33,7 +33,7 @@ public interface PostPort {
     /**
      * HTTP: GET /api/posts/user/{username}?requesterId={requesterId}
      */
-    List<PostDto> getUserTimeline(String username, UUID requesterId);
+    List<PostDto> getUserTimeline(UUID requesterId);
 
     /**
      * HTTP: GET /api/posts/{postId}?requesterId={requesterId}

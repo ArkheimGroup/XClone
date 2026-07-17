@@ -88,18 +88,18 @@ public class PostViewModel {
     }
 
     /**
-     * Loads a user's timeline via {@link PostPort#getUserTimeline} and
+     * Loads a user's timeline (all the created posts) via {@link PostPort#getUserTimeline} and
      * replaces the contents of {@link #timelineProperty()}.
      */
-//    public void loadUserTimeline(String username, UUID requesterId){
-//        errorMessage.set("");
-//        try {
-//            List<PostDto> posts = postPort.getUserTimeline(username, requesterId);
-//            timeline.setAll(posts);
-//        } catch (Exception e) {
-//            errorMessage.set(e.getMessage());
-//        }
-//    }
+    public void loadUserTimeline(UUID requesterId){
+        errorMessage.set("");
+        try {
+            List<PostDto> posts = postPort.getUserTimeline(requesterId);
+            timeline.setAll(posts);
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+        }
+    }
 
     /**
      * Loads a single post's details via {@link PostPort#getPostDetails}
