@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox prefHeight="423.0" prefWidth="937.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="arkheim.client.presentation.controllers.RegisterController">
+    <StackPane minWidth="0.0" prefWidth="420.0" styleClass="brand-panel" HBox.hgrow="ALWAYS">
+        <VBox alignment="CENTER" minWidth="0.0" spacing="18.0">
+            <Label styleClass="brand-title" text="X Clone" textFill="WHITE">
+                <font>
+                    <Font size="32.0"/>
+                </font>
+            </Label>
+            <ImageView fitHeight="211.0" fitWidth="212.0" pickOnBounds="true" preserveRatio="true">
+                <Image url="@../Assets/images/XCloneLogo_DarkMode_Transparent.png"/>
+            </ImageView>
+            <Label text="Join the conversation" textFill="WHITE"/>
+        </VBox>
+    </StackPane>
+
+    <StackPane prefHeight="520.0" prefWidth="531.0" styleClass="right-form-panel" HBox.hgrow="ALWAYS">
+        <VBox alignment="CENTER" maxWidth="583.0" prefHeight="520.0" prefWidth="583.0" spacing="14.0">
+
+            <padding>
+                <Insets bottom="32.0" left="32.0" right="32.0" top="32.0"/>
+            </padding>
+            <Region prefHeight="6.0"/>
+
+            <TextField fx:id="usernameField" promptText="Username" styleClass="text-input"/>
+
+            <TextField fx:id="nameField" promptText="Full name" styleClass="text-input"/>
+
+            <TextField fx:id="emailField" promptText="Email" styleClass="text-input"/>
+
+            <PasswordField fx:id="passwordField" promptText="Password" styleClass="text-input"/>
+
+            <PasswordField fx:id="passwordRepetitionField" promptText="Confirm password"
+                           styleClass="text-input"/>
+
+            <DatePicker fx:id="datePicker" prefHeight="36.0" prefWidth="397.0" promptText="Date of birth"/>
+            <Label fx:id="errorLabel" alignment="CENTER" contentDisplay="CENTER" styleClass="error-label"/>
+
+            <Region prefHeight="4.0"/>
+
+            <Button fx:id="registerButton" maxWidth="Infinity" onAction="#onRegisterClicked"
+                    styleClass="button-primary" text="Create account"/>
+
+            <Hyperlink fx:id="goToLoginLink" onAction="#onGoToLoginClicked"
+                       text="Already have an account? Log in"/>
+        </VBox>
+    </StackPane>
+</HBox>
