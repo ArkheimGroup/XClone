@@ -62,7 +62,26 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showLoginScreen() {
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/arkheim/client/presentation/views/login.fxml")
+        );
 
+        Parent root;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load login.fxml\n" + e);
+        }
+
+        LoginController controller = loader.getController();
+        controller.setAuthViewModel(authViewModel);
+        controller.setNavigator(this);
+
+        Scene scene = new Scene(root);
+        addStyle(scene);
+
+        stage.setScene(scene);
+        stage.show();
     }
 
     @Override
