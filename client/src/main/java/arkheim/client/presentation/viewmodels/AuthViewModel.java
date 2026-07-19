@@ -6,6 +6,8 @@ import javafx.beans.property.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Presentation-layer state and actions for the login/register screens.
@@ -25,11 +27,19 @@ public class AuthViewModel {
     private final StringProperty registerName = new SimpleStringProperty("");
     private final StringProperty registerEmail = new SimpleStringProperty("");
     private final StringProperty registerPassword = new SimpleStringProperty("");
+    private final StringProperty registerPasswordRepetitionProperty = new SimpleStringProperty("");
     private final ObjectProperty<LocalDate> registerDateOfBirth = new SimpleObjectProperty<>();
 
     // --- shared UI state ---
     private final StringProperty errorMessage = new SimpleStringProperty("");
     private final ObjectProperty<UserDto> currentUser = new SimpleObjectProperty<>();
+
+    // --- validation ---
+    private final BooleanProperty emailIsValid = new SimpleBooleanProperty();
+    private final BooleanProperty passwordRepetitionCorrect = new SimpleBooleanProperty(false);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
 
 
     public AuthViewModel(AuthPort authPort){
@@ -41,7 +51,15 @@ public class AuthViewModel {
      * field values.
      */
     public void login(){
+        emailIsValid.set(true);
         errorMessage.set("");
+
+        if (!isEmailValid(emailProperty().get())) {
+            errorMessage.set(emailProperty().get() + " is not a valid email");
+            emailIsValid.set(false);
+            return;
+        }
+
         try{
             UserDto user = authPort.login(email.get(), password.get());
             currentUser.set(user);
@@ -56,7 +74,22 @@ public class AuthViewModel {
      * {@link #registerPasswordProperty()}, {@link #registerDateOfBirthProperty()}).
      */
     public void register(){
+        emailIsValid.set(true);
+        passwordRepetitionCorrect.set(true);
         errorMessage.set("");
+
+        if (!isEmailValid(emailProperty().get())) {
+            errorMessage.set(emailProperty().get() + " is not a valid email");
+            emailIsValid.set(false);
+            return;
+        }
+
+        if (!Objects.equals(registerPasswordRepetitionProperty().get(), registerPasswordProperty().get())) {
+            errorMessage.set("Password and its repetition does not match");
+            passwordRepetitionCorrect.set(false);
+            return;
+        }
+
         try{
             LocalDateTime dob = registerDateOfBirth.get() != null
                     ? registerDateOfBirth.get().atStartOfDay()
@@ -86,10 +119,17 @@ public class AuthViewModel {
     public StringProperty registerNameProperty() { return registerName; }
     public StringProperty registerEmailProperty() { return registerEmail; }
     public StringProperty registerPasswordProperty() { return registerPassword; }
+    public StringProperty registerPasswordRepetitionProperty() { return registerPasswordRepetitionProperty; }
     public ObjectProperty<LocalDate> registerDateOfBirthProperty() { return registerDateOfBirth; }
 
     // --- shared state getters ---
     public StringProperty errorMessageProperty() { return errorMessage; }
     public ReadOnlyObjectProperty<UserDto> currentUserProperty() { return currentUser; }
 
+    // --- validation ---
+    public boolean emailIsValid() { return emailIsValid.get(); }
+    public boolean passwordRepetitionCorrect() { return passwordRepetitionCorrect.get(); }
+    private boolean isEmailValid(String email) {
+        return email != null && EMAIL_PATTERN.matcher(email).matches();
+    }
 }
