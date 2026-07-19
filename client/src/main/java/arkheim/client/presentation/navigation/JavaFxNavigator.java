@@ -1,0 +1,77 @@
+package arkheim.client.presentation.navigation;
+
+import arkheim.client.presentation.controllers.LoginController;
+import arkheim.client.presentation.controllers.RegisterController;
+import arkheim.client.presentation.theme.ThemeMode;
+import arkheim.client.presentation.viewmodels.AuthViewModel;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.util.Objects;
+
+public class JavaFxNavigator implements Navigator {
+
+    private final Stage stage;
+    private final AuthViewModel authViewModel;
+    private ThemeMode themeMode;
+    private final String lightStyle;
+    private final String darkStyle;
+
+    public JavaFxNavigator(Stage stage, AuthViewModel authViewModel, ThemeMode themeMode) {
+        this.stage = stage;
+        this.authViewModel = authViewModel;
+
+        try {
+            lightStyle = Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/Style.css")).toExternalForm();
+        }
+        catch (NullPointerException e) {
+            throw new RuntimeException("Could not load the css file\n" + e);
+        }
+
+        try {
+            darkStyle = Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/DarkMode.css")).toExternalForm();
+        }
+        catch (NullPointerException e) {
+            throw new RuntimeException("Could not load the css file\n" + e);
+        }
+
+        this.themeMode = themeMode;
+    }
+
+    public void setThemeMode(ThemeMode themeMode) {
+        this.themeMode = themeMode;
+    }
+
+    public void updateTheme() {
+        Scene scene = stage.getScene();
+        addStyle(scene);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void addStyle(Scene scene) {
+        if (themeMode == ThemeMode.LIGHT) {
+            scene.getStylesheets().add(lightStyle);
+        } else {
+            scene.getStylesheets().add(darkStyle);
+        }
+    }
+
+    @Override
+    public void showLoginScreen() {
+
+    }
+
+    @Override
+    public void showRegisterScreen() {
+
+    }
+
+    @Override
+    public void showHomeScreen() {
+        // load home.fxml
+    }
+}
