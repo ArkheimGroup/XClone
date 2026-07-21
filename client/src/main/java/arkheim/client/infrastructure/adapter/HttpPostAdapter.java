@@ -58,9 +58,9 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
     }
 
     @Override
-    public List<PostDto> getUserTimeline(String username, UUID requesterId) {
+    public List<PostDto> getUserTimeline(UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/api/posts/user/" + username + "?requesterId=" + requesterId))
+                .uri(URI.create(baseUrl + "/api/posts/timeline" + "?requesterId=" + requesterId))
                 .GET()
                 .build();
 
@@ -81,6 +81,16 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
     public List<PostDto> getPostReplies(UUID postId, UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId + "/replies?requesterId=" + requesterId))
+                .GET()
+                .build();
+
+        return send(request, POST_LIST_TYPE, "Post");
+    }
+
+    @Override
+    public List<PostDto> findPostsByWord(String word, UUID requesterId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/posts/byword/" + word + "?requesterId=" + requesterId))
                 .GET()
                 .build();
 

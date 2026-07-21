@@ -25,6 +25,9 @@ public class PostViewModel {
     // --- single loaded post (e.g. a detail/thread view) ---
     private final ObjectProperty<PostDto> currentPost = new SimpleObjectProperty<>();
 
+    // --- posts matching the current search query ---
+    private final ObservableList<PostDto> searchResults = FXCollections.observableArrayList();
+
     // --- create-post form fields ---
     private final StringProperty newPostContent = new SimpleStringProperty("");
     private final StringProperty newPostMediaUrl = new SimpleStringProperty("");
@@ -85,18 +88,18 @@ public class PostViewModel {
     }
 
     /**
-     * Loads a user's timeline via {@link PostPort#getUserTimeline} and
+     * Loads a user's timeline (all the created posts) via {@link PostPort#getUserTimeline} and
      * replaces the contents of {@link #timelineProperty()}.
      */
-//    public void loadUserTimeline(String username, UUID requesterId){
-//        errorMessage.set("");
-//        try {
-//            List<PostDto> posts = postPort.getUserTimeline(username, requesterId);
-//            timeline.setAll(posts);
-//        } catch (Exception e) {
-//            errorMessage.set(e.getMessage());
-//        }
-//    }
+    public void loadUserTimeline(UUID requesterId){
+        errorMessage.set("");
+        try {
+            List<PostDto> posts = postPort.getUserTimeline(requesterId);
+            timeline.setAll(posts);
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+        }
+    }
 
     /**
      * Loads a single post's details via {@link PostPort#getPostDetails}
@@ -179,6 +182,21 @@ public class PostViewModel {
         }
     }
 
+    /**
+     * Searches for posts matching the given word via
+     * {@link PostPort#findPostsByWord} and stores the results in
+     * {@link #searchResultsProperty()}.
+     */
+    public void findPostsByWord(String word, UUID requesterId) {
+        errorMessage.set("");
+        try {
+            List<PostDto> results = postPort.findPostsByWord(word, requesterId);
+            searchResults.setAll(results);
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+        }
+    }
+
     // Getters
 
     // --- collection getters ---
@@ -192,6 +210,9 @@ public class PostViewModel {
     public StringProperty newPostContentProperty() { return newPostContent; }
     public StringProperty newPostMediaUrlProperty() { return newPostMediaUrl; }
     public ObjectProperty<UUID> newPostParentIdProperty() { return newPostParentId; }
+
+    // --- search results ---
+    public ObservableList<PostDto> searchResultsProperty() { return searchResults; }
 
     // --- shared state getter ---
     public StringProperty errorMessageProperty() { return errorMessage; }
