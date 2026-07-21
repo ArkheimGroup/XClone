@@ -5,6 +5,9 @@ import arkheim.server.application.dtos.UserRegisterRequest;
 import arkheim.server.application.dtos.responses.UserResponse;
 import arkheim.server.application.ports.PasswordEncoderPort;
 import arkheim.server.domain.entities.User;
+import arkheim.server.application.exception.BadArgumentException;
+import arkheim.server.application.exception.ConflictException;
+import arkheim.server.application.exception.ErrorCode;
 import arkheim.server.domain.repository.UserRepository;
 
 
@@ -26,13 +29,13 @@ public class AuthService {
         // Fetch user using userRepository
         User user = userRepository.findByEmail(loginRequest.email());
         if (user == null) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new BadArgumentException(ErrorCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
         }
 
         // Verify the password matches
         boolean matches = passwordEncoderPort.matches(loginRequest.rawPassword(), user.getPasswordHash());
         if (!matches) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new BadArgumentException(ErrorCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
         }
 
         // Confirm the login by returning a UserResponse
@@ -46,12 +49,12 @@ public class AuthService {
     public UserResponse register(UserRegisterRequest registerRequest) {
         // Check if username already exists
         if (userRepository.findByUsername(registerRequest.username()) != null) {
-            throw new IllegalStateException("Username already exists");
+            throw new ConflictException(ErrorCode.USERNAME_ALREADY_EXISTS, "Username already exists");
         }
 
         // Check if email already exists
         if (userRepository.findByEmail(registerRequest.email()) != null) {
-            throw new IllegalStateException("Email already exists");
+            throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already exists");
         }
 
         // Hash the password

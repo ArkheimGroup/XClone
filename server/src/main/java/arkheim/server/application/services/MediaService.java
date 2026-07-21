@@ -1,10 +1,11 @@
 package arkheim.server.application.services;
 
 import arkheim.server.domain.entities.Media;
+import arkheim.server.application.exception.ErrorCode;
+import arkheim.server.application.exception.NotFoundException;
 import arkheim.server.domain.repository.MediaRepository;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class MediaService {
@@ -43,7 +44,7 @@ public class MediaService {
      */
     public void linkMediaToPost(UUID postId, UUID mediaId) {
         if(mediaRepository.findById(mediaId) == null){
-            throw new NoSuchElementException("Media not found");
+            throw new NotFoundException(ErrorCode.MEDIA_NOT_FOUND, "Media not found");
         }
 
         mediaRepository.linkToPost(postId, mediaId);
@@ -55,8 +56,8 @@ public class MediaService {
      * @param mediaId the media's UUID
      */
     public void unlinkMediaFromPost(UUID postId, UUID mediaId) {
-        if(mediaRepository.findById(mediaId) == null){
-            throw new NoSuchElementException("Media not found");
+        if(mediaRepository.findById(mediaId) == null) {
+            throw new NotFoundException(ErrorCode.MEDIA_NOT_FOUND, "Media not found");
         }
 
         mediaRepository.unLinkFromPost(postId, mediaId);

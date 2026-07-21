@@ -5,6 +5,9 @@ import arkheim.server.application.dtos.responses.PostResponse;
 import arkheim.server.domain.entities.Media;
 import arkheim.server.domain.entities.Post;
 import arkheim.server.domain.entities.User;
+import arkheim.server.application.exception.ErrorCode;
+import arkheim.server.application.exception.ForbiddenException;
+import arkheim.server.application.exception.NotFoundException;
 import arkheim.server.domain.repository.LikeRepository;
 import arkheim.server.domain.repository.MediaRepository;
 import arkheim.server.domain.repository.PostRepository;
@@ -35,17 +38,17 @@ public class PostService {
     public void deletePost(UUID postId, UUID requesterId) {
         Post post = postRepository.findById(postId);
         if (post == null) {
-            throw new NoSuchElementException("Post not found");
+            throw new NotFoundException(ErrorCode.POST_NOT_FOUND, "Post not found");
         }
 
         User requester = userRepository.findById(requesterId);
         if (requester == null) {
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         // Verify the requester is the owner of the post
         if (!post.getAuthorUsername().equals(requester.getUsername())) {
-            throw new SecurityException("User is not authorized to delete this post");
+            throw new ForbiddenException(ErrorCode.USER_NOT_AUTHORIZED_TO_DELETE_POST, "User is not authorized to delete this post");
         }
 
         // Unlink the post's media
@@ -75,7 +78,7 @@ public class PostService {
     public PostResponse createPost(CreatePostRequest createPostRequest) {
         User author = userRepository.findById(createPostRequest.authorId());
         if (author == null) {
-            throw new NoSuchElementException("Author user not found");
+            throw new NotFoundException(ErrorCode.AUTHOR_NOT_FOUND, "Author user not found");
         }
 
         UUID replyPostId = null;
@@ -84,7 +87,7 @@ public class PostService {
         if (createPostRequest.parentPostId() != null) {
             Post parentPost = postRepository.findById(createPostRequest.parentPostId());
             if (parentPost == null) {
-                throw new NoSuchElementException("Parent post not found");
+                throw new NotFoundException(ErrorCode.PARENT_POST_NOT_FOUND, "Parent post not found");
             }
             // If the content is blank/empty, it's considered a retweet/repost, else it's a comment/reply
             if (createPostRequest.content() == null || createPostRequest.content().trim().isEmpty()) {
@@ -138,12 +141,12 @@ public class PostService {
     public void toggleLike(UUID userId, UUID postId) {
         Post post = postRepository.findById(postId);
         if (post == null) {
-            throw new NoSuchElementException("Post not found");
+            throw new NotFoundException(ErrorCode.POST_NOT_FOUND, "Post not found");
         }
 
         User user = userRepository.findById(userId);
         if (user == null) {
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         if (likeRepository.isLikedByUser(userId, postId)) {
