@@ -1,5 +1,6 @@
 package arkheim.server.infrastructure.api;
 
+import arkheim.server.application.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,102 +12,146 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.Map;
-import java.util.NoSuchElementException;
-
+// If ApiError is passed with no ErrorCode, frontend will avoid showing the message to a normal user
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // Catches NoSuchElementException (maps to 404 Not Found)
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<Map<String, String>> handleNotFound(NoSuchElementException ex) {
-        logger.warn("Resource not found: {}", ex.getMessage());
+    private ResponseEntity<ApiError> UserResponseHelper(BaseApplicationException ex, HttpStatus status) {
+        ApiError error = new ApiError(
+            ex.getCode(),
+            ex.getUserMessage(),
+            status
+        );
+
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND) // HTTP 404
-                .body(Map.of("error", ex.getMessage()));
+                .status(status)
+                .body(error);
     }
 
-    // Catches SecurityException (maps to 403 Forbidden)
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<Map<String, String>> handleForbidden(SecurityException ex) {
+    private ResponseEntity<ApiError> responseHelper(Exception ex, HttpStatus status) {
+        ApiError error = new ApiError(
+                null,
+                ex.getMessage(),
+                status
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(error);
+    }
+
+    private ResponseEntity<ApiError> responseHelper(Exception ex, HttpStatus status, String message) {
+        ApiError error = new ApiError(
+                null,
+                message,
+                status
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(error);
+    }
+
+    // Catches NotFoundException, equivalent to NoSuchElementException (maps to 404 Not Found)
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(NotFoundException ex) {
+        logger.warn("Not found: {}", ex.getMessage());
+
+        return UserResponseHelper(ex, HttpStatus.NOT_FOUND); // HTTP 404
+    }
+
+    // Catches ForbiddenException, equivalent to SecurityException (maps to 403 Forbidden)
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(ForbiddenException ex) {
         logger.warn("Access forbidden: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN) // HTTP 403
-                .body(Map.of("error", ex.getMessage()));
+
+        return UserResponseHelper(ex, HttpStatus.FORBIDDEN); // HTTP 403
     }
 
-    // Catches IllegalStateException (maps to 409 Conflict)
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, String>> handleConflict(IllegalStateException ex) {
+    // Catches ConflictException, equivalent to IllegalStateException (maps to 409 Conflict)
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
         logger.warn("Conflict error: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT) // HTTP 409
-                .body(Map.of("error", ex.getMessage()));
+
+        return UserResponseHelper(ex, HttpStatus.CONFLICT); // HTTP 409
     }
 
-    // Catches IllegalArgumentException (maps to 400 Bad Request)
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException ex) {
+    // Catches BadArgumentException, equivalent to IllegalArgumentException (maps to 400 Bad Request)
+    @ExceptionHandler(BadArgumentException.class)
+    public ResponseEntity<ApiError> handleBadRequest(BadArgumentException ex) {
         logger.warn("Bad request: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // HTTP 400
-                .body(Map.of("error", ex.getMessage()));
+
+        return UserResponseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 400
     }
 
-    // Catches JSON parsing errors (malformed input)
+    // Catches HttpMessageNotReadableException (malformed input)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         logger.warn("Malformed JSON request: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // HTTP 400
-                .body(Map.of("error", "Malformed JSON request body"));
+
+        return responseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 400
     }
 
-    // Catches parameter/path variable type mismatch errors
+    // Catches parameter/path variable type mismatch exceptions
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String message = String.format("Parameter '%s' should be of type '%s'", ex.getName(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
         logger.warn("Type mismatch error: {}", message);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // HTTP 400
-                .body(Map.of("error", message));
+
+        return responseHelper(ex, HttpStatus.BAD_REQUEST, message); // HTTP 400
     }
 
-    // Catches unsupported HTTP methods
+    // Catches unsupported HTTP methods exception
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<Map<String, String>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+    public ResponseEntity<ApiError> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         logger.warn("HTTP Method not supported: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.METHOD_NOT_ALLOWED) // HTTP 405
-                .body(Map.of("error", ex.getMessage()));
+
+        return responseHelper(ex, HttpStatus.METHOD_NOT_ALLOWED); // HTTP 405
     }
 
-    // Catches static resource or endpoint 404 errors
+    // Catches ResourceNotFoundException, equivalent to static resource or endpoint 404 errors
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Map<String, String>> handleResourceNotFound(NoResourceFoundException ex) {
+    public ResponseEntity<ApiError> handleResourceNotFound(NoResourceFoundException ex) {
         logger.warn("Resource not found: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND) // HTTP 404
-                .body(Map.of("error", "Resource not found: " + ex.getResourcePath()));
+
+        return responseHelper(
+                ex,
+                HttpStatus.NOT_FOUND, // HTTP 404
+                "Resource not found: " + ex.getResourcePath()
+        );
+    }
+
+    // Catches business customized exceptions, equivalent to other BaseApplicationException subclasses (returns HTTP 400)
+    @ExceptionHandler(BaseApplicationException.class)
+    public ResponseEntity<ApiError> handleBaseException(BaseApplicationException ex) {
+        logger.warn("Business related exception: {}", ex.getMessage());
+
+        return UserResponseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 200
     }
 
     // Catches generic unhandled RuntimeExceptions (returns HTTP 500 without leaking details)
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleGeneralRuntime(RuntimeException ex) {
+    public ResponseEntity<ApiError> handleGeneralRuntime(RuntimeException ex) {
         logger.error("Unhandled internal runtime error occurred", ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR) // HTTP 500
-                .body(Map.of("error", "An unexpected error occurred. Please try again later."));
+
+        return responseHelper(
+                ex,
+                HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+                "An unexpected error occurred. Please try again later."
+        );
     }
 
     // Catches any general unhandled exceptions (fallback to prevent stack trace leaks)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
+    public ResponseEntity<ApiError> handleGeneralException(Exception ex) {
         logger.error("Unhandled internal server error occurred", ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR) // HTTP 500
-                .body(Map.of("error", "An unexpected error occurred. Please try again later."));
+
+        return responseHelper(
+                ex,
+                HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+                "An unexpected error occurred. Please try again later."
+        );
     }
 }
