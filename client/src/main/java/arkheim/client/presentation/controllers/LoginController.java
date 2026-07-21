@@ -68,7 +68,9 @@ public class LoginController extends BaseController {
             navigator.showHomeScreen();
         }
 
-        emailField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !authViewModel.emailIsValid());
+        boolean validEmail = authViewModel.emailIsValid().get();
+
+        emailField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !validEmail);
     }
 
     @FXML

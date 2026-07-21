@@ -127,8 +127,8 @@ public class AuthViewModel {
     public ReadOnlyObjectProperty<UserDto> currentUserProperty() { return currentUser; }
 
     // --- validation ---
-    public boolean emailIsValid() { return emailIsValid.get(); }
-    public boolean passwordRepetitionCorrect() { return passwordRepetitionCorrect.get(); }
+    public BooleanProperty emailIsValid() { return emailIsValid; }
+    public BooleanProperty passwordRepetitionCorrect() { return passwordRepetitionCorrect; }
     private boolean isEmailValid(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
     }

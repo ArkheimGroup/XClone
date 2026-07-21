@@ -87,10 +87,13 @@ public class RegisterController extends BaseController {
             navigator.showHomeScreen();
         }
 
-        emailField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !authViewModel.emailIsValid());
+        boolean validEmail = authViewModel.emailIsValid().get();
+        boolean passwordMatch = authViewModel.passwordRepetitionCorrect().get();
 
-        passwordRepetitionField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !authViewModel.passwordRepetitionCorrect());
-        passwordField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !authViewModel.passwordRepetitionCorrect());
+        emailField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !validEmail);
+
+        passwordRepetitionField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !passwordMatch);
+        passwordField.pseudoClassStateChanged(PseudoClass.getPseudoClass("invalid"), !passwordMatch);
     }
 
     public void onGoToLoginClicked() {
