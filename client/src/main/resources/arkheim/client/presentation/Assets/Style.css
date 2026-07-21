@@ -1,0 +1,114 @@
+.root {
+    -fx-primary-color: rgba(29, 161, 242, 1.0);
+    -fx-primary-color-50: rgba(29, 161, 242, 0.5);
+    -fx-primary-color-25: rgba(29, 161, 242, 0.25);
+    -fx-primary-invalid: rgba(255, 0, 0, 1.0);
+    -fx-primary-invalid-25: rgba(255, 0, 0, 0.25);
+    -fx-primary-hover: rgba(26, 145, 218, 1.0);
+    -fx-bg-dark: rgba(21, 32, 43, 1.0);
+    -fx-bg-dark-50: rgba(21, 32, 43, 0.5);
+    -fx-bg-light: rgba(255, 255, 255, 1.0);
+    -fx-text-dark: rgba(15, 20, 25, 1.0);
+    -fx-text-muted: rgba(91, 112, 131, 1.0);
+    -fx-border-color-light: rgba(207, 217, 222, 1.0);
+    -fx-disabled-light: rgba(207, 217, 222, 0.5);
+}
+
+.date-picker {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-border-color-light;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: -fx-bg-dark;
+    -fx-text-fill: white;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: -fx-bg-dark-50;
+    -fx-text-fill: white;
+}
+
+.brand-panel {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #0F1419 0%, #15202B 100%);
+    -fx-alignment: center;
+}
+
+.brand-title {
+    -fx-text-fill: white;
+    -fx-font-family: "Segoe UI Semibold", "System";
+    -fx-font-size: 24px;
+}
+
+.right-form-panel {
+    -fx-background-color: -fx-bg-light;
+    -fx-alignment: center;
+}
+
+.error-label {
+    -fx-text-fill: red;
+    -fx-font-weight: bold;
+}
+
+.text-input {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-border-color-light;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 12px 16px;
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-dark;
+    -fx-prompt-text-fill: -fx-text-muted;
+}
+
+.text-input:hover {
+    -fx-border-color: -fx-primary-color;
+}
+
+.text-input:focused {
+    -fx-border-color: -fx-primary-color;
+}
+
+.text-input:invalid {
+    -fx-background-color: -fx-primary-invalid-25;
+    -fx-border-color: -fx-primary-invalid;
+    -fx-text-fill: -fx-text-dark;
+    -fx-prompt-text-fill: -fx-text-muted;
+}
+
+.button-primary {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+    -fx-background-radius: 25px; /* Pill shape */
+    -fx-padding: 12px 0px;
+    -fx-cursor: hand;
+}
+
+.button-primary:disabled {
+    -fx-background-color: -fx-primary-color-50;
+}
+
+.button-primary:hover:enabled {
+    -fx-background-color: -fx-primary-hover;
+}
+
+.button-primary:pressed:enabled {
+    -fx-background-color: #167bb6;
+}
+
+.hyperlink {
+    -fx-text-fill: -fx-primary-color;
+    -fx-underline: false;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.hyperlink:hover {
+    -fx-underline: true;
+    -fx-text-fill: -fx-primary-hover;
+}

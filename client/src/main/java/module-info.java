@@ -1,6 +1,8 @@
 module arkheim.client {
     requires javafx.controls;
     requires javafx.fxml;
+    opens arkheim.client.presentation.controllers to javafx.fxml;
+    opens arkheim.client.presentation.views to javafx.fxml;
 
     requires org.kordamp.bootstrapfx.core;
     requires java.net.http;
