@@ -3,9 +3,10 @@ package arkheim.server.application.services;
 import arkheim.server.application.dtos.UpdateProfileRequest;
 import arkheim.server.application.dtos.responses.UserProfileResponse;
 import arkheim.server.domain.entities.User;
+import arkheim.server.application.exception.ErrorCode;
+import arkheim.server.application.exception.NotFoundException;
 import arkheim.server.domain.repository.UserRepository;
 
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class UserService {
@@ -24,7 +25,7 @@ public class UserService {
         // Fetch user by id.
         User user = userRepository.findById(userId);
         if(user == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         return new UserProfileResponse(user);
@@ -39,7 +40,7 @@ public class UserService {
         // Fetch user by username.
         User user = userRepository.findByUsername(username);
         if(user == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         return new UserProfileResponse(user);
@@ -54,7 +55,7 @@ public class UserService {
         // Fetch user by id
         User user = userRepository.findById(request.userId());
         if(user == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         // Update user
@@ -84,7 +85,7 @@ public class UserService {
      */
     public void pinPost(UUID userId, UUID postId) {
         if(userRepository.findById(userId) == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.updatePinnedPost(userId, postId);
@@ -96,7 +97,7 @@ public class UserService {
      */
     public void unpinPost(UUID userId) {
         if(userRepository.findById(userId) == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.updatePinnedPost(userId, null);
@@ -108,7 +109,7 @@ public class UserService {
      */
     public void deleteUser(UUID userId) {
         if(userRepository.findById(userId) == null){
-            throw new NoSuchElementException("User not found");
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.delete(userId);
