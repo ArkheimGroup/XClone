@@ -47,7 +47,7 @@ UNDER CONSTRUCTION
 ---
 ## Architecture 📐
 The project in whole uses a simple client-server architecture, however each of those modules leverages **Clean architecture** for independent development, decoupled structure, code adaptability and scalability.  
-for more technical detail checkout [Technical information about architecture](docs/architecture.md)
+for more technical detail checkout [Technical information about architecture](docs/technical_docs/architecture_report.md)
 
 ---
 ## Prerequirements ‼️
@@ -105,6 +105,6 @@ java -jar target/*.jar
 ---
 ## Credits
 This project wouldn't be possible without help of:  
-[Matin Ardestani](https://github.com/Matin-Ardestani): Application layer developer & Domain layer advisor  
+[Matin Ardestani](https://github.com/Matin-Ardestani): Application layer developer, Domain layer developer and advisor & Clinet general developer   
 [Ramtin Jafari](https://github.com/RamtinJafari): Front-end developer, Graphic designer & Infrastructure Assistant  
 [Farnam Jahangard](https://github.com/farnam-jhn): Infrastructure developer, Project manager & Architect 
