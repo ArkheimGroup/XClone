@@ -7,7 +7,7 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
 [![Conventional Branch](https://img.shields.io/badge/Conventional%20Branch-Spec-6192c3)](https://conventionalbranch.org) [![Conventional Commit](https://img.shields.io/badge/Conventional%20Commits-1.0.0-green)](https://www.conventionalcommits.org/en/v1.0.0/)
 
 ---
-- [XClone](#xclone)
+## Table of contents
   - [Screenshots](#screenshots)
   - [Tech Stack](#tech-stack)
     - [Server](#server)
@@ -19,6 +19,12 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
     - [Client](#client-1)
   - [Credits](#credits)
 
+## Other Documentations
+- [Technical Documentations Index](./docs/technical_index.md)
+- AI Report
+  - [Farnam's AI Report](./docs/ai_report/farnam_ai_report.md) 
+- Resources
+  - [Farnam's Resources](./docs/resources_report/farnam_resources.md)
 ---
 ## Screenshots
 ```
