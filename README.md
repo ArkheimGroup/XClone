@@ -1,6 +1,6 @@
 # XClone
 <p align="center">
-<img src="resources/XCloneLogo_DarkMode_Transparent.png" width=50%>
+<img src="resources/XCloneLogo_DarkMode_Transparent.png" width=23%>
 </p>
 
 A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in java.  
