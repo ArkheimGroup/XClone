@@ -35,12 +35,13 @@ UNDER CONSTRUCTION
 ## Tech Stack
 ### Server
 | Field                      | Tehnology                                                                                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | 
+|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------| 
 | **Main language**          | ![Java](https://img.shields.io/badge/Java-black?style=for-the-badge&logo=openjdk&logoColor=white)                                                           |     
 | **Framework**              | ![Spring boot](https://img.shields.io/badge/springboot-000000?style=for-the-badge&logo=springboot&logoColor=green)                                          |     
 | **Continuous integration** | ![Docker](https://img.shields.io/badge/docker-black?style=for-the-badge&logo=docker&logoColor=blue)                                                         |     
 | **Database**               | ![MySQL](https://img.shields.io/badge/MySQL-black?style=for-the-badge&logo=mysql&logoColor=white)                                                           |     
-| **Networking**             | ![RESTful API](https://img.shields.io/badge/RESTful_API-black?style=for-the-badge) ![Socket](https://img.shields.io/badge/Socket-black?style=for-the-badge) |     
+| **Networking**             | ![RESTful API](https://img.shields.io/badge/RESTful_API-black?style=for-the-badge) ![Socket](https://img.shields.io/badge/Socket-black?style=for-the-badge) |  
+| **Scripting Language**     | ![Kotlin Script](https://img.shields.io/badge/Kotlin_Script-black?style=for-the-badge&logo=Kotlin&logoColor=white)                                          |
 
 ### Client
 | Field             | Tehnology                                                                                         |     
@@ -59,6 +60,7 @@ for more technical detail checkout [Technical information about architecture](do
 ## Prerequirements ‼️
 - Java 25 (required)
 - Maven (optional)
+- Kotlin compiler / IntelliJ Idea (optional)
 - MySQL (optional*)
 - Docker desktop / Docker engine + Docker composer (optional*)
 > \*: You can run the server module either by building the docker image or running a MySQL Server and configuring a file and running server manually.
@@ -77,9 +79,14 @@ git clone https://github.com/ArkheimGroup/XClone.git
 cd XClone
 ```
 2. Run a MySQL Server
-3. Configure `application.properties` inside resources folder: `XClone/server/src/main/resources/application.properties` (edit any variable shown with a `${}` to their actual value, e.g. `${DB_HOST}` -> `127.0.0.1`) 
-> Note: You either need to change this file or declare environment variables, to declare environment variables enter every field inside the `application.properties` that is Shown like this: `${}` followed by a `=` and their value **inside your terminal**. e.g. `${DB_HOST}` -> `DB_HOST=127.0.0.1`
+3. Configure `application.properties` inside resources folder: `XClone/server/src/main/resources/application.properties` (edit any variable shown with a `${}` to their actual value, e.g. `${DB_HOST}` -> `127.0.0.1`)  
+> IMPORTANT: You can do the configuration using a kotlin script inside root of the project called `configure-db.kts`
+> to do this you can right click on `configure-db.kts` and `Run configure-db.kts` inside IntelliJ or you can run it in terminal using kotlin compiler:
+> ```bash 
+> kotlinc -script configure-db.kts
+> ```
 
+> Note: You either need to change this file or declare environment variables, to declare environment variables enter every field inside the `application.properties` that is Shown like this: `${}` followed by a `=` and their value **inside your terminal**. e.g. `${DB_HOST}` -> `DB_HOST=127.0.0.1`
 4. Compile the application: (run inside `XClone/server`) [On the same shell session as you declared your enviornment variables if you gone that way]
 ```bash
 mvn clean package
