@@ -23,8 +23,9 @@ Infrastructure layer consists of few folders:
 1. **API**: RESTful API Controllers live inside this folder, they map different endpoint to a block of code which calls a service from the application layer to do the job
 2. **Repository**: This folder contains implementations of domain layer repositories, these are the one to later on inject to the application layer.
 ## Diagram
-
-![Diagram](../resources/architecture/server_architecture.png)
+<p align="center">
+<img src="../../resources/architecture/server_architecture.png">
+</p> 
 
 ## Tree 
 
@@ -92,14 +93,18 @@ like server this layer has two folders:
 #### 2. Presentation Layer
 This layer alone leverages another architecture itself: Model View ViewModel or MVVM.
 
-![MVVM](../resources/architecture/mvvm.png)
+<p align="center">
+<img src="../../resources/architecture/mvvm.png">
+</p> 
+
 
 In this architecture, Views handles user interactions and sends the events to ViewModels where they perform the required task and manipulate the model which is present inside server's database.
 #### 3. Infrastructure Layer
 Inside this layer there are **Adapters** which adapts (implements) Ports inside domain layer to DI into ViewModels.
 ## Diagram
-
-![Client Architecture](../resources/architecture/client_architecture.png)
+<p align="center">
+<img src="../../resources/architecture/client_architecture.png">
+</p> 
 
 ## Tree 
 

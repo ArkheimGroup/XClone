@@ -1,13 +1,13 @@
 # XClone
 <p align="center">
-<img src="resources/XCloneLogo_DarkMode_Transparent.png" width=50%>
+<img src="resources/XCloneLogo_DarkMode_Transparent.png" width=23%>
 </p>
 
 A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in java.  
 [![Conventional Branch](https://img.shields.io/badge/Conventional%20Branch-Spec-6192c3)](https://conventionalbranch.org) [![Conventional Commit](https://img.shields.io/badge/Conventional%20Commits-1.0.0-green)](https://www.conventionalcommits.org/en/v1.0.0/)
 
 ---
-- [XClone](#xclone)
+## Table of contents
   - [Screenshots](#screenshots)
   - [Tech Stack](#tech-stack)
     - [Server](#server)
@@ -19,6 +19,12 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
     - [Client](#client-1)
   - [Credits](#credits)
 
+## Other Documentations
+- [Technical Documentations Index](./docs/technical_index.md)
+- AI Report
+  - [Farnam's AI Report](./docs/ai_report/farnam_ai_report.md) 
+- Resources
+  - [Farnam's Resources](./docs/resources_report/farnam_resources.md)
 ---
 ## Screenshots
 ```
@@ -47,7 +53,7 @@ UNDER CONSTRUCTION
 ---
 ## Architecture 📐
 The project in whole uses a simple client-server architecture, however each of those modules leverages **Clean architecture** for independent development, decoupled structure, code adaptability and scalability.  
-for more technical detail checkout [Technical information about architecture](docs/architecture.md)
+for more technical detail checkout [Technical information about architecture](docs/technical_docs/architecture_report.md)
 
 ---
 ## Prerequirements ‼️
@@ -105,6 +111,6 @@ java -jar target/*.jar
 ---
 ## Credits
 This project wouldn't be possible without help of:  
-[Matin Ardestani](https://github.com/Matin-Ardestani): Application layer developer & Domain layer advisor  
+[Matin Ardestani](https://github.com/Matin-Ardestani): Application layer developer, Domain layer developer and advisor & Clinet general developer   
 [Ramtin Jafari](https://github.com/RamtinJafari): Front-end developer, Graphic designer & Infrastructure Assistant  
 [Farnam Jahangard](https://github.com/farnam-jhn): Infrastructure developer, Project manager & Architect 
