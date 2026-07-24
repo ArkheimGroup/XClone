@@ -29,6 +29,7 @@ public record PostResponse(
         boolean isRepostedByMe
 ) {
     public PostResponse(Post post,
+                        String content,
                         User author,
                         List<Media> medias,
                         int likeCount,
@@ -43,8 +44,10 @@ public record PostResponse(
     ){
 
         List<String> mediaUrls = new ArrayList<>();
-        for(Media media : medias){
-            mediaUrls.add(media.getUrl());
+        if (medias != null) {
+            for(Media media : medias){
+                mediaUrls.add(media.getUrl());
+            }
         }
 
         this(
@@ -53,7 +56,7 @@ public record PostResponse(
                 author.getUsername(),
                 author.getName(),
                 author.getPfpUrl(),
-                post.getDescription(),
+                content != null ? content : post.getDescription(),
                 mediaUrls,
                 post.getCreatedAt(),
                 likeCount,
@@ -66,5 +69,34 @@ public record PostResponse(
                 isLikedByMe,
                 isRepostedByMe
         );
+    }
+
+    public PostResponse(Post post,
+                        User author,
+                        List<Media> medias,
+                        int likeCount,
+                        int repostCount,
+                        int replyCount,
+                        UUID parentPostId,
+                        String repliedUsername,
+                        boolean isRepost,
+                        String repostedFromUsername,
+                        boolean isLikedByMe,
+                        boolean isRepostedByMe
+    ){
+        this(
+                post,
+                post != null ? post.getDescription() : "",
+                author,
+                medias,
+                likeCount,
+                repostCount,
+                replyCount,
+                parentPostId,
+                repliedUsername,
+                isRepost,
+                repostedFromUsername,
+                isLikedByMe,
+                isRepostedByMe);
     }
 }

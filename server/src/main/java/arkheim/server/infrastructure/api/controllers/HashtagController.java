@@ -31,7 +31,7 @@ public class HashtagController {
      * @return {@link ResponseEntity} containing a list of {@link PostResponse} containing the hashtag
      */
     @GetMapping("/{hashtagName}/posts")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable String hashtagName, @RequestParam UUID requesterId) {
+    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable String hashtagName, @RequestParam(required = false) UUID requesterId) {
         List<PostResponse> posts = hashtagService.getPostsByHashtag(hashtagName, requesterId);
         return ResponseEntity.ok(posts);
     }

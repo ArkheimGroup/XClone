@@ -74,7 +74,13 @@ public class HashtagService {
      * @return List of {@link PostResponse} containing the hashtag
      */
     public List<PostResponse> getPostsByHashtag(String hashtagName, UUID requesterId) {
-        List<Post> posts = hashtagRepository.findPostsByHashtag(hashtagName);
+        String cleanTag = hashtagName != null ? hashtagName.trim() : "";
+        if (cleanTag.startsWith("#")) {
+            cleanTag = cleanTag.substring(1).trim();
+        }
+        cleanTag = cleanTag.toLowerCase();
+
+        List<Post> posts = hashtagRepository.findPostsByHashtag(cleanTag);
 
         List<PostResponse> responses = new ArrayList<>();
 
@@ -83,7 +89,7 @@ public class HashtagService {
             List<Post> reposts = postRepository.findReposts(post.getId());
             List<Media> medias = mediaRepository.findByPostId(post.getId());
             int likeCount = likeRepository.countLikesForPost(post.getId());
-            boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
+            boolean isLikedByMe = requesterId != null && likeRepository.isLikedByUser(requesterId, post.getId());
             int repostCount = reposts.size();
             User requester = requesterId != null ? userRepository.findById(requesterId) : null;
             String requesterUsername = requester != null ? requester.getUsername() : null;
@@ -95,11 +101,18 @@ public class HashtagService {
             UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
             String repliedUsername = null;
             String repostedFromUsername = null;
+            String content = post.getDescription();
             if (parentPostId != null) {
                 Post parentPost = postRepository.findById(parentPostId);
                 if (parentPost != null) {
                     if (isRepost) {
                         repostedFromUsername = parentPost.getAuthorUsername();
+                        if (content == null || content.isBlank()) {
+                            content = parentPost.getDescription();
+                        }
+                        if (medias.isEmpty()) {
+                            medias = mediaRepository.findByPostId(parentPost.getId());
+                        }
                     } else {
                         repliedUsername = parentPost.getAuthorUsername();
                     }
@@ -108,6 +121,7 @@ public class HashtagService {
 
             responses.add(new PostResponse(
                     post,
+                    content,
                     author,
                     medias,
                     likeCount,

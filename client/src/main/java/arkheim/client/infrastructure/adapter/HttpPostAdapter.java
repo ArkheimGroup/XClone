@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -89,8 +90,32 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
 
     @Override
     public List<PostDto> findPostsByWord(String word, UUID requesterId) {
+        if (word == null || word.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String cleanWord = word.trim();
+        if (cleanWord.startsWith("#")) {
+            cleanWord = cleanWord.substring(1).trim();
+        }
+
+        if (cleanWord.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String encodedWord = java.net.URLEncoder.encode(cleanWord, StandardCharsets.UTF_8); // since URIs can only contain normal ASCII characters, it encodes the hashtag.
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/api/posts/byword/" + word + "?requesterId=" + requesterId))
+                .uri(URI.create(baseUrl + "/api/posts/byword/" + encodedWord + "?requesterId=" + requesterId))
+                .GET()
+                .build();
+
+        return send(request, POST_LIST_TYPE, "Post");
+    }
+
+    @Override
+    public List<PostDto> getUserPosts(String username) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/posts/user/" + username))
                 .GET()
                 .build();
 

@@ -21,8 +21,25 @@ public class HttpHashtagAdapter extends ApiClient implements HashtagPort {
 
     @Override
     public List<PostDto> getPostsByHashtag(String hashtagName, UUID requesterId) {
+        if (hashtagName == null || hashtagName.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String cleanTag = hashtagName.trim();
+        if (cleanTag.startsWith("#")) {
+            cleanTag = cleanTag.substring(1).trim();
+        }
+
+        if (cleanTag.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+
+        cleanTag = cleanTag.toLowerCase();
+
+        String encodedTag = java.net.URLEncoder.encode(cleanTag, java.nio.charset.StandardCharsets.UTF_8);
+        String queryParam = requesterId != null ? "?requesterId=" + requesterId : "";
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/api/hashtags/" + hashtagName + "/posts?requesterId=" + requesterId))
+                .uri(URI.create(baseUrl + "/api/hashtags/" + encodedTag + "/posts" + queryParam))
                 .GET()
                 .build();
 

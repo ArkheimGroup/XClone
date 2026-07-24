@@ -22,6 +22,9 @@ public record PostDto(
         int repostCount,
         int replyCount,
         UUID parentPostId,
+        String repliedUsername,
+        @SerializedName("isRepost") boolean isRepost,
+        String repostedFromUsername,
         @SerializedName("isLikedByMe") boolean likedByMe,
         @SerializedName("isRepostedByMe") boolean repostedByMe
 ) {}

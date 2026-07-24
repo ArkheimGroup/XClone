@@ -68,11 +68,18 @@ public class PostService {
             UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
             String repliedUsername = null;
             String repostedFromUsername = null;
+            String content = post.getDescription();
             if (parentPostId != null) {
                 Post parentPost = postRepository.findById(parentPostId);
                 if (parentPost != null) {
                     if (isRepost) {
                         repostedFromUsername = parentPost.getAuthorUsername();
+                        if (content == null || content.isBlank()) {
+                            content = parentPost.getDescription();
+                        }
+                        if (medias.isEmpty()) {
+                            medias = mediaRepository.findByPostId(parentPost.getId());
+                        }
                     } else {
                         repliedUsername = parentPost.getAuthorUsername();
                     }
@@ -81,6 +88,7 @@ public class PostService {
 
             responses.add(new PostResponse(
                     post,
+                    content,
                     author,
                     medias,
                     likeCount,
@@ -170,11 +178,15 @@ public class PostService {
         UUID parentPostId = createPostRequest.parentPostId();
         String repliedUsername = null;
         String repostedFromUsername = null;
+        String content = post.getDescription();
         if (parentPostId != null) {
             Post parentPost = postRepository.findById(parentPostId);
             if (parentPost != null) {
                 if (isRepost) {
                     repostedFromUsername = parentPost.getAuthorUsername();
+                    if (content == null || content.isBlank()) {
+                        content = parentPost.getDescription();
+                    }
                 } else {
                     repliedUsername = parentPost.getAuthorUsername();
                 }
@@ -187,7 +199,7 @@ public class PostService {
                 author.getUsername(),
                 author.getName(),
                 author.getPfpUrl(),
-                post.getDescription(),
+                content,
                 mediaUrls,
                 post.getCreatedAt(),
                 0,
@@ -236,13 +248,16 @@ public class PostService {
             return Collections.emptyList();
         }
 
-        String cleanWord = word.trim();
-        if (cleanWord.startsWith("#")) {
-            cleanWord = cleanWord.substring(1).trim();
+        String rawWord = word.trim();
+        boolean isHashtagSearch = rawWord.startsWith("#");
+        String cleanWord = isHashtagSearch ? rawWord.substring(1).trim() : rawWord;
+
+        if (cleanWord.isBlank()) {
+            return Collections.emptyList();
         }
 
-        List<Post> postsByWord = postRepository.findByWord(cleanWord);
-        List<Post> postsByHashtag = hashtagRepository != null ? hashtagRepository.findPostsByHashtag(cleanWord) : Collections.emptyList();
+        List<Post> postsByWord = !isHashtagSearch ? postRepository.findByWord(cleanWord) : Collections.emptyList();
+        List<Post> postsByHashtag = hashtagRepository != null ? hashtagRepository.findPostsByHashtag(cleanWord.toLowerCase()) : Collections.emptyList();
 
         Map<UUID, Post> postMap = new LinkedHashMap<>();
         for (Post p : postsByWord) {
@@ -271,11 +286,18 @@ public class PostService {
             UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
             String repliedUsername = null;
             String repostedFromUsername = null;
+            String content = post.getDescription();
             if (parentPostId != null) {
                 Post parentPost = postRepository.findById(parentPostId);
                 if (parentPost != null) {
                     if (isRepost) {
                         repostedFromUsername = parentPost.getAuthorUsername();
+                        if (content == null || content.isBlank()) {
+                            content = parentPost.getDescription();
+                        }
+                        if (medias.isEmpty()) {
+                            medias = mediaRepository.findByPostId(parentPost.getId());
+                        }
                     } else {
                         repliedUsername = parentPost.getAuthorUsername();
                     }
@@ -284,6 +306,7 @@ public class PostService {
 
             responses.add(new PostResponse(
                     post,
+                    content,
                     author,
                     medias,
                     likeCount,
