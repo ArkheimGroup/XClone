@@ -81,7 +81,7 @@ public class JdbcHashtagRepository implements HashtagRepository {
 
     @Override
     public void linkToPost(UUID postId, UUID hashtagId) {
-        String sql = "INSERT INTO post_hashtags (hashtag_id, post_id) VALUES (?, ?)";
+        String sql = "INSERT IGNORE INTO post_hashtags (hashtag_id, post_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, uuidToBytes(hashtagId), uuidToBytes(postId));
     }
 }
