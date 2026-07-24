@@ -21,7 +21,10 @@ public record PostResponse(
         int likeCount,
         int repostCount,
         int replyCount,
-        UUID parentPostId, // Filled if this post is a Reply post
+        UUID parentPostId, // Filled if this post is a Reply or Repost
+        String repliedUsername, // Username of the parent post's author
+        boolean isRepost,
+        String repostedFromUsername,
         boolean isLikedByMe, // Calculated on retrieval
         boolean isRepostedByMe
 ) {
@@ -32,6 +35,9 @@ public record PostResponse(
                         int repostCount,
                         int replyCount,
                         UUID parentPostId,
+                        String repliedUsername,
+                        boolean isRepost,
+                        String repostedFromUsername,
                         boolean isLikedByMe,
                         boolean isRepostedByMe
     ){
@@ -54,6 +60,9 @@ public record PostResponse(
                 repostCount,
                 replyCount,
                 parentPostId,
+                repliedUsername,
+                isRepost,
+                repostedFromUsername,
                 isLikedByMe,
                 isRepostedByMe
         );
