@@ -64,6 +64,9 @@ public class JdbcUserRepository implements UserRepository {
      * */
     @Override
     public User findByUsername(String username) {
+        if (username == null){
+            return null;
+        }
         String sql = "SELECT * FROM users WHERE username=?";
         List<User> result = jdbcTemplate.query(sql, userRowMapper, username);
         return result.stream().findFirst().orElse(null);
@@ -74,6 +77,9 @@ public class JdbcUserRepository implements UserRepository {
      * */
     @Override
     public User findByEmail(String email) {
+        if (email == null){
+            return null;
+        }
         String sql = "SELECT * FROM users WHERE email=?";
         List<User> result = jdbcTemplate.query(sql, userRowMapper, email);
         return result.stream().findFirst().orElse(null);

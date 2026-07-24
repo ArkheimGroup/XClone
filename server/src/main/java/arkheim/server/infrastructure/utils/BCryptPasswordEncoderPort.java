@@ -13,6 +13,13 @@ public class BCryptPasswordEncoderPort implements PasswordEncoderPort {
 
     @Override
     public boolean matches(String rawPassword, String hashPassword) {
-        return BCrypt.checkpw(rawPassword, hashPassword);
+        if (rawPassword == null || hashPassword == null || hashPassword.isBlank()) {
+            return false;
+        }
+        try {
+            return BCrypt.checkpw(rawPassword, hashPassword);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
