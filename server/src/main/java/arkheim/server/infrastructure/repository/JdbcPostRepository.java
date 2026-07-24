@@ -114,7 +114,7 @@ public class JdbcPostRepository implements PostRepository {
         for (byte[] childId : childIds) {
             jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) childId);
             jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) childId);
-            jdbcTemplate.update("DELETE FROM post_medias WHERE post_id=?", (Object) childId);
+            jdbcTemplate.update("DELETE FROM post_media WHERE post_id=?", (Object) childId);
         }
         jdbcTemplate.update("DELETE FROM posts WHERE reply_post_id=?", (Object) bytes);
         jdbcTemplate.update("DELETE FROM posts WHERE repost_post_id=?", (Object) bytes);
@@ -122,7 +122,7 @@ public class JdbcPostRepository implements PostRepository {
         // Clean up own dependencies
         jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) bytes);
         jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) bytes);
-        jdbcTemplate.update("DELETE FROM post_medias WHERE post_id=?", (Object) bytes);
+        jdbcTemplate.update("DELETE FROM post_media WHERE post_id=?", (Object) bytes);
 
         // Delete the post itself
         jdbcTemplate.update("DELETE FROM posts WHERE id=?", (Object) bytes);
