@@ -126,4 +126,10 @@ public class PostController {
         List<PostResponse> posts = postService.findPostsByWord(word, requesterId);
         return ResponseEntity.ok(posts);
     }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<PostResponse>> getUserPosts(@PathVariable String username){
+        List<PostResponse> posts = postService.getUserPosts(username);
+        return  ResponseEntity.ok(posts);
+    }
 }

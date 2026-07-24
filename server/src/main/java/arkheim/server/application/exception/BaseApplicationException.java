@@ -5,6 +5,7 @@ public abstract class BaseApplicationException extends RuntimeException {
     private final String message;
 
     public BaseApplicationException(ErrorCode code, String message) {
+        super(message);
         this.code = code;
         this.message = message;
     }

@@ -51,9 +51,10 @@ public class AppConfig {
             PostRepository postRepository,
             MediaRepository mediaRepository,
             UserRepository userRepository,
-            LikeRepository likeRepository
+            LikeRepository likeRepository,
+            HashtagRepository hashtagRepository
     ) {
-        return new PostService(postRepository, mediaRepository, userRepository, likeRepository);
+        return new PostService(postRepository, mediaRepository, userRepository, likeRepository, hashtagRepository);
     }
 
     @Bean

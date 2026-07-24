@@ -105,10 +105,26 @@ public class FeedService {
         int likeCount = likeRepository.countLikesForPost(post.getId());
         boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
         int repostCount = reposts.size();
-        String requesterUsername = userRepository.findById(requesterId).getUsername();
-        boolean isRepostedByMe = reposts.stream()
-                .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername)); // True if a post from reposts is found that has the same username as the requester
+        User requester = requesterId != null ? userRepository.findById(requesterId) : null;
+        String requesterUsername = requester != null ? requester.getUsername() : null;
+        boolean isRepostedByMe = requesterUsername != null && reposts.stream()
+                .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername));
         int replyCount = postRepository.findReplies(post.getId()).size();
+
+        boolean isRepost = post.getRepostPostId() != null;
+        UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
+        String repliedUsername = null;
+        String repostedFromUsername = null;
+        if (parentPostId != null) {
+            Post parentPost = postRepository.findById(parentPostId);
+            if (parentPost != null) {
+                if (isRepost) {
+                    repostedFromUsername = parentPost.getAuthorUsername();
+                } else {
+                    repliedUsername = parentPost.getAuthorUsername();
+                }
+            }
+        }
 
         return new PostResponse(
                 post,
@@ -117,7 +133,10 @@ public class FeedService {
                 likeCount,
                 repostCount,
                 replyCount,
-                post.getRepostPostId() != null ? post.getRepostPostId() : post.getReplyPostId(), // The post is eather reply or repost, or none so the value would be null anyway
+                parentPostId,
+                repliedUsername,
+                isRepost,
+                repostedFromUsername,
                 isLikedByMe,
                 isRepostedByMe
         );
