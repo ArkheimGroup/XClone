@@ -103,8 +103,29 @@ public class JdbcPostRepository implements PostRepository {
 
     @Override
     public void delete(UUID id) {
-        String sql = "DELETE FROM posts WHERE id=?";
-        jdbcTemplate.update(sql, (Object) uuidToBytes(id));
+        byte[] bytes = uuidToBytes(id);
+
+        // Delete post childs (replies, reposts of it, hashtags, likes and medias)
+        List<byte[]> childIds = jdbcTemplate.query(
+                "SELECT id FROM posts WHERE reply_post_id=? OR repost_post_id=?",
+                (rs, rowNum) -> rs.getBytes("id"),
+                bytes, bytes
+        );
+        for (byte[] childId : childIds) {
+            jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) childId);
+            jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) childId);
+            jdbcTemplate.update("DELETE FROM post_medias WHERE post_id=?", (Object) childId);
+        }
+        jdbcTemplate.update("DELETE FROM posts WHERE reply_post_id=?", (Object) bytes);
+        jdbcTemplate.update("DELETE FROM posts WHERE repost_post_id=?", (Object) bytes);
+
+        // Clean up own dependencies
+        jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) bytes);
+        jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) bytes);
+        jdbcTemplate.update("DELETE FROM post_medias WHERE post_id=?", (Object) bytes);
+
+        // Delete the post itself
+        jdbcTemplate.update("DELETE FROM posts WHERE id=?", (Object) bytes);
     }
 
     /**
