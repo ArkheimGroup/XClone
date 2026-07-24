@@ -12,23 +12,90 @@ import arkheim.server.domain.repository.LikeRepository;
 import arkheim.server.domain.repository.MediaRepository;
 import arkheim.server.domain.repository.PostRepository;
 import arkheim.server.domain.repository.UserRepository;
+import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.repository.HashtagRepository;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PostService {
     private final PostRepository postRepository;
     private final MediaRepository mediaRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
+    private final HashtagRepository hashtagRepository;
 
     public PostService(PostRepository postRepository,
                        MediaRepository mediaRepository,
                        UserRepository userRepository,
-                       LikeRepository likeRepository) {
+                       LikeRepository likeRepository,
+                       HashtagRepository hashtagRepository) {
         this.postRepository = postRepository;
         this.mediaRepository = mediaRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
+        this.hashtagRepository = hashtagRepository;
+    }
+
+    /**
+     * @param username username of the user
+     * @return posts posted by the user
+     */
+    public List<PostResponse> getUserPosts(String username){
+        List<Post> posts;
+        posts = postRepository.findByAuthorUsername(username);
+
+        List<PostResponse> responses = new ArrayList<>();
+
+        User user = userRepository.findByUsername(username);
+        UUID requesterId = user.getId();
+
+        for(Post post : posts){
+            User author = userRepository.findByUsername(post.getAuthorUsername());
+            List<Post> reposts = postRepository.findReposts(post.getId());
+            List<Media> medias = mediaRepository.findByPostId(post.getId());
+            int likeCount = likeRepository.countLikesForPost(post.getId());
+            boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
+            User requester = requesterId != null ? userRepository.findById(requesterId) : null;
+            String requesterUsername = requester != null ? requester.getUsername() : null;
+            boolean isRepostedByMe = requesterUsername != null && reposts.stream()
+                    .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername));
+            int repostCount = reposts.size();
+            int replyCount = postRepository.findReplies(post.getId()).size();
+
+            boolean isRepost = post.getRepostPostId() != null;
+            UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
+            String repliedUsername = null;
+            String repostedFromUsername = null;
+            if (parentPostId != null) {
+                Post parentPost = postRepository.findById(parentPostId);
+                if (parentPost != null) {
+                    if (isRepost) {
+                        repostedFromUsername = parentPost.getAuthorUsername();
+                    } else {
+                        repliedUsername = parentPost.getAuthorUsername();
+                    }
+                }
+            }
+
+            responses.add(new PostResponse(
+                    post,
+                    author,
+                    medias,
+                    likeCount,
+                    repostCount,
+                    replyCount,
+                    parentPostId,
+                    repliedUsername,
+                    isRepost,
+                    repostedFromUsername,
+                    isLikedByMe,
+                    isRepostedByMe
+            ));
+        }
+
+        return responses;
     }
 
     /**
@@ -47,27 +114,11 @@ public class PostService {
         }
 
         // Verify the requester is the owner of the post
-        if (!post.getAuthorUsername().equals(requester.getUsername())) {
+        if (!post.getAuthorUsername().equalsIgnoreCase(requester.getUsername())) {
             throw new ForbiddenException(ErrorCode.USER_NOT_AUTHORIZED_TO_DELETE_POST, "User is not authorized to delete this post");
         }
 
-        // Unlink the post's media
-        List<Media> mediaList = mediaRepository.findByPostId(postId);
-        if (mediaList != null) {
-            for (Media media : mediaList) {
-                mediaRepository.unLinkFromPost(postId, media.getId());
-            }
-        }
-
-        // Delete reposts of this post
-        List<Post> reposts = postRepository.findReposts(postId);
-        if (reposts != null) {
-            for (Post repost : reposts) {
-                postRepository.delete(repost.getId());
-            }
-        }
-
-        // Delete the post itself
+        // Delete the post (cascading cleanup handled by repository)
         postRepository.delete(postId);
     }
 
@@ -115,6 +166,21 @@ public class PostService {
             mediaUrls = List.of(createPostRequest.mediaUrl());
         }
 
+        boolean isRepost = repostPostId != null;
+        UUID parentPostId = createPostRequest.parentPostId();
+        String repliedUsername = null;
+        String repostedFromUsername = null;
+        if (parentPostId != null) {
+            Post parentPost = postRepository.findById(parentPostId);
+            if (parentPost != null) {
+                if (isRepost) {
+                    repostedFromUsername = parentPost.getAuthorUsername();
+                } else {
+                    repliedUsername = parentPost.getAuthorUsername();
+                }
+            }
+        }
+
         return new PostResponse(
                 post.getId(),
                 author.getId(),
@@ -127,7 +193,10 @@ public class PostService {
                 0,
                 0,
                 0,
-                createPostRequest.parentPostId(),
+                parentPostId,
+                repliedUsername,
+                isRepost,
+                repostedFromUsername,
                 false,
                 false
         );
@@ -163,21 +232,55 @@ public class PostService {
      * @return a List of {@link PostResponse} containing the received word
      */
     public List<PostResponse> findPostsByWord(String word, UUID requesterId){
-        List<Post> posts = postRepository.findByWord(word);
+        if (word == null || word.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        String cleanWord = word.trim();
+        if (cleanWord.startsWith("#")) {
+            cleanWord = cleanWord.substring(1).trim();
+        }
+
+        List<Post> postsByWord = postRepository.findByWord(cleanWord);
+        List<Post> postsByHashtag = hashtagRepository != null ? hashtagRepository.findPostsByHashtag(cleanWord) : Collections.emptyList();
+
+        Map<UUID, Post> postMap = new LinkedHashMap<>();
+        for (Post p : postsByWord) {
+            postMap.put(p.getId(), p);
+        }
+        for (Post p : postsByHashtag) {
+            postMap.putIfAbsent(p.getId(), p);
+        }
 
         List<PostResponse> responses = new ArrayList<>();
 
-        for(Post post : posts){
+        for(Post post : postMap.values()){
             User author = userRepository.findByUsername(post.getAuthorUsername());
             List<Post> reposts = postRepository.findReposts(post.getId());
             List<Media> medias = mediaRepository.findByPostId(post.getId());
             int likeCount = likeRepository.countLikesForPost(post.getId());
-            boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
+            boolean isLikedByMe = requesterId != null && likeRepository.isLikedByUser(requesterId, post.getId());
+            User requester = requesterId != null ? userRepository.findById(requesterId) : null;
+            String requesterUsername = requester != null ? requester.getUsername() : null;
+            boolean isRepostedByMe = requesterUsername != null && reposts.stream()
+                    .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername));
             int repostCount = reposts.size();
-            String requesterUsername = userRepository.findById(requesterId).getUsername();
-            boolean isRepostedByMe = reposts.stream()
-                    .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername)); // True if a post from reposts is found that has the same username as the requester
             int replyCount = postRepository.findReplies(post.getId()).size();
+
+            boolean isRepost = post.getRepostPostId() != null;
+            UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
+            String repliedUsername = null;
+            String repostedFromUsername = null;
+            if (parentPostId != null) {
+                Post parentPost = postRepository.findById(parentPostId);
+                if (parentPost != null) {
+                    if (isRepost) {
+                        repostedFromUsername = parentPost.getAuthorUsername();
+                    } else {
+                        repliedUsername = parentPost.getAuthorUsername();
+                    }
+                }
+            }
 
             responses.add(new PostResponse(
                     post,
@@ -186,7 +289,10 @@ public class PostService {
                     likeCount,
                     repostCount,
                     replyCount,
-                    post.getRepostPostId() != null ? post.getRepostPostId() : post.getReplyPostId(), // The post is eather reply or repost, or none so the value would be null anyway
+                    parentPostId,
+                    repliedUsername,
+                    isRepost,
+                    repostedFromUsername,
                     isLikedByMe,
                     isRepostedByMe
             ));
