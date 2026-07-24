@@ -115,11 +115,18 @@ public class FeedService {
         UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
         String repliedUsername = null;
         String repostedFromUsername = null;
+        String content = post.getDescription();
         if (parentPostId != null) {
             Post parentPost = postRepository.findById(parentPostId);
             if (parentPost != null) {
                 if (isRepost) {
                     repostedFromUsername = parentPost.getAuthorUsername();
+                    if (content == null || content.isBlank()) {
+                        content = parentPost.getDescription();
+                    }
+                    if (medias.isEmpty()) {
+                        medias = mediaRepository.findByPostId(parentPost.getId());
+                    }
                 } else {
                     repliedUsername = parentPost.getAuthorUsername();
                 }
@@ -128,6 +135,7 @@ public class FeedService {
 
         return new PostResponse(
                 post,
+                content,
                 author,
                 medias,
                 likeCount,

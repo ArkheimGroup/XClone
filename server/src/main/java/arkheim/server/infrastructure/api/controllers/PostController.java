@@ -122,7 +122,7 @@ public class PostController {
      * @return {@link ResponseEntity} containing a list of {@link PostResponse} representing the posts
      */
     @GetMapping("/byword/{word}")
-    public ResponseEntity<List<PostResponse>> getPostsByWord(@PathVariable String word, @RequestParam UUID requesterId){
+    public ResponseEntity<List<PostResponse>> getPostsByWord(@PathVariable String word, @RequestParam(required = false) UUID requesterId){
         List<PostResponse> posts = postService.findPostsByWord(word, requesterId);
         return ResponseEntity.ok(posts);
     }
