@@ -73,17 +73,18 @@ public class JdbcPostRepository implements PostRepository {
 
     @Override
     public List<Post> findFollowingsPosts(UUID userId) {
-        String sql = "SELECT p.* FROM posts p " +
+        String sql = "SELECT DISTINCT p.* FROM posts p " +
                 "JOIN users u ON p.author_username = u.username " +
-                "JOIN follows f ON u.id = f.following_id " +
-                "WHERE f.follower_id = ? " +
+                "LEFT JOIN follows f ON u.id = f.following_id " +
+                "WHERE f.follower_id = ? OR u.id = ? " +
                 "ORDER BY p.created_at DESC";
-        return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(userId));
+        byte[] userBytes = uuidToBytes(userId);
+        return jdbcTemplate.query(sql, postRowMapper, userBytes, userBytes);
     }
 
     @Override
     public List<Post> getAllPosts() {
-        String sql = "SELECT * FROM posts";
+        String sql = "SELECT * FROM posts ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper);
     }
 
