@@ -4,10 +4,9 @@ import arkheim.client.domain.ports.PostPort;
 import arkheim.client.domain.ports.dtos.PostDto;
 import javafx.beans.property.*;
 import javafx.collections.*;
+import java.util.*;
 import java.util.function.UnaryOperator;
-
-import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Presentation-layer state and actions for viewing, creating, and
@@ -17,6 +16,7 @@ import java.util.UUID;
 public class PostViewModel {
 
     private final PostPort postPort;
+    private final arkheim.client.domain.ports.HashtagPort hashtagPort;
 
     // --- loaded collections ---
     private final ObservableList<PostDto> timeline = FXCollections.observableArrayList();
@@ -28,6 +28,9 @@ public class PostViewModel {
     // --- posts matching the current search query ---
     private final ObservableList<PostDto> searchResults = FXCollections.observableArrayList();
 
+    // --- posts created by a specific user ---
+    private final ObservableList<PostDto> userPosts = FXCollections.observableArrayList();
+
     // --- create-post form fields ---
     private final StringProperty newPostContent = new SimpleStringProperty("");
     private final StringProperty newPostMediaUrl = new SimpleStringProperty("");
@@ -36,8 +39,13 @@ public class PostViewModel {
     // --- shared UI state ---
     private final StringProperty errorMessage = new SimpleStringProperty("");
 
-    public PostViewModel(PostPort postPort) {
+    public PostViewModel(PostPort postPort, arkheim.client.domain.ports.HashtagPort hashtagPort) {
         this.postPort = postPort;
+        this.hashtagPort = hashtagPort;
+    }
+
+    public PostViewModel(PostPort postPort) {
+        this(postPort, new arkheim.client.infrastructure.adapter.HttpHashtagAdapter());
     }
 
     /**
@@ -82,6 +90,7 @@ public class PostViewModel {
             postPort.deletePost(postId, requesterId);
             timeline.removeIf(p -> p.id().equals(postId));
             replies.removeIf(p -> p.id().equals(postId));
+            userPosts.removeIf(p -> p.id().equals(postId));
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
         }
@@ -154,9 +163,61 @@ public class PostViewModel {
         boolean nowLiked = !p.likedByMe();
         int newLikeCount = nowLiked ? p.likeCount() + 1 : p.likeCount() - 1;
         return new PostDto(
-                p.id(), p.authorId(), p.authorUsername(), p.authorName(), p.authorPfpUrl(),
-                p.content(), p.mediaUrls(), p.createdAt(), newLikeCount, p.repostCount(),
-                p.replyCount(), p.parentPostId(), nowLiked, p.repostedByMe()
+                p.id(),
+                p.authorId(),
+                p.authorUsername(),
+                p.authorName(),
+                p.authorPfpUrl(),
+                p.content(),
+                p.mediaUrls(),
+                p.createdAt(),
+                newLikeCount,
+                p.repostCount(),
+                p.replyCount(),
+                p.parentPostId(),
+                p.repliedUsername(),
+                p.isRepost(),
+                p.repostedFromUsername(),
+                nowLiked,
+                p.repostedByMe()
+        );
+    }
+
+    /**
+     * Reposts the given post on behalf of {@code authorId} via {@link PostPort#createPost}.
+     * Adjusts {@code repostCount} and flips {@code repostedByMe} locally.
+     */
+    public void repost(UUID postId, UUID authorId) {
+        errorMessage.set("");
+        try {
+            postPort.createPost(authorId, "", null, postId);
+            replaceWherePresent(postId, this::withToggledRepost);
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+        }
+    }
+
+    private PostDto withToggledRepost(PostDto p) {
+        boolean nowReposted = !p.repostedByMe();
+        int newRepostCount = nowReposted ? p.repostCount() + 1 : Math.max(0, p.repostCount() - 1);
+        return new PostDto(
+                p.id(),
+                p.authorId(),
+                p.authorUsername(),
+                p.authorName(),
+                p.authorPfpUrl(),
+                p.content(),
+                p.mediaUrls(),
+                p.createdAt(),
+                p.likeCount(),
+                newRepostCount,
+                p.replyCount(),
+                p.parentPostId(),
+                p.repliedUsername(),
+                p.isRepost(),
+                p.repostedFromUsername(),
+                p.likedByMe(),
+                nowReposted
         );
     }
 
@@ -172,6 +233,7 @@ public class PostViewModel {
         }
         replaceInList(timeline, postId, transform);
         replaceInList(replies, postId, transform);
+        replaceInList(userPosts, postId, transform);
     }
     private void replaceInList(ObservableList<PostDto> list, UUID postId, UnaryOperator<PostDto> transform) {
         for (int i = 0; i < list.size(); i++) {
@@ -190,8 +252,54 @@ public class PostViewModel {
     public void findPostsByWord(String word, UUID requesterId) {
         errorMessage.set("");
         try {
-            List<PostDto> results = postPort.findPostsByWord(word, requesterId);
+            String cleanQuery = word != null ? word.trim() : "";
+            if (cleanQuery.isEmpty()) {
+                searchResults.clear();
+                return;
+            }
+
+            List<PostDto> results;
+            if (cleanQuery.startsWith("#")) {
+                String hashtagTag = cleanQuery.substring(1).trim();
+                if (hashtagTag.isBlank()) {
+                    results = List.of();
+                } else if (hashtagPort != null) {
+                    results = hashtagPort.getPostsByHashtag(hashtagTag, requesterId);
+                } else {
+                    results = postPort.findPostsByWord(cleanQuery, requesterId);
+                }
+            } else {
+                results = new ArrayList<>(postPort.findPostsByWord(cleanQuery, requesterId));
+                if (hashtagPort != null && !cleanQuery.isBlank()) {
+                    try {
+                        List<PostDto> hashtagPosts = hashtagPort.getPostsByHashtag(cleanQuery, requesterId);
+                        if (hashtagPosts != null && !hashtagPosts.isEmpty()) {
+                            Set<UUID> existingIds = results.stream().map(PostDto::id).collect(Collectors.toSet());
+                            for (PostDto hp : hashtagPosts) {
+                                if (!existingIds.contains(hp.id())) {
+                                    results.add(hp);
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
             searchResults.setAll(results);
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+        }
+    }
+
+    /**
+     * Loads posts created by a specific user via {@link PostPort#getUserPosts} and
+     * replaces the contents of {@link #userPostsProperty()}.
+     */
+    public void loadUserPosts(String username) {
+        errorMessage.set("");
+        try {
+            List<PostDto> posts = postPort.getUserPosts(username);
+            userPosts.setAll(posts);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
         }
@@ -213,6 +321,9 @@ public class PostViewModel {
 
     // --- search results ---
     public ObservableList<PostDto> searchResultsProperty() { return searchResults; }
+
+    // --- user posts ---
+    public ObservableList<PostDto> userPostsProperty() { return userPosts; }
 
     // --- shared state getter ---
     public StringProperty errorMessageProperty() { return errorMessage; }
