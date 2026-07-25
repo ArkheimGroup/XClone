@@ -47,6 +47,21 @@ public class HashtagViewModel {
     }
 
     /**
+     * Searches for posts tagged with a hashtag query (handling leading '#' if present).
+     */
+    public void searchPostsByHashtag(String query, UUID requesterId) {
+        if (query == null || query.isBlank()) {
+            postsByHashtag.clear();
+            return;
+        }
+        String cleanTag = query.trim();
+        if (cleanTag.startsWith("#")) {
+            cleanTag = cleanTag.substring(1).trim();
+        }
+        loadPostsByHashtag(cleanTag, requesterId);
+    }
+
+    /**
      * Loads the hashtags attached to the given post via
      * {@link HashtagPort#getHashtagsForPost} and replaces the contents of
      * {@link #hashtagsForPostProperty()}.

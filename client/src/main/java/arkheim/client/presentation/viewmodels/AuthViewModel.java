@@ -54,14 +54,23 @@ public class AuthViewModel {
         emailIsValid.set(true);
         errorMessage.set("");
 
-        if (!isEmailValid(emailProperty().get())) {
-            errorMessage.set(emailProperty().get() + " is not a valid email");
+        String rawInput = emailProperty().get();
+        String input = rawInput != null ? rawInput.trim() : "";
+
+        if (input.isBlank()) {
+            errorMessage.set("Please enter an email or username");
             emailIsValid.set(false);
             return;
         }
 
-        try{
-            UserDto user = authPort.login(email.get(), password.get());
+        if (input.contains("@") && !isEmailValid(input)) {
+            errorMessage.set(input + " is not a valid email format");
+            emailIsValid.set(false);
+            return;
+        }
+
+        try {
+            UserDto user = authPort.login(input, password.get());
             currentUser.set(user);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
@@ -78,8 +87,8 @@ public class AuthViewModel {
         passwordRepetitionCorrect.set(true);
         errorMessage.set("");
 
-        if (!isEmailValid(emailProperty().get())) {
-            errorMessage.set(emailProperty().get() + " is not a valid email");
+        if (!isEmailValid(registerEmailProperty().get())) {
+            errorMessage.set(registerEmailProperty().get() + " is not a valid email");
             emailIsValid.set(false);
             return;
         }
