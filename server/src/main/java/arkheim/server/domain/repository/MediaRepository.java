@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface MediaRepository {
     Media findById(UUID id);
+    Media findByUrl(String url);
     List<Media> findByPostId(UUID postId);
 
     /**
