@@ -47,6 +47,13 @@ public class  JdbcMediaRepository implements MediaRepository {
     }
 
     @Override
+    public Media findByUrl(String url) {
+        String sql = "SELECT * FROM media WHERE url=?";
+        List<Media> result = jdbcTemplate.query(sql, mediaRowMapper, url);
+        return result.stream().findFirst().orElse(null);
+    }
+
+    @Override
     public List<Media> findByPostId(UUID postId) {
         String sql = "SELECT m.* FROM media m " +
                 "JOIN post_media pm ON m.id = pm.media_id " +
