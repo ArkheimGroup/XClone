@@ -163,9 +163,23 @@ public class PostViewModel {
         boolean nowLiked = !p.likedByMe();
         int newLikeCount = nowLiked ? p.likeCount() + 1 : p.likeCount() - 1;
         return new PostDto(
-                p.id(), p.authorId(), p.authorUsername(), p.authorName(), p.authorPfpUrl(),
-                p.content(), p.mediaUrls(), p.createdAt(), newLikeCount, p.repostCount(),
-                p.replyCount(), p.parentPostId(), p.repliedUsername(), p.isRepost(), p.repostedFromUsername(), nowLiked, p.repostedByMe()
+                p.id(),
+                p.authorId(),
+                p.authorUsername(),
+                p.authorName(),
+                p.authorPfpUrl(),
+                p.content(),
+                p.mediaUrls(),
+                p.createdAt(),
+                newLikeCount,
+                p.repostCount(),
+                p.replyCount(),
+                p.parentPostId(),
+                p.repliedUsername(),
+                p.isRepost(),
+                p.repostedFromUsername(),
+                nowLiked,
+                p.repostedByMe()
         );
     }
 
@@ -187,9 +201,23 @@ public class PostViewModel {
         boolean nowReposted = !p.repostedByMe();
         int newRepostCount = nowReposted ? p.repostCount() + 1 : Math.max(0, p.repostCount() - 1);
         return new PostDto(
-                p.id(), p.authorId(), p.authorUsername(), p.authorName(), p.authorPfpUrl(),
-                p.content(), p.mediaUrls(), p.createdAt(), p.likeCount(), newRepostCount,
-                p.replyCount(), p.parentPostId(), p.repliedUsername(), p.isRepost(), p.repostedFromUsername(), p.likedByMe(), nowReposted
+                p.id(),
+                p.authorId(),
+                p.authorUsername(),
+                p.authorName(),
+                p.authorPfpUrl(),
+                p.content(),
+                p.mediaUrls(),
+                p.createdAt(),
+                p.likeCount(),
+                newRepostCount,
+                p.replyCount(),
+                p.parentPostId(),
+                p.repliedUsername(),
+                p.isRepost(),
+                p.repostedFromUsername(),
+                p.likedByMe(),
+                nowReposted
         );
     }
 

@@ -1,6 +1,7 @@
 package arkheim.client.presentation.viewmodels;
 
 import arkheim.client.domain.ports.FeedPort;
+import arkheim.client.domain.ports.HashtagPort;
 import arkheim.client.domain.ports.PostPort;
 import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.presentation.state.FeedUiEvent;
@@ -27,7 +28,7 @@ public class FeedViewModel {
 
     private final FeedPort feedPort;
     private final PostPort postPort;
-    private final arkheim.client.domain.ports.HashtagPort hashtagPort;
+    private final HashtagPort hashtagPort;
 
     private final ScheduledExecutorService autoRefreshExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r);
@@ -40,7 +41,7 @@ public class FeedViewModel {
     // The single source of truth for the Feed UI
     private final ObjectProperty<FeedUiState> uiState = new SimpleObjectProperty<>(FeedUiState.initial());
 
-    public FeedViewModel(FeedPort feedPort, PostPort postPort, arkheim.client.domain.ports.HashtagPort hashtagPort) {
+    public FeedViewModel(FeedPort feedPort, PostPort postPort, HashtagPort hashtagPort) {
         this.feedPort = feedPort;
         this.postPort = postPort;
         this.hashtagPort = hashtagPort;
@@ -179,9 +180,23 @@ public class FeedViewModel {
                             boolean nowLiked = !p.likedByMe();
                             int newLikeCount = nowLiked ? p.likeCount() + 1 : p.likeCount() - 1;
                             return new PostDto(
-                                    p.id(), p.authorId(), p.authorUsername(), p.authorName(), p.authorPfpUrl(),
-                                    p.content(), p.mediaUrls(), p.createdAt(), newLikeCount, p.repostCount(),
-                                    p.replyCount(), p.parentPostId(), p.repliedUsername(), p.isRepost(), p.repostedFromUsername(), nowLiked, p.repostedByMe()
+                                    p.id(),
+                                    p.authorId(),
+                                    p.authorUsername(),
+                                    p.authorName(),
+                                    p.authorPfpUrl(),
+                                    p.content(),
+                                    p.mediaUrls(),
+                                    p.createdAt(),
+                                    newLikeCount,
+                                    p.repostCount(),
+                                    p.replyCount(),
+                                    p.parentPostId(),
+                                    p.repliedUsername(),
+                                    p.isRepost(),
+                                    p.repostedFromUsername(),
+                                    nowLiked,
+                                    p.repostedByMe()
                             );
                         }
                         return p;
