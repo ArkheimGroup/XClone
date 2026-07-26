@@ -15,4 +15,5 @@ public enum ErrorCode {
 
     // --- media ---
     MEDIA_NOT_FOUND,
+    INVALID_MEDIA_FILE
 }
