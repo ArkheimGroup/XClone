@@ -1,12 +1,24 @@
 package arkheim.server.application.services;
 
+import arkheim.server.application.exception.BadArgumentException;
 import arkheim.server.domain.entities.Media;
 import arkheim.server.application.exception.ErrorCode;
 import arkheim.server.application.exception.NotFoundException;
 import arkheim.server.domain.repository.MediaRepository;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
 
 public class MediaService {
     private final MediaRepository mediaRepository;
@@ -69,6 +81,51 @@ public class MediaService {
      */
     public void deleteMedia(UUID mediaId) {
         mediaRepository.delete(mediaId);
+    }
+
+    /**
+     * Uploads a media file to the server storage and registers it in the database.
+     * @param file the uploaded file
+     * @param uploadedBy user UUID who uploaded the media
+     */
+    public Media uploadAndRegisterMedia(MultipartFile file, UUID uploadedBy) {
+        if (file == null || file.isEmpty()) {
+            throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "Files can't be empty");
+        }
+
+        try {
+            Path uploadDir = Paths.get("uploads/media");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension; // to store files using UUID
+            Path filePath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            String fileUrl = "uploads/media/" + fileName;
+
+            long fileSize = file.getSize();
+            int width = 0;
+            int height = 0;
+
+            try (InputStream in = Files.newInputStream(filePath)) {
+                BufferedImage image = ImageIO.read(in);
+                if (image != null) {
+                    width = image.getWidth();
+                    height = image.getHeight();
+                }
+            } catch (Exception ignored) {
+            }
+
+            return registerMedia(fileUrl, width, height, fileSize, uploadedBy);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save file", e);
+        }
     }
 
     /**

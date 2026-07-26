@@ -168,11 +168,16 @@ public class PostService {
 
         List<String> mediaUrls = Collections.emptyList();
         if (createPostRequest.mediaUrl() != null && !createPostRequest.mediaUrl().trim().isEmpty()) {
-            Media media = new Media(createPostRequest.mediaUrl(), 0, 0, 0, author.getId());
-            mediaRepository.save(media);
+            String url = createPostRequest.mediaUrl().trim();
+            Media media = mediaRepository.findByUrl(url);
+            if (media == null) {
+                media = new Media(url, 0, 0, 0, author.getId());
+                mediaRepository.save(media);
+            }
             mediaRepository.linkToPost(post.getId(), media.getId());
-            mediaUrls = List.of(createPostRequest.mediaUrl());
+            mediaUrls = List.of(url);
         }
+
 
         boolean isRepost = repostPostId != null;
         UUID parentPostId = createPostRequest.parentPostId();
