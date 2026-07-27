@@ -570,6 +570,17 @@ public class HomeController extends BaseController {
         java.io.File selectedFile = fileChooser.showOpenDialog(window);
 
         if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            long maxSizeBytes = 15L * 1024 * 1024; // 15MB
+            if (selectedFile.length() > maxSizeBytes) {
+                if (feedErrorLabel != null) {
+                    feedErrorLabel.setText("Failed to attach media: File size exceeds maximum limit of 15MB");
+                    feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                    feedErrorLabel.setVisible(true);
+                    feedErrorLabel.setManaged(true);
+                }
+                return;
+            }
+
             new Thread(() -> {
                 try {
                     MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());

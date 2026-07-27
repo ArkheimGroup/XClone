@@ -257,6 +257,16 @@ public class ProfileController extends BaseController {
         java.io.File selectedFile = fileChooser.showOpenDialog(window);
 
         if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            long maxSizeBytes = 15L * 1024 * 1024; // 15MB
+            if (selectedFile.length() > maxSizeBytes) {
+                if (profileErrorLabel != null) {
+                    profileErrorLabel.setText("Failed to upload avatar: File size exceeds maximum limit of 15MB");
+                    profileErrorLabel.setVisible(true);
+                    profileErrorLabel.setManaged(true);
+                }
+                return;
+            }
+
             new Thread(() -> {
                 try {
                     arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
