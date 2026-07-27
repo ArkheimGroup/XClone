@@ -26,4 +26,8 @@ public class MainApplication extends Application {
         Navigator navigator = new JavaFxNavigator(stage, authViewModel, ThemeMode.LIGHT);
         navigator.showLoginScreen();
     }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 }
