@@ -93,6 +93,11 @@ public class MediaService {
             throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "Files can't be empty");
         }
 
+        long maxSizeBytes = 15L * 1024 * 1024; // 15MB
+        if (file.getSize() > maxSizeBytes) {
+            throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "File size exceeds maximum allowed limit of 15MB");
+        }
+
         try {
             Path uploadDir = Paths.get("uploads/media");
             if (!Files.exists(uploadDir)) {
@@ -102,7 +107,11 @@ public class MediaService {
             String originalFilename = file.getOriginalFilename();
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+            }
+            List<String> allowedImageExtensions = List.of(".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp");
+            if (!allowedImageExtensions.contains(extension)) {
+                throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "Only image files (.png, .jpg, .jpeg, .gif, .bmp, .webp) are allowed");
             }
             String fileName = UUID.randomUUID().toString() + extension; // to store files using UUID
             Path filePath = uploadDir.resolve(fileName);
