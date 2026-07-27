@@ -7,15 +7,15 @@ import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FeedViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
 import arkheim.client.presentation.viewmodels.MediaViewModel;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -29,7 +29,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -37,14 +36,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class HomeController extends BaseController {
 
     @FXML
     private ImageView logoImageView;
+    @FXML
+    private ImageView navHomeIcon;
+    @FXML
+    private ImageView navExploreIcon;
+    @FXML
+    private ImageView navProfileIcon;
     @FXML
     private Circle userAvatarCircle;
     @FXML
@@ -67,6 +70,8 @@ public class HomeController extends BaseController {
     private Circle composerAvatarCircle;
     @FXML
     private TextArea composerTextArea;
+    @FXML
+    private Button composerMediaButton;
     @FXML
     private Button composerPostButton;
     @FXML
@@ -91,14 +96,13 @@ public class HomeController extends BaseController {
     private String pendingMediaUrl = null;
     private String pendingMediaFileName = null;
 
-    private ThemeMode themeMode = ThemeMode.LIGHT;
     private boolean bindingsInitialized = false;
     private UserDto currentUser;
 
     @FXML
     private void initialize() {
         // Initial setup for static elements
-        updateLogo();
+        updateIcons();
     }
 
     public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel, MediaViewModel mediaViewModel) {
@@ -115,6 +119,16 @@ public class HomeController extends BaseController {
             MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
 
+        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                this.currentUser = newVal;
+                if (userDisplayName != null) userDisplayName.setText(newVal.name());
+                if (userHandleName != null) userHandleName.setText("@" + newVal.username());
+                if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
+                if (composerAvatarCircle != null) MediaUiUtils.loadAvatar(composerAvatarCircle, newVal.pfpUrl(), themeMode);
+            }
+        });
+
         initializeStateBindings();
     }
 
@@ -128,11 +142,9 @@ public class HomeController extends BaseController {
         // Reactive binding: Whenever the FeedUiState changes, re-render the view
         feedViewModel.uiStateProperty().addListener((obs, oldState, newState) -> renderState(newState));
 
-        // Composer Input binding: Send updates to state
+        // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.equals(feedViewModel.getState().composerText())) {
-                feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(newVal));
-            }
+            updateComposerPostButtonState();
         });
 
         // Trigger first feed load
@@ -145,24 +157,25 @@ public class HomeController extends BaseController {
         bindingsInitialized = true;
     }
 
+    private void updateComposerPostButtonState() {
+        if (composerPostButton == null || composerTextArea == null) return;
+        boolean isTextEmpty = composerTextArea.getText() == null || composerTextArea.getText().strip().isEmpty();
+        boolean isMediaEmpty = pendingMediaUrl == null;
+        boolean isPosting = feedViewModel != null && feedViewModel.getState().isPosting();
+        composerPostButton.setDisable(isPosting || (isTextEmpty && isMediaEmpty));
+    }
+
     /**
      * Renders the UI nodes depending on the current FeedUiState snapshot.
      */
     private void renderState(FeedUiState state) {
-        // Sync composer text field
-        if (!Objects.equals(composerTextArea.getText(), state.composerText())) {
-            composerTextArea.setText(state.composerText());
-        }
-
         // Sync search field if search is cleared
         if (!state.isSearching() && searchField != null && searchField.getText() != null && !searchField.getText().isEmpty()) {
             searchField.setText("");
         }
 
         // Enable/Disable composer post button
-        boolean isComposerTextEmpty = state.composerText() == null || state.composerText().strip().isEmpty();
-        boolean isComposerEmpty = isComposerTextEmpty && pendingMediaUrl == null;
-        composerPostButton.setDisable(state.isPosting() || isComposerEmpty);
+        updateComposerPostButtonState();
 
         // Update tab indicators active styles
         updateTabStyles(state.activeTab());
@@ -362,7 +375,8 @@ public class HomeController extends BaseController {
 
         // Delete post support if current user matches post author
         if (currentUser != null && currentUser.id().equals(post.authorId())) {
-            Button deleteBtn = new Button("🗑");
+            Button deleteBtn = new Button();
+            IconUtils.setButtonIcon(deleteBtn, "trash", themeMode, 16);
             deleteBtn.getStyleClass().add("post-action-btn");
             deleteBtn.setStyle("-fx-text-fill: #E02424; -fx-padding: 4px;");
             deleteBtn.setOnAction(e -> {
@@ -383,9 +397,14 @@ public class HomeController extends BaseController {
         // Add badges for repost or reply
         if (post.isRepost() || post.repostedFromUsername() != null) {
             String origAuthor = post.repostedFromUsername() != null ? post.repostedFromUsername() : (post.repliedUsername() != null ? post.repliedUsername() : "user");
-            Label repostBadge = new Label("🔁 Reposted from @" + origAuthor);
-            repostBadge.getStyleClass().add("post-author-handle");
-            repostBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            HBox repostBadge = new HBox(6.0);
+            repostBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView repostIcon = IconUtils.createIconView("repost", themeMode, 14);
+            Label repostLabel = new Label("Reposted from @" + origAuthor);
+            repostLabel.getStyleClass().add("post-author-handle");
+            repostLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            repostBadge.getChildren().addAll(repostIcon, repostLabel);
+            repostBadge.setStyle("-fx-padding: 0 0 4px 0;");
             card.getChildren().add(0, repostBadge);
         } else if (post.parentPostId() != null) {
             String targetUser = post.repliedUsername() != null ? post.repliedUsername() : "user";
@@ -409,7 +428,8 @@ public class HomeController extends BaseController {
         HBox actionsRow = new HBox(40.0);
         actionsRow.getStyleClass().add("post-actions");
 
-        Button replyBtn = new Button("💬 " + post.replyCount());
+        Button replyBtn = new Button(" " + post.replyCount());
+        IconUtils.setButtonIcon(replyBtn, "comment", themeMode, 16);
         replyBtn.getStyleClass().add("post-action-btn");
         replyBtn.setOnAction(e -> {
             e.consume();
@@ -418,7 +438,8 @@ public class HomeController extends BaseController {
             }
         });
 
-        Button repostBtn = new Button("🔁 " + post.repostCount());
+        Button repostBtn = new Button(" " + post.repostCount());
+        IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 16);
         repostBtn.getStyleClass().add("post-action-btn");
         if (post.repostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -432,8 +453,9 @@ public class HomeController extends BaseController {
             }
         });
 
-        String likeSymbol = post.likedByMe() ? "♥" : "♡";
-        Button likeBtn = new Button(likeSymbol + " " + post.likeCount());
+        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        Button likeBtn = new Button(" " + post.likeCount());
+        IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 16);
         likeBtn.getStyleClass().add("post-action-btn");
         if (post.likedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -451,33 +473,48 @@ public class HomeController extends BaseController {
         return card;
     }
 
-    @FXML
-    private void onThemeToggleClicked() {
-        if (navigator instanceof JavaFxNavigator fxNavigator) {
-            if (themeMode == ThemeMode.LIGHT) {
-                themeMode = ThemeMode.DARK;
-                themeToggleBtn.setText("☼ Light Mode");
-            } else {
-                themeMode = ThemeMode.LIGHT;
-                themeToggleBtn.setText("☾ Dark Mode");
-            }
-            fxNavigator.setThemeMode(themeMode);
-            fxNavigator.updateTheme();
-            updateLogo();
-            if (feedViewModel != null) {
-                renderState(feedViewModel.getState());
-            }
+    @Override
+    public void setThemeMode(ThemeMode themeMode) {
+        super.setThemeMode(themeMode);
+        if (feedViewModel != null) {
+            renderState(feedViewModel.getState());
         }
     }
 
-    private void updateLogo() {
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            ThemeMode newMode = (themeMode == ThemeMode.LIGHT) ? ThemeMode.DARK : ThemeMode.LIGHT;
+            fxNavigator.setThemeMode(newMode);
+            fxNavigator.updateTheme();
+            setThemeMode(newMode);
+        }
+    }
+
+    @Override
+    public void updateIcons() {
         String logoPath = (themeMode == ThemeMode.LIGHT)
-                ? "/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"
-                : "/arkheim/client/presentation/Assets/images/XCloneLogo_DarkMode_Transparent.png";
+                ? "/arkheim/client/presentation/Assets/images/icons/light/XCloneLogo_LightMode_Transparent.png"
+                : "/arkheim/client/presentation/Assets/images/icons/dark/XCloneLogo_DarkMode_Transparent.png";
         try {
-            logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            if (logoImageView != null) {
+                logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            }
         } catch (Exception e) {
             System.err.println("Could not load logo: " + e.getMessage());
+        }
+        if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
+        if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
+        if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (composerMediaButton != null) IconUtils.setButtonIcon(composerMediaButton, "image", themeMode, 18);
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+        }
+        if (userAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (composerAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
     }
 
@@ -499,10 +536,15 @@ public class HomeController extends BaseController {
     @FXML
     private void onComposerPostClicked() {
         if (currentUser != null) {
+            String text = composerTextArea != null ? composerTextArea.getText() : "";
+            feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(text != null ? text : ""));
             feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), pendingMediaUrl));
+            if (composerTextArea != null) {
+                composerTextArea.setText("");
+            }
             pendingMediaUrl = null;
             pendingMediaFileName = null;
-            renderState(feedViewModel.getState());
+            updateComposerPostButtonState();
         }
     }
 
@@ -526,11 +568,9 @@ public class HomeController extends BaseController {
     @FXML
     private void onMediaAttachmentClicked() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Media File");
+        fileChooser.setTitle("Select Image File");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Media Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.mp4", "*.mkv", "*.avi", "*.mov"),
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
-                new FileChooser.ExtensionFilter("Video Files", "*.mp4", "*.mkv", "*.avi", "*.mov"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
@@ -540,6 +580,17 @@ public class HomeController extends BaseController {
         java.io.File selectedFile = fileChooser.showOpenDialog(window);
 
         if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            long maxSizeBytes = 15L * 1024 * 1024; // 15MB
+            if (selectedFile.length() > maxSizeBytes) {
+                if (feedErrorLabel != null) {
+                    feedErrorLabel.setText("Failed to attach media: File size exceeds maximum limit of 15MB");
+                    feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                    feedErrorLabel.setVisible(true);
+                    feedErrorLabel.setManaged(true);
+                }
+                return;
+            }
+
             new Thread(() -> {
                 try {
                     MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());

@@ -31,19 +31,19 @@
         <VBox spacing="6.0" VBox.vgrow="ALWAYS">
             <!-- Home -->
             <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavHomeClicked">
-                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <ImageView fx:id="navHomeIcon" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Home"/>
             </HBox>
 
             <!-- Explore -->
             <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
-                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <ImageView fx:id="navExploreIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Explore"/>
             </HBox>
 
             <!-- Profile -->
             <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item, nav-item-active" onMouseClicked="#onNavProfileClicked">
-                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <ImageView fx:id="navProfileIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Profile"/>
             </HBox>
 
@@ -107,8 +107,8 @@
                         <Label fx:id="profileBioLabel" text="This is the profile bio description." style="-fx-font-size: 15px;" wrapText="true"/>
 
                         <HBox spacing="16.0">
-                            <Label fx:id="profileDobLabel" text="📅 Born January 1, 2000" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
-                            <Label fx:id="profileJoinedLabel" text="📅 Joined March 2026" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            <Label fx:id="profileDobLabel" text="Born January 1, 2000" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            <Label fx:id="profileJoinedLabel" text="Joined March 2026" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
                         </HBox>
 
                         <HBox spacing="20.0" style="-fx-padding: 6px 0px 0px 0px;">
@@ -140,8 +140,7 @@
                         <VBox spacing="4.0">
                             <Label text="Profile Photo" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
                             <HBox spacing="8.0" alignment="CENTER_LEFT">
-                                <TextField fx:id="editPfpField" promptText="URL" HBox.hgrow="ALWAYS"/>
-                                <Button text="🖼 Upload Avatar" styleClass="button-secondary" onAction="#onUploadAvatarClicked"/>
+                                <Button fx:id="uploadAvatarBtn" text=" Upload Avatar" styleClass="button-secondary" onAction="#onUploadAvatarClicked"/>
                             </HBox>
                         </VBox>
 

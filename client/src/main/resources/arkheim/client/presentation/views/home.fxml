@@ -29,19 +29,19 @@
         <VBox spacing="6.0" VBox.vgrow="ALWAYS">
             <!-- Home -->
             <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item, nav-item-active" onMouseClicked="#onNavHomeClicked">
-                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <ImageView fx:id="navHomeIcon" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Home"/>
             </HBox>
             
             <!-- Explore -->
             <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
-                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <ImageView fx:id="navExploreIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Explore"/>
             </HBox>
             
             <!-- Profile -->
             <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavProfileClicked">
-                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <ImageView fx:id="navProfileIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Profile"/>
             </HBox>
             
@@ -117,7 +117,7 @@
                                 <HBox alignment="CENTER_LEFT" styleClass="composer-action-bar">
                                     <!-- Monochrome Icons Bar -->
                                     <HBox spacing="4.0" HBox.hgrow="ALWAYS">
-                                        <Button text="🖼" styleClass="composer-icon-btn" focusTraversable="false" onAction="#onMediaAttachmentClicked"/>
+                                        <Button fx:id="composerMediaButton" styleClass="composer-icon-btn" focusTraversable="false" onAction="#onMediaAttachmentClicked"/>
                                     </HBox>
                                     
                                     <!-- Composer Post pill button -->

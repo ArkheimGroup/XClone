@@ -4,6 +4,7 @@ import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
@@ -37,6 +38,12 @@ public class PostDetailsController extends BaseController {
 
     @FXML
     private ImageView logoImageView;
+    @FXML
+    private ImageView navHomeIcon;
+    @FXML
+    private ImageView navExploreIcon;
+    @FXML
+    private ImageView navProfileIcon;
     @FXML
     private Circle userAvatarCircle;
     @FXML
@@ -74,6 +81,10 @@ public class PostDetailsController extends BaseController {
     private Label metricsRepliesCount;
 
     @FXML
+    private Button focalReplyBtn;
+    @FXML
+    private Button focalRepostBtn;
+    @FXML
     private Button focalLikeBtn;
 
     @FXML
@@ -97,13 +108,12 @@ public class PostDetailsController extends BaseController {
     private AuthViewModel authViewModel;
     private PostViewModel postViewModel;
 
-    private ThemeMode themeMode = ThemeMode.LIGHT;
     private UserDto currentUser;
     private UUID postId;
 
     @FXML
     private void initialize() {
-        updateLogo();
+        updateIcons();
     }
 
     public void setViewModels(AuthViewModel authViewModel, PostViewModel postViewModel, UUID postId) {
@@ -118,6 +128,16 @@ public class PostDetailsController extends BaseController {
             MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
+
+        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                this.currentUser = newVal;
+                if (userDisplayName != null) userDisplayName.setText(newVal.name());
+                if (userHandleName != null) userHandleName.setText("@" + newVal.username());
+                if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
+                if (replyComposerAvatar != null) MediaUiUtils.loadAvatar(replyComposerAvatar, newVal.pfpUrl(), themeMode);
+            }
+        });
 
         initializeStateBindings();
         loadData();
@@ -173,7 +193,12 @@ public class PostDetailsController extends BaseController {
         metricsRepostsCount.setText(String.valueOf(post.repostCount()));
         metricsRepliesCount.setText(String.valueOf(post.replyCount()));
 
-        focalLikeBtn.setText(post.likedByMe() ? "♥" : "♡");
+        IconUtils.setButtonIcon(focalLikeBtn, post.likedByMe() ? "heart_full" : "heart", themeMode, 20);
+        focalLikeBtn.setText("");
+        if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
+        if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);
+        if (deleteFocalBtn != null) IconUtils.setButtonIcon(deleteFocalBtn, "trash", themeMode, 16);
+
         if (post.likedByMe()) {
             focalLikeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         } else {
@@ -307,7 +332,8 @@ public class PostDetailsController extends BaseController {
 
         // Delete button for replies
         if (currentUser != null && currentUser.id().equals(reply.authorId())) {
-            Button deleteBtn = new Button("🗑");
+            Button deleteBtn = new Button();
+            IconUtils.setButtonIcon(deleteBtn, "trash", themeMode, 16);
             deleteBtn.getStyleClass().add("post-action-btn");
             deleteBtn.setStyle("-fx-text-fill: #E02424; -fx-padding: 4px;");
             deleteBtn.setOnAction(e -> {
@@ -329,9 +355,14 @@ public class PostDetailsController extends BaseController {
         PostDto parentPost = postViewModel.currentPostProperty().get();
         if (reply.isRepost() || reply.repostedFromUsername() != null) {
             String origAuthor = reply.repostedFromUsername() != null ? reply.repostedFromUsername() : (reply.repliedUsername() != null ? reply.repliedUsername() : "user");
-            Label repostBadge = new Label("🔁 Reposted from @" + origAuthor);
-            repostBadge.getStyleClass().add("post-author-handle");
-            repostBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            HBox repostBadge = new HBox(6.0);
+            repostBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView repostIcon = IconUtils.createIconView("repost", themeMode, 14);
+            Label repostLabel = new Label("Reposted from @" + origAuthor);
+            repostLabel.getStyleClass().add("post-author-handle");
+            repostLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            repostBadge.getChildren().addAll(repostIcon, repostLabel);
+            repostBadge.setStyle("-fx-padding: 0 0 4px 0;");
             card.getChildren().add(0, repostBadge);
         } else {
             String targetUser = reply.repliedUsername() != null ? reply.repliedUsername() : (parentPost != null ? parentPost.authorUsername() : "user");
@@ -351,7 +382,8 @@ public class PostDetailsController extends BaseController {
         HBox actions = new HBox(40.0);
         actions.getStyleClass().add("post-actions");
 
-        Button replyBtn = new Button("💬 " + reply.replyCount());
+        Button replyBtn = new Button(" " + reply.replyCount());
+        IconUtils.setButtonIcon(replyBtn, "comment", themeMode, 14);
         replyBtn.getStyleClass().add("post-action-btn");
         replyBtn.setStyle("-fx-font-size: 12px;");
         replyBtn.setOnAction(e -> {
@@ -361,7 +393,8 @@ public class PostDetailsController extends BaseController {
             }
         });
 
-        Button repostBtn = new Button("🔁 " + reply.repostCount());
+        Button repostBtn = new Button(" " + reply.repostCount());
+        IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 14);
         repostBtn.getStyleClass().add("post-action-btn");
         repostBtn.setStyle("-fx-font-size: 12px;");
         if (reply.repostedByMe()) {
@@ -374,8 +407,9 @@ public class PostDetailsController extends BaseController {
             }
         });
 
-        String likeSym = reply.likedByMe() ? "♥" : "♡";
-        Button likeBtn = new Button(likeSym + " " + reply.likeCount());
+        String likeIconName = reply.likedByMe() ? "heart_full" : "heart";
+        Button likeBtn = new Button(" " + reply.likeCount());
+        IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 14);
         likeBtn.getStyleClass().add("post-action-btn");
         likeBtn.setStyle("-fx-font-size: 12px;");
         if (reply.likedByMe()) {
@@ -424,32 +458,52 @@ public class PostDetailsController extends BaseController {
         }
     }
 
-    @FXML
-    private void onThemeToggleClicked() {
-        if (navigator instanceof JavaFxNavigator fxNavigator) {
-            if (themeMode == ThemeMode.LIGHT) {
-                themeMode = ThemeMode.DARK;
-                themeToggleBtn.setText("☼ Light Mode");
-            } else {
-                themeMode = ThemeMode.LIGHT;
-                themeToggleBtn.setText("☾ Dark Mode");
-            }
-            fxNavigator.setThemeMode(themeMode);
-            fxNavigator.updateTheme();
-            updateLogo();
-            loadData();
+    @Override
+    public void setThemeMode(ThemeMode themeMode) {
+        super.setThemeMode(themeMode);
+        if (postViewModel != null && postViewModel.currentPostProperty().get() != null) {
+            renderFocalPost(postViewModel.currentPostProperty().get());
+            renderReplies();
         }
     }
 
-    private void updateLogo() {
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            ThemeMode newMode = (themeMode == ThemeMode.LIGHT) ? ThemeMode.DARK : ThemeMode.LIGHT;
+            fxNavigator.setThemeMode(newMode);
+            fxNavigator.updateTheme();
+            setThemeMode(newMode);
+        }
+    }
+
+    @Override
+    public void updateIcons() {
         String logoPath = (themeMode == ThemeMode.LIGHT)
-                ? "/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"
-                : "/arkheim/client/presentation/Assets/images/XCloneLogo_DarkMode_Transparent.png";
+                ? "/arkheim/client/presentation/Assets/images/icons/light/XCloneLogo_LightMode_Transparent.png"
+                : "/arkheim/client/presentation/Assets/images/icons/dark/XCloneLogo_DarkMode_Transparent.png";
         try {
-            logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            if (logoImageView != null) {
+                logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            }
         } catch (Exception e) {
             System.err.println("Could not load logo: " + e.getMessage());
         }
+        if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
+        if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
+        if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+        }
+        if (userAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (replyComposerAvatar != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
+        }
+        if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
+        if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);
+        if (deleteFocalBtn != null) IconUtils.setButtonIcon(deleteFocalBtn, "trash", themeMode, 16);
     }
 
     @FXML

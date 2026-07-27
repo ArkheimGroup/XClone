@@ -13,9 +13,23 @@ import java.util.regex.Pattern;
 
 public class BaseController {
     protected Navigator navigator;
+    protected ThemeMode themeMode = ThemeMode.LIGHT;
 
     public void setNavigator(Navigator navigator) {
         this.navigator = navigator;
+    }
+
+    public void setThemeMode(ThemeMode themeMode) {
+        this.themeMode = themeMode;
+        updateIcons();
+    }
+
+    public ThemeMode getThemeMode() {
+        return themeMode;
+    }
+
+    public void updateIcons() {
+        // Subclasses override to update theme-dependent icons
     }
 
     protected Node createFormattedPostBody(String content, ThemeMode themeMode, Consumer<String> onHashtagClick) {

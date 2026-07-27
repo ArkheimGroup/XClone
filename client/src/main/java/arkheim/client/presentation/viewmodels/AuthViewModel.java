@@ -58,12 +58,12 @@ public class AuthViewModel {
         String input = rawInput != null ? rawInput.trim() : "";
 
         if (input.isBlank()) {
-            errorMessage.set("Please enter an email or username");
+            errorMessage.set("Please enter an email");
             emailIsValid.set(false);
             return;
         }
 
-        if (input.contains("@") && !isEmailValid(input)) {
+        if (!isEmailValid(input)) {
             errorMessage.set(input + " is not a valid email format");
             emailIsValid.set(false);
             return;

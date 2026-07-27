@@ -16,7 +16,7 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Image icon = new Image(
-                Objects.requireNonNull(getClass().getResourceAsStream("/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"))
+                Objects.requireNonNull(getClass().getResourceAsStream("/arkheim/client/presentation/Assets/images/icons/light/XCloneLogo_LightMode_Transparent.png"))
         );
         stage.getIcons().add(icon);
 
