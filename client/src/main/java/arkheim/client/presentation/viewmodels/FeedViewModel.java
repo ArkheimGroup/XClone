@@ -4,6 +4,7 @@ import arkheim.client.domain.ports.FeedPort;
 import arkheim.client.domain.ports.HashtagPort;
 import arkheim.client.domain.ports.PostPort;
 import arkheim.client.domain.ports.dtos.PostDto;
+import arkheim.client.infrastructure.adapter.HttpHashtagAdapter;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import javafx.beans.property.ObjectProperty;
@@ -48,7 +49,7 @@ public class FeedViewModel {
     }
 
     public FeedViewModel(FeedPort feedPort, PostPort postPort) {
-        this(feedPort, postPort, new arkheim.client.infrastructure.adapter.HttpHashtagAdapter());
+        this(feedPort, postPort, new HttpHashtagAdapter());
     }
 
     private synchronized void startAutoRefresh(UUID userId) {
@@ -106,7 +107,7 @@ public class FeedViewModel {
             case FeedUiEvent.LoadFeed e -> handleLoadFeed(e.userId());
             case FeedUiEvent.SwitchTab e -> handleSwitchTab(e.tabType(), e.userId());
             case FeedUiEvent.UpdateComposerText e -> handleUpdateComposer(e.text());
-            case FeedUiEvent.SubmitPost e -> handleSubmitPost(e.authorId());
+            case FeedUiEvent.SubmitPost e -> handleSubmitPost(e.authorId(), e.mediaUrl());
             case FeedUiEvent.ToggleLike e -> handleToggleLike(e.postId(), e.userId());
             case FeedUiEvent.DeletePost e -> handleDeletePost(e.postId(), e.userId());
             case FeedUiEvent.PerformSearch e -> handleSearch(e.query(), e.userId());
@@ -144,16 +145,18 @@ public class FeedViewModel {
         uiState.set(uiState.get().withComposerText(text));
     }
 
-    private void handleSubmitPost(UUID authorId) {
+    private void handleSubmitPost(UUID authorId, String mediaUrl) {
         String content = uiState.get().composerText();
-        if (content == null || content.strip().isEmpty()) {
+        boolean hasContent = content != null && !content.strip().isEmpty();
+        boolean hasMedia = mediaUrl != null && !mediaUrl.isBlank();
+        if (!hasContent && !hasMedia) {
             return;
         }
 
         uiState.set(uiState.get().withPosting(true).withError(null));
         try {
-            // Call postPort to create a top-level post with no media or parent
-            PostDto created = postPort.createPost(authorId, content, null, null);
+            // Call postPort to create a top-level post with optional mediaUrl
+            PostDto created = postPort.createPost(authorId, hasContent ? content : "", mediaUrl, null);
 
             // Prepend the new post directly to timeline for instant feedback
             List<PostDto> updatedPosts = new ArrayList<>();

@@ -6,6 +6,7 @@ import arkheim.client.domain.ports.dtos.MediaDto;
 import javafx.beans.property.*;
 import javafx.collections.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,11 +48,29 @@ public class MediaViewModel {
     }
 
     /**
+     * Uploads a physical media file via {@link MediaPort#uploadMedia} and
+     * stores the result in {@link #lastRegisteredMediaProperty()}.
+     * @return registered {@link MediaDto} or null if error occurred
+     */
+    public MediaDto uploadMedia(File file, UUID uploadedBy) {
+        errorMessage.set("");
+        try {
+            MediaDto registered = mediaPort.uploadMedia(file, uploadedBy);
+            lastRegisteredMedia.set(registered);
+            return registered;
+        } catch (Exception e) {
+            errorMessage.set(e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Links the given media to the given post via
      * {@link MediaPort#linkMediaToPost}.
      * adds the media locally to {@link #postMediaProperty()} if not already present,
      * rather than re-fetching the full list.
      */
+
     public void linkMediaToPost(MediaDto media, UUID postId) {
         errorMessage.set("");
         try {
