@@ -53,23 +53,25 @@ public class RegisterController extends BaseController {
             return;
         }
 
-        emailField.textProperty().bindBidirectional(authViewModel.emailProperty());
+        emailField.textProperty().bindBidirectional(authViewModel.registerEmailProperty());
         passwordField.textProperty().bindBidirectional(authViewModel.registerPasswordProperty());
         passwordRepetitionField.textProperty().bindBidirectional(authViewModel.registerPasswordRepetitionProperty());
         errorLabel.textProperty().bind(authViewModel.errorMessageProperty());
+        errorLabel.visibleProperty().bind(authViewModel.errorMessageProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(authViewModel.errorMessageProperty().isNotEmpty());
         usernameField.textProperty().bindBidirectional(authViewModel.registerUsernameProperty());
         nameField.textProperty().bindBidirectional(authViewModel.registerNameProperty());
         datePicker.valueProperty().bindBidirectional(authViewModel.registerDateOfBirthProperty());
 
         registerButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> authViewModel.emailProperty().get().isBlank()
+                        () -> authViewModel.registerEmailProperty().get().isBlank()
                             || authViewModel.registerPasswordProperty().get().isBlank()
                             || authViewModel.registerPasswordRepetitionProperty().get().isBlank()
                             || authViewModel.registerUsernameProperty().get().isBlank()
                             || authViewModel.registerNameProperty().get().isBlank()
                             || authViewModel.registerDateOfBirthProperty().get() == null,
-                        authViewModel.emailProperty(),
+                        authViewModel.registerEmailProperty(),
                         authViewModel.registerPasswordProperty(),
                         authViewModel.registerPasswordRepetitionProperty(),
                         authViewModel.registerUsernameProperty(),

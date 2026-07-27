@@ -48,6 +48,8 @@ public class LoginController extends BaseController {
         emailField.textProperty().bindBidirectional(authViewModel.emailProperty());
         passwordField.textProperty().bindBidirectional(authViewModel.passwordProperty());
         errorLabel.textProperty().bind(authViewModel.errorMessageProperty());
+        errorLabel.visibleProperty().bind(authViewModel.errorMessageProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(authViewModel.errorMessageProperty().isNotEmpty());
 
         loginButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
@@ -64,7 +66,7 @@ public class LoginController extends BaseController {
     @FXML
     private void onLoginClicked() {
         authViewModel.login();
-        if (authViewModel.currentUserProperty() != null) {
+        if (authViewModel.currentUserProperty().get() != null) {
             navigator.showHomeScreen();
         }
 
