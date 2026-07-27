@@ -140,7 +140,6 @@
                         <VBox spacing="4.0">
                             <Label text="Profile Photo" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
                             <HBox spacing="8.0" alignment="CENTER_LEFT">
-                                <TextField fx:id="editPfpField" promptText="URL" HBox.hgrow="ALWAYS"/>
                                 <Button fx:id="uploadAvatarBtn" text=" Upload Avatar" styleClass="button-secondary" onAction="#onUploadAvatarClicked"/>
                             </HBox>
                         </VBox>

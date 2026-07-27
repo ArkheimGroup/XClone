@@ -98,8 +98,6 @@ public class ProfileController extends BaseController {
     @FXML
     private TextArea editBioArea;
     @FXML
-    private TextField editPfpField;
-    @FXML
     private DatePicker editDobPicker;
     @FXML
     private Button uploadAvatarBtn;
@@ -153,7 +151,6 @@ public class ProfileController extends BaseController {
         // Bind form fields to UserViewModel
         editNameField.textProperty().bindBidirectional(userViewModel.editNameProperty());
         editBioArea.textProperty().bindBidirectional(userViewModel.editBiographyProperty());
-        editPfpField.textProperty().bindBidirectional(userViewModel.editPfpUrlProperty());
         editDobPicker.valueProperty().bindBidirectional(userViewModel.editDateOfBirthProperty());
 
         // Bind Profile changes
@@ -265,7 +262,7 @@ public class ProfileController extends BaseController {
                     arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
                     if (uploadedMedia != null) {
                         Platform.runLater(() -> {
-                            editPfpField.setText(uploadedMedia.url());
+                            userViewModel.editPfpUrlProperty().set(uploadedMedia.url());
                             MediaUiUtils.loadAvatar(profileAvatarCircle, uploadedMedia.url(), themeMode);
                         });
                     }
