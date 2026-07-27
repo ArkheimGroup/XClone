@@ -40,3 +40,6 @@ build/
 
 ### Obsidain ###
 .obsidian
+
+### uploads ###
+uploads/media/*
