@@ -8,7 +8,7 @@ import java.util.UUID;
  * to compute the next state.
  */
 public sealed interface FeedUiEvent {
-    
+
     /**
      * Triggers fetching the latest feed posts for the timeline.
      */
@@ -25,9 +25,14 @@ public sealed interface FeedUiEvent {
     record UpdateComposerText(String text) implements FeedUiEvent {}
 
     /**
-     * Triggers creating a new post from the composer content.
+     * Triggers creating a new post from the composer content, with optional mediaUrl.
      */
-    record SubmitPost(UUID authorId) implements FeedUiEvent {}
+    record SubmitPost(UUID authorId, String mediaUrl) implements FeedUiEvent {
+        public SubmitPost(UUID authorId) {
+            this(authorId, null);
+        }
+    }
+
 
     /**
      * Triggers liking/unliking a specific post.

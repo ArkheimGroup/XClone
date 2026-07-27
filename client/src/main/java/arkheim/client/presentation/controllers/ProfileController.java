@@ -5,10 +5,12 @@ import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.domain.ports.dtos.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -108,6 +110,7 @@ public class ProfileController extends BaseController {
     private UserViewModel userViewModel;
     private FollowViewModel followViewModel;
     private PostViewModel postViewModel;
+    private arkheim.client.presentation.viewmodels.MediaViewModel mediaViewModel;
 
     private ThemeMode themeMode = ThemeMode.LIGHT;
     private UserDto currentUser;
@@ -124,12 +127,14 @@ public class ProfileController extends BaseController {
         this.userViewModel = userViewModel;
         this.followViewModel = followViewModel;
         this.postViewModel = postViewModel;
+        this.mediaViewModel = new arkheim.client.presentation.viewmodels.MediaViewModel(new arkheim.client.infrastructure.adapter.HttpMediaAdapter());
         this.profileId = profileId;
 
         this.currentUser = authViewModel.currentUserProperty().get();
         if (currentUser != null) {
             userDisplayName.setText(currentUser.name());
             userHandleName.setText("@" + currentUser.username());
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
 
         initializeStateBindings();
@@ -212,6 +217,8 @@ public class ProfileController extends BaseController {
         profileHandleLabel.setText("@" + profile.username());
         profileBioLabel.setText(profile.biography() == null ? "" : profile.biography());
 
+        MediaUiUtils.loadAvatar(profileAvatarCircle, profile.pfpUrl(), themeMode);
+
         String dobText = profile.dateOfBirth() != null
                 ? "📅 Born " + profile.dateOfBirth().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
                 : "📅 Date of birth undisclosed";
@@ -227,6 +234,44 @@ public class ProfileController extends BaseController {
 
         postViewModel.loadUserPosts(profile.username());
     }
+
+    @FXML
+    private void onUploadAvatarClicked() {
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Select Avatar Image");
+        fileChooser.getExtensionFilters().addAll(
+                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
+                new javafx.stage.FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        javafx.stage.Window window = profileAvatarCircle != null && profileAvatarCircle.getScene() != null
+                ? profileAvatarCircle.getScene().getWindow()
+                : null;
+        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+
+        if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            new Thread(() -> {
+                try {
+                    arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    if (uploadedMedia != null) {
+                        Platform.runLater(() -> {
+                            editPfpField.setText(uploadedMedia.url());
+                            MediaUiUtils.loadAvatar(profileAvatarCircle, uploadedMedia.url(), themeMode);
+                        });
+                    }
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        if (profileErrorLabel != null) {
+                            profileErrorLabel.setText("Failed to upload avatar: " + e.getMessage());
+                            profileErrorLabel.setVisible(true);
+                            profileErrorLabel.setManaged(true);
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
 
     private void updateFollowButtonVisibility(boolean isFollowing) {
         if (currentUser != null && currentUser.id().equals(profileId)) {
@@ -299,7 +344,8 @@ public class ProfileController extends BaseController {
 
         HBox header = new HBox(12.0);
         Circle avatar = new Circle(20.0);
-        avatar.setFill(Color.web(themeMode == ThemeMode.LIGHT ? "#E7E7E8" : "#16181C"));
+        MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
+
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
 
         VBox meta = new VBox(2.0);
@@ -394,13 +440,13 @@ public class ProfileController extends BaseController {
         }
 
         if (post.mediaUrls() != null && !post.mediaUrls().isEmpty()) {
-            StackPane mediaPane = new StackPane();
-            mediaPane.getStyleClass().add("post-media-placeholder");
-            Label mediaLabel = new Label("🖼 Image Preview (" + post.mediaUrls().get(0) + ")");
-            mediaLabel.getStyleClass().add("post-media-placeholder-label");
-            mediaPane.getChildren().add(mediaLabel);
-            card.getChildren().add(mediaPane);
+            for (String mediaUrl : post.mediaUrls()) {
+                if (mediaUrl != null && !mediaUrl.isBlank()) {
+                    card.getChildren().add(MediaUiUtils.createMediaPreviewNode(mediaUrl, themeMode));
+                }
+            }
         }
+
 
         HBox actions = new HBox(40.0);
         actions.getStyleClass().add("post-actions");
@@ -470,6 +516,16 @@ public class ProfileController extends BaseController {
     @FXML
     private void onSaveProfileClicked() {
         userViewModel.updateProfile(profileId);
+        UserProfileDto updatedProfile = userViewModel.currentProfileProperty().get();
+        if (updatedProfile != null && authViewModel != null && currentUser != null && currentUser.id().equals(profileId)) {
+            authViewModel.updateCurrentUserDetails(updatedProfile.name(), updatedProfile.pfpUrl());
+            this.currentUser = authViewModel.currentUserProperty().get();
+            if (currentUser != null) {
+                userDisplayName.setText(currentUser.name());
+                userHandleName.setText("@" + currentUser.username());
+                MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+            }
+        }
         editProfileFormBox.setVisible(false);
         editProfileFormBox.setManaged(false);
         profileInfoBox.setVisible(true);
@@ -572,6 +628,7 @@ public class ProfileController extends BaseController {
             dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/" + styleFile)).toExternalForm());
         } catch (Exception ignored) {}
 
+
         dialog.showAndWait();
     }
 
@@ -602,6 +659,7 @@ public class ProfileController extends BaseController {
             System.err.println("Could not load logo: " + e.getMessage());
         }
     }
+
 
     @FXML
     private void onSearchSubmitted() {
@@ -663,14 +721,15 @@ public class ProfileController extends BaseController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        
+
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().clear();
         String styleFile = (themeMode == ThemeMode.LIGHT) ? "Style.css" : "DarkMode.css";
         try {
             dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/" + styleFile)).toExternalForm());
         } catch (Exception ignored) {}
-        
+
+
         alert.showAndWait();
     }
 }
