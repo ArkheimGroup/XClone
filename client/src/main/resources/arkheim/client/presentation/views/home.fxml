@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<HBox alignment="CENTER" prefHeight="800.0" prefWidth="1280.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.HomeController">
+    
+    <!-- 1. LEFT SIDEBAR / NAVIGATION (Width: 275px) -->
+    <VBox prefWidth="275.0" minWidth="220.0" styleClass="left-sidebar" spacing="20.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <!-- Logo -->
+        <HBox alignment="CENTER_LEFT">
+            <ImageView fx:id="logoImageView" fitHeight="128.0" fitWidth="128.0" pickOnBounds="true" preserveRatio="true"/>
+        </HBox>
+        
+        <!-- Navigation Links -->
+        <VBox spacing="6.0" VBox.vgrow="ALWAYS">
+            <!-- Home -->
+            <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item, nav-item-active" onMouseClicked="#onNavHomeClicked">
+                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <Label styleClass="nav-label" text="Home"/>
+            </HBox>
+            
+            <!-- Explore -->
+            <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
+                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label styleClass="nav-label" text="Explore"/>
+            </HBox>
+            
+            <!-- Profile -->
+            <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavProfileClicked">
+                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <Label styleClass="nav-label" text="Profile"/>
+            </HBox>
+            
+            <!-- Sidebar Post Button -->
+            <Button fx:id="sidebarPostButton" text="Post" prefWidth="220.0" styleClass="button-primary" onAction="#onSidebarPostClicked">
+                <VBox.margin>
+                    <Insets top="16.0"/>
+                </VBox.margin>
+            </Button>
+        </VBox>
+
+        <!-- Bottom Account & Theme Settings -->
+        <VBox spacing="10.0">
+            <!-- Theme Toggle Button -->
+            <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
+            
+            <!-- User Profile Card -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;">
+                <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
+                <VBox alignment="CENTER_LEFT">
+                    <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label fx:id="userHandleName" text="\@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+    
+    <!-- 2. CENTER MAIN FEED (Width: 600px) -->
+    <VBox prefWidth="600.0" minWidth="500.0" maxWidth="600.0" styleClass="center-feed" HBox.hgrow="ALWAYS">
+        <!-- Sticky Header / Top Navigation Tabs -->
+        <VBox styleClass="sticky-header">
+            <Label text="Home" styleClass="header-title"/>
+            <HBox prefHeight="53.0" alignment="CENTER" styleClass="tab-container">
+                <!-- For You Tab -->
+                <VBox fx:id="tabForYou" alignment="BOTTOM_CENTER" HBox.hgrow="ALWAYS" styleClass="tab-item, tab-item-active" onMouseClicked="#onTabForYouClicked">
+                    <Label text="For You" styleClass="tab-label"/>
+                    <VBox fx:id="tabForYouIndicator" styleClass="tab-item-active-indicator" prefWidth="60.0" maxWidth="60.0">
+                        <VBox.margin>
+                            <Insets top="12.0"/>
+                        </VBox.margin>
+                    </VBox>
+                </VBox>
+                
+                <!-- Following Tab -->
+                <VBox fx:id="tabFollowing" alignment="BOTTOM_CENTER" HBox.hgrow="ALWAYS" styleClass="tab-item" onMouseClicked="#onTabFollowingClicked">
+                    <Label text="Following" styleClass="tab-label"/>
+                    <VBox fx:id="tabFollowingIndicator" prefWidth="60.0" maxWidth="60.0">
+                        <VBox.margin>
+                            <Insets top="12.0"/>
+                        </VBox.margin>
+                    </VBox>
+                </VBox>
+            </HBox>
+        </VBox>
+        
+        <!-- Center Content: Composer + Feed Timeline Scroll -->
+        <ScrollPane fx:id="feedScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="0.0">
+                    <!-- Inline Post Composer -->
+                    <VBox styleClass="composer" spacing="12.0">
+                        <HBox spacing="12.0">
+                            <!-- User Avatar Placeholder -->
+                            <Circle fx:id="composerAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
+                            
+                            <!-- Text Input Area -->
+                            <VBox HBox.hgrow="ALWAYS" spacing="8.0">
+                                <TextArea fx:id="composerTextArea" promptText="What is happening?!" styleClass="composer-textarea" prefHeight="70.0" wrapText="true" minHeight="50.0"/>
+                                
+                                <!-- Error message banner inside composer -->
+                                <Label fx:id="feedErrorLabel" styleClass="error-label" visible="false" managed="false"/>
+                                
+                                <HBox alignment="CENTER_LEFT" styleClass="composer-action-bar">
+                                    <!-- Monochrome Icons Bar -->
+                                    <HBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                        <Button text="🖼" styleClass="composer-icon-btn" focusTraversable="false" onAction="#onMediaAttachmentClicked"/>
+                                    </HBox>
+                                    
+                                    <!-- Composer Post pill button -->
+                                    <Button fx:id="composerPostButton" text="Post" styleClass="button-primary" onAction="#onComposerPostClicked"/>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- Feed Timeline items list container -->
+                    <VBox fx:id="feedTimelineContainer" spacing="0.0">
+                        <!-- Dynamic elements injected by controller -->
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </VBox>
+    
+    <!-- 3. RIGHT SIDEBAR (Width: 350px) -->
+    <VBox prefWidth="350.0" minWidth="280.0" styleClass="right-sidebar" spacing="16.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <!-- Search bar widget -->
+        <VBox styleClass="search-container">
+            <TextField fx:id="searchField" promptText="Search" styleClass="search-field" onAction="#onSearchSubmitted"/>
+        </VBox>
+
+        <!-- Right side search results -->
+        <ScrollPane fitToWidth="true" styleClass="main-scroll" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+            <content>
+                <VBox fx:id="searchResultsContainer" spacing="10.0"/>
+            </content>
+        </ScrollPane>
+    </VBox>
+</HBox>

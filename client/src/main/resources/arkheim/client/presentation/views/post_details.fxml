@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<HBox alignment="CENTER" prefHeight="800.0" prefWidth="1280.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.PostDetailsController">
+    
+    <!-- 1. LEFT SIDEBAR / NAVIGATION (Width: 275px) -->
+    <VBox prefWidth="275.0" minWidth="220.0" styleClass="left-sidebar" spacing="20.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <!-- Logo -->
+        <HBox alignment="CENTER_LEFT">
+            <ImageView fx:id="logoImageView" fitHeight="128.0" fitWidth="128.0" pickOnBounds="true" preserveRatio="true"/>
+        </HBox>
+        
+        <!-- Navigation Links -->
+        <VBox spacing="6.0" VBox.vgrow="ALWAYS">
+            <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavHomeClicked">
+                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <Label styleClass="nav-label" text="Home"/>
+            </HBox>
+            
+            <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
+                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label styleClass="nav-label" text="Explore"/>
+            </HBox>
+            
+            <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavProfileClicked">
+                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <Label styleClass="nav-label" text="Profile"/>
+            </HBox>
+            
+            <Button fx:id="sidebarPostButton" text="Post" prefWidth="220.0" styleClass="button-primary" onAction="#onSidebarPostClicked">
+                <VBox.margin>
+                    <Insets top="16.0"/>
+                </VBox.margin>
+            </Button>
+        </VBox>
+
+        <!-- Bottom Settings & Account info -->
+        <VBox spacing="10.0">
+            <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
+            
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;">
+                <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
+                <VBox alignment="CENTER_LEFT">
+                    <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label fx:id="userHandleName" text="\@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+    
+    <!-- 2. CENTER MAIN FEED (Width: 600px) -->
+    <VBox prefWidth="600.0" minWidth="500.0" maxWidth="600.0" styleClass="center-feed" HBox.hgrow="ALWAYS">
+        <!-- Sticky Header with Back Button -->
+        <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="sticky-header" style="-fx-padding: 12px 16px;">
+            <Button fx:id="backButton" text="←" styleClass="post-action-btn" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 4px 8px;" onAction="#onBackClicked"/>
+            <Label text="Post" style="-fx-font-size: 18px; -fx-font-weight: 800;"/>
+        </HBox>
+        
+        <!-- Thread scroll area -->
+        <ScrollPane fx:id="detailsScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="0.0">
+                    
+                    <!-- Parent Post Container (If present) -->
+                    <VBox fx:id="parentPostContainer" spacing="0.0">
+                        <!-- Dynamic parent post injected here -->
+                    </VBox>
+                    
+                    <!-- Main Focal Post Card -->
+                    <VBox fx:id="focalPostContainer" style="-fx-padding: 16px; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;" spacing="14.0">
+                        <!-- Header Author Info -->
+                        <HBox spacing="12.0" alignment="CENTER_LEFT">
+                            <Circle fx:id="focalAvatarCircle" radius="24.0" fill="#E7E7E8" stroke="transparent"/>
+                            <VBox>
+                                <Label fx:id="focalAuthorName" text="Author Name" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                                <Label fx:id="focalAuthorHandle" text="\@handle" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="deleteFocalBtn" text="🗑" styleClass="post-action-btn" style="-fx-text-fill: #E02424;" visible="false" managed="false" onAction="#onDeleteFocalClicked"/>
+                        </HBox>
+                        
+                        <!-- Content Body -->
+                        <Label fx:id="focalContentText" text="Focal post content text" style="-fx-font-size: 18px; -fx-line-spacing: 6px;" wrapText="true" maxWidth="560.0"/>
+                        
+                        <!-- Media Container -->
+                        <StackPane fx:id="focalMediaContainer" visible="false" managed="false">
+                            <!-- Optional media attachments -->
+                        </StackPane>
+                        
+                        <!-- Detailed Timestamp -->
+                        <HBox style="-fx-border-color: -fx-border-color-muted transparent -fx-border-color-muted transparent; -fx-border-width: 1px 0px 1px 0px; -fx-padding: 8px 0px;">
+                            <Label fx:id="focalTimestampLabel" text="12:30 PM · Jul 24, 2026" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                        </HBox>
+                        
+                        <!-- Detailed Metrics Row -->
+                        <HBox spacing="20.0" style="-fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px; -fx-padding: 0px 0px 8px 0px;">
+                            <HBox spacing="4.0">
+                                <Label fx:id="metricsLikesCount" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Likes" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
+                            <HBox spacing="4.0">
+                                <Label fx:id="metricsRepostsCount" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Reposts" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
+                            <HBox spacing="4.0">
+                                <Label fx:id="metricsRepliesCount" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Replies" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
+                        </HBox>
+                        
+                        <!-- Quick Action icons -->
+                        <HBox spacing="60.0" alignment="CENTER">
+                            <Button text="💬" styleClass="composer-icon-btn"/>
+                            <Button text="🔁" styleClass="composer-icon-btn"/>
+                            <Button fx:id="focalLikeBtn" text="♡" styleClass="composer-icon-btn" onAction="#onFocalLikeClicked"/>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- Reply Composer Panel -->
+                    <VBox styleClass="composer" spacing="12.0">
+                        <HBox spacing="12.0">
+                            <Circle fx:id="replyComposerAvatar" radius="18.0" fill="#E7E7E8" stroke="transparent"/>
+                            
+                            <VBox HBox.hgrow="ALWAYS" spacing="8.0">
+                                <TextArea fx:id="replyTextArea" promptText="Post your reply" styleClass="composer-textarea" prefHeight="50.0" wrapText="true" minHeight="40.0"/>
+                                
+                                <Label fx:id="detailsErrorLabel" styleClass="error-label" visible="false" managed="false"/>
+                                
+                                <HBox alignment="CENTER_RIGHT">
+                                    <Button fx:id="replyPostBtn" text="Reply" styleClass="button-primary" style="-fx-padding: 8px 16px; -fx-font-size: 13px;" onAction="#onReplySubmitClicked"/>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- Replies list container -->
+                    <VBox fx:id="repliesListContainer" spacing="0.0">
+                        <!-- Dynamic reply items injected here -->
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </VBox>
+    
+    <!-- 3. RIGHT SIDEBAR (Width: 350px) -->
+    <VBox prefWidth="350.0" minWidth="280.0" styleClass="right-sidebar" spacing="16.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <VBox styleClass="search-container">
+            <TextField fx:id="searchField" promptText="Search" styleClass="search-field" onAction="#onSearchSubmitted"/>
+        </VBox>
+
+        <!-- Right side search results -->
+        <ScrollPane fitToWidth="true" styleClass="main-scroll" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+            <content>
+                <VBox fx:id="searchResultsContainer" spacing="10.0"/>
+            </content>
+        </ScrollPane>
+    </VBox>
+</HBox>

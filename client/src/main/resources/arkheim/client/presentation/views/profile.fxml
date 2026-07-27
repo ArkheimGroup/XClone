@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<HBox alignment="CENTER" prefHeight="800.0" prefWidth="1280.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.ProfileController">
+    
+    <!-- 1. LEFT SIDEBAR / NAVIGATION (Width: 275px) -->
+    <VBox prefWidth="275.0" minWidth="220.0" styleClass="left-sidebar" spacing="20.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <!-- Logo -->
+        <HBox alignment="CENTER_LEFT">
+            <ImageView fx:id="logoImageView" fitHeight="128.0" fitWidth="128.0" pickOnBounds="true" preserveRatio="true"/>
+        </HBox>
+        
+        <!-- Navigation Links -->
+        <VBox spacing="6.0" VBox.vgrow="ALWAYS">
+            <!-- Home -->
+            <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavHomeClicked">
+                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <Label styleClass="nav-label" text="Home"/>
+            </HBox>
+            
+            <!-- Explore -->
+            <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
+                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label styleClass="nav-label" text="Explore"/>
+            </HBox>
+            
+            <!-- Profile -->
+            <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item, nav-item-active" onMouseClicked="#onNavProfileClicked">
+                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <Label styleClass="nav-label" text="Profile"/>
+            </HBox>
+            
+            <Button fx:id="sidebarPostButton" text="Post" prefWidth="220.0" styleClass="button-primary" onAction="#onSidebarPostClicked">
+                <VBox.margin>
+                    <Insets top="16.0"/>
+                </VBox.margin>
+            </Button>
+        </VBox>
+
+        <!-- Bottom Settings & Account info -->
+        <VBox spacing="10.0">
+            <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
+            
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;">
+                <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
+                <VBox alignment="CENTER_LEFT">
+                    <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label fx:id="userHandleName" text="\@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+    
+    <!-- 2. CENTER MAIN FEED (Width: 600px) -->
+    <VBox prefWidth="600.0" minWidth="500.0" maxWidth="600.0" styleClass="center-feed" HBox.hgrow="ALWAYS">
+        <!-- Sticky Header with Back Button -->
+        <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="sticky-header" style="-fx-padding: 12px 16px;">
+            <Button fx:id="backButton" text="←" styleClass="post-action-btn" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 4px 8px;" onAction="#onBackClicked"/>
+            <VBox>
+                <Label fx:id="headerProfileName" text="Name" style="-fx-font-size: 18px; -fx-font-weight: 800;"/>
+                <Label fx:id="headerPostCount" text="0 posts" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+            </VBox>
+        </HBox>
+        
+        <!-- Profile Scroll Area -->
+        <ScrollPane fx:id="profileScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="0.0">
+                    <!-- Banner Placeholder -->
+                    <Region style="-fx-background-color: -fx-border-color-muted; -fx-min-height: 180px; -fx-pref-height: 180px;"/>
+                    
+                    <!-- Avatar & Action button row (overlapping) -->
+                    <HBox alignment="BOTTOM_RIGHT" style="-fx-padding: -40px 16px 16px 16px;">
+                        <HBox alignment="BOTTOM_LEFT" HBox.hgrow="ALWAYS">
+                            <Circle fx:id="profileAvatarCircle" radius="55.0" fill="#E7E7E8" stroke="white" strokeWidth="4.0"/>
+                        </HBox>
+                        
+                        <!-- Primary actions (Follow / Unfollow / Edit profile) -->
+                        <StackPane>
+                            <Button fx:id="editProfileButton" text="Edit profile" styleClass="button-secondary" visible="false" managed="false" onAction="#onEditProfileClicked"/>
+                            <Button fx:id="followButton" text="Follow" styleClass="button-primary" style="-fx-padding: 8px 16px; -fx-font-size: 14px;" visible="false" managed="false" onAction="#onFollowClicked"/>
+                            <Button fx:id="unfollowButton" text="Following" styleClass="button-secondary" visible="false" managed="false" onAction="#onUnfollowClicked"/>
+                        </StackPane>
+                    </HBox>
+                    
+                    <!-- Profile Information Panel -->
+                    <VBox fx:id="profileInfoBox" style="-fx-padding: 0px 16px 16px 16px;" spacing="10.0">
+                        <VBox spacing="2.0">
+                            <Label fx:id="profileNameLabel" text="Full Name" style="-fx-font-size: 22px; -fx-font-weight: 800;"/>
+                            <Label fx:id="profileHandleLabel" text="\@handle" style="-fx-font-size: 15px;" styleClass="post-author-handle"/>
+                        </VBox>
+                        
+                        <Label fx:id="profileBioLabel" text="This is the profile bio description." style="-fx-font-size: 15px;" wrapText="true"/>
+                        
+                        <HBox spacing="16.0">
+                            <Label fx:id="profileDobLabel" text="📅 Born January 1, 2000" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            <Label fx:id="profileJoinedLabel" text="📅 Joined March 2026" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                        </HBox>
+                        
+                        <HBox spacing="20.0" style="-fx-padding: 6px 0px 0px 0px;">
+                            <HBox spacing="4.0" style="-fx-cursor: hand;" onMouseClicked="#onFollowingClicked">
+                                <Label fx:id="followingCountLabel" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Following" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
+                            <HBox spacing="4.0" style="-fx-cursor: hand;" onMouseClicked="#onFollowersClicked">
+                                <Label fx:id="followersCountLabel" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Followers" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- EDIT PROFILE FORM (Toggled visibility) -->
+                    <VBox fx:id="editProfileFormBox" style="-fx-padding: 16px; -fx-border-color: -fx-border-color-muted transparent -fx-border-color-muted transparent; -fx-border-width: 1px 0px 1px 0px;" spacing="12.0" visible="false" managed="false">
+                        <Label text="Edit Profile" style="-fx-font-size: 17px; -fx-font-weight: bold;"/>
+                        
+                        <VBox spacing="4.0">
+                            <Label text="Name" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <TextField fx:id="editNameField" promptText="Name"/>
+                        </VBox>
+                        
+                        <VBox spacing="4.0">
+                            <Label text="Bio" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <TextArea fx:id="editBioArea" promptText="Biography" prefHeight="60.0" wrapText="true"/>
+                        </VBox>
+                        
+                        <VBox spacing="4.0">
+                            <Label text="Profile Photo URL" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <TextField fx:id="editPfpField" promptText="URL"/>
+                        </VBox>
+                        
+                        <VBox spacing="4.0">
+                            <Label text="Date of Birth" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <DatePicker fx:id="editDobPicker" prefWidth="380.0"/>
+                        </VBox>
+                        
+                        <HBox spacing="10.0" alignment="CENTER_RIGHT" style="-fx-padding: 10px 0px 0px 0px;">
+                            <Button text="Cancel" styleClass="button-secondary" onAction="#onCancelEditClicked"/>
+                            <Button text="Save" styleClass="button-primary" style="-fx-padding: 8px 20px;" onAction="#onSaveProfileClicked"/>
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- Error message banner -->
+                    <Label fx:id="profileErrorLabel" styleClass="error-label" visible="false" managed="false"/>
+                    
+                    <!-- Header title for posts -->
+                    <HBox style="-fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px; -fx-padding: 12px 16px;">
+                        <Label text="Posts" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    </HBox>
+                    
+                    <!-- Profile timeline posts list -->
+                    <VBox fx:id="profileTimelineContainer" spacing="0.0">
+                        <!-- Dynamic post items injected here -->
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </VBox>
+    
+    <!-- 3. RIGHT SIDEBAR (Width: 350px) -->
+    <VBox prefWidth="350.0" minWidth="280.0" styleClass="right-sidebar" spacing="16.0" HBox.hgrow="NEVER">
+        <padding>
+            <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        </padding>
+        
+        <!-- Search bar -->
+        <VBox styleClass="search-container">
+            <TextField fx:id="searchField" promptText="Search" styleClass="search-field" onAction="#onSearchSubmitted"/>
+        </VBox>
+
+        <!-- Right side search results -->
+        <ScrollPane fitToWidth="true" styleClass="main-scroll" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+            <content>
+                <VBox fx:id="searchResultsContainer" spacing="10.0"/>
+            </content>
+        </ScrollPane>
+    </VBox>
+</HBox>
