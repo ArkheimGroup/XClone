@@ -1,0 +1,496 @@
+package arkheim.client.presentation.controllers;
+
+import arkheim.client.domain.ports.dtos.PostDto;
+import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.presentation.theme.ThemeMode;
+import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.viewmodels.AuthViewModel;
+import arkheim.client.presentation.viewmodels.PostViewModel;
+import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
+import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.UUID;
+
+public class PostDetailsController extends BaseController {
+
+    @FXML
+    private ImageView logoImageView;
+    @FXML
+    private Circle userAvatarCircle;
+    @FXML
+    private Label userDisplayName;
+    @FXML
+    private Label userHandleName;
+    @FXML
+    private Button themeToggleBtn;
+
+    @FXML
+    private Button backButton;
+    @FXML
+    private VBox parentPostContainer;
+
+    @FXML
+    private Circle focalAvatarCircle;
+    @FXML
+    private Label focalAuthorName;
+    @FXML
+    private Label focalAuthorHandle;
+    @FXML
+    private Button deleteFocalBtn;
+    @FXML
+    private Label focalContentText;
+    @FXML
+    private StackPane focalMediaContainer;
+    @FXML
+    private Label focalTimestampLabel;
+
+    @FXML
+    private Label metricsLikesCount;
+    @FXML
+    private Label metricsRepostsCount;
+    @FXML
+    private Label metricsRepliesCount;
+
+    @FXML
+    private Button focalLikeBtn;
+
+    @FXML
+    private Circle replyComposerAvatar;
+    @FXML
+    private TextArea replyTextArea;
+    @FXML
+    private Button replyPostBtn;
+
+    @FXML
+    private Label detailsErrorLabel;
+    @FXML
+    private VBox repliesListContainer;
+    @FXML
+    private ScrollPane detailsScrollPane;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private VBox searchResultsContainer;
+
+    private AuthViewModel authViewModel;
+    private PostViewModel postViewModel;
+
+    private ThemeMode themeMode = ThemeMode.LIGHT;
+    private UserDto currentUser;
+    private UUID postId;
+
+    @FXML
+    private void initialize() {
+        updateLogo();
+    }
+
+    public void setViewModels(AuthViewModel authViewModel, PostViewModel postViewModel, UUID postId) {
+        this.authViewModel = authViewModel;
+        this.postViewModel = postViewModel;
+        this.postId = postId;
+
+        this.currentUser = authViewModel.currentUserProperty().get();
+        if (currentUser != null) {
+            userDisplayName.setText(currentUser.name());
+            userHandleName.setText("@" + currentUser.username());
+        }
+
+        initializeStateBindings();
+        loadData();
+    }
+
+    private void initializeStateBindings() {
+        // Sync composer text
+        replyTextArea.textProperty().bindBidirectional(postViewModel.newPostContentProperty());
+
+        // Enable button only when text is typed
+        replyPostBtn.disableProperty().bind(
+                Bindings.createBooleanBinding(
+                        () -> postViewModel.newPostContentProperty().get().isBlank(),
+                        postViewModel.newPostContentProperty()
+                )
+        );
+
+        // Bind focal post details changes
+        postViewModel.currentPostProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                renderFocalPost(newVal);
+            }
+        });
+
+        // Bind replies changes
+        postViewModel.repliesProperty().addListener((ListChangeListener<PostDto>) change -> {
+            renderReplies();
+        });
+
+        // Bind error messages
+        detailsErrorLabel.textProperty().bind(postViewModel.errorMessageProperty());
+        detailsErrorLabel.visibleProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
+        detailsErrorLabel.managedProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
+    }
+
+    private void loadData() {
+        postViewModel.loadPostDetails(postId, currentUser != null ? currentUser.id() : null);
+        postViewModel.loadPostReplies(postId, currentUser != null ? currentUser.id() : null);
+    }
+
+    private void renderFocalPost(PostDto post) {
+        focalAuthorName.setText(post.authorName());
+        focalAuthorHandle.setText("@" + post.authorUsername());
+        focalContentText.setText(post.content());
+
+        String dateText = post.createdAt() != null
+                ? post.createdAt().format(DateTimeFormatter.ofPattern("h:mm a · MMM dd, yyyy"))
+                : "Just now";
+        focalTimestampLabel.setText(dateText);
+
+        metricsLikesCount.setText(String.valueOf(post.likeCount()));
+        metricsRepostsCount.setText(String.valueOf(post.repostCount()));
+        metricsRepliesCount.setText(String.valueOf(post.replyCount()));
+
+        focalLikeBtn.setText(post.likedByMe() ? "♥" : "♡");
+        if (post.likedByMe()) {
+            focalLikeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
+        } else {
+            focalLikeBtn.setStyle("");
+        }
+
+        // Delete button for focal post
+        if (currentUser != null && currentUser.id().equals(post.authorId())) {
+            deleteFocalBtn.setVisible(true);
+            deleteFocalBtn.setManaged(true);
+        } else {
+            deleteFocalBtn.setVisible(false);
+            deleteFocalBtn.setManaged(false);
+        }
+
+        // Render parent post preview if present
+        parentPostContainer.getChildren().clear();
+        if (post.parentPostId() != null) {
+            renderParentPreview(post.parentPostId());
+        }
+    }
+
+    private void renderParentPreview(UUID parentId) {
+        // Mock loading parent post details since it is loaded via postPort
+        // To build a premium layout we display a small connected node above
+        HBox parentPreview = new HBox(12.0);
+        parentPreview.setStyle("-fx-padding: 12px 16px 4px 16px;");
+
+        VBox leftConnector = new VBox(2.0);
+        leftConnector.setAlignment(Pos.TOP_CENTER);
+        Circle avatar = new Circle(14.0, Color.LIGHTGRAY);
+        Region line = new Region();
+        line.setStyle("-fx-background-color: -fx-border-color-muted; -fx-min-width: 2px; -fx-max-width: 2px; -fx-pref-height: 25px;");
+        leftConnector.getChildren().addAll(avatar, line);
+
+        VBox rightDetails = new VBox(4.0);
+        Label parentTitle = new Label("Show parent post in thread...");
+        parentTitle.setStyle("-fx-font-size: 13px; -fx-font-style: italic;");
+        parentTitle.getStyleClass().add("post-author-handle");
+        rightDetails.getChildren().add(parentTitle);
+
+        parentPreview.getChildren().addAll(leftConnector, rightDetails);
+        parentPreview.setOnMouseClicked(e -> {
+            navigator.showPostDetailsScreen(parentId);
+        });
+        parentPostContainer.getChildren().add(parentPreview);
+    }
+
+    private void renderReplies() {
+        repliesListContainer.getChildren().clear();
+
+        if (postViewModel.repliesProperty().isEmpty()) {
+            VBox emptyBox = new VBox(12.0);
+            emptyBox.setAlignment(Pos.CENTER);
+            emptyBox.setStyle("-fx-padding: 30px;");
+            Label title = new Label("Be the first to reply");
+            title.getStyleClass().add("empty-title");
+            title.setStyle("-fx-font-size: 15px;");
+            Label desc = new Label("Share your thoughts on this conversation.");
+            desc.getStyleClass().add("empty-desc");
+            emptyBox.getChildren().addAll(title, desc);
+            repliesListContainer.getChildren().add(emptyBox);
+        } else {
+            for (PostDto reply : postViewModel.repliesProperty()) {
+                repliesListContainer.getChildren().add(createReplyCard(reply));
+            }
+        }
+    }
+
+    private Node createReplyCard(PostDto reply) {
+        VBox card = new VBox(10.0);
+        card.getStyleClass().add("post-card");
+        card.setStyle("-fx-padding: 12px 16px 12px 36px; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
+
+        // Hook up reply click to load details
+        card.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 1 && navigator != null) {
+                navigator.showPostDetailsScreen(reply.id());
+            }
+        });
+
+        HBox header = new HBox(12.0);
+        Circle avatar = new Circle(16.0);
+        avatar.setFill(Color.web(themeMode == ThemeMode.LIGHT ? "#E7E7E8" : "#16181C"));
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+
+        VBox meta = new VBox(2.0);
+        HBox metaRow = new HBox(6.0);
+        metaRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label name = new Label(reply.authorName());
+        name.getStyleClass().add("post-author-name");
+        name.setStyle("-fx-font-size: 14px;");
+
+        Label handle = new Label("@" + reply.authorUsername());
+        handle.getStyleClass().add("post-author-handle");
+        handle.setStyle("-fx-font-size: 14px;");
+
+        Label dot = new Label("·");
+        dot.getStyleClass().add("post-author-handle");
+
+        String time = reply.createdAt() != null ? reply.createdAt().format(DateTimeFormatter.ofPattern("MMM dd")) : "Just now";
+        Label timeLabel = new Label(time);
+        timeLabel.getStyleClass().add("post-timestamp");
+
+        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        meta.getChildren().add(metaRow);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        header.getChildren().addAll(avatar, meta, spacer);
+
+        // Delete button for replies
+        if (currentUser != null && currentUser.id().equals(reply.authorId())) {
+            Button deleteBtn = new Button("🗑");
+            deleteBtn.getStyleClass().add("post-action-btn");
+            deleteBtn.setStyle("-fx-text-fill: #E02424; -fx-padding: 4px;");
+            deleteBtn.setOnAction(e -> {
+                e.consume(); // prevent navigation trigger
+                postViewModel.deletePost(reply.id(), currentUser.id());
+                // re-fetch replies
+                postViewModel.loadPostReplies(postId, currentUser.id());
+            });
+            header.getChildren().add(deleteBtn);
+        }
+
+        Node bodyNode = createFormattedPostBody(reply.content(), themeMode, tag -> {
+            searchField.setText(tag);
+            onSearchSubmitted();
+        });
+
+        card.getChildren().addAll(header, bodyNode);
+
+        PostDto parentPost = postViewModel.currentPostProperty().get();
+        if (reply.isRepost() || reply.repostedFromUsername() != null) {
+            String origAuthor = reply.repostedFromUsername() != null ? reply.repostedFromUsername() : (reply.repliedUsername() != null ? reply.repliedUsername() : "user");
+            Label repostBadge = new Label("🔁 Reposted from @" + origAuthor);
+            repostBadge.getStyleClass().add("post-author-handle");
+            repostBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            card.getChildren().add(0, repostBadge);
+        } else {
+            String targetUser = reply.repliedUsername() != null ? reply.repliedUsername() : (parentPost != null ? parentPost.authorUsername() : "user");
+            Label replyingLabel = new Label("Replying to @" + targetUser);
+            replyingLabel.getStyleClass().add("post-author-handle");
+            replyingLabel.setStyle("-fx-font-size: 12px; -fx-padding: 0 0 2px 0;");
+            card.getChildren().add(1, replyingLabel);
+        }
+
+        HBox actions = new HBox(40.0);
+        actions.getStyleClass().add("post-actions");
+
+        Button replyBtn = new Button("💬 " + reply.replyCount());
+        replyBtn.getStyleClass().add("post-action-btn");
+        replyBtn.setStyle("-fx-font-size: 12px;");
+        replyBtn.setOnAction(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showPostDetailsScreen(reply.id());
+            }
+        });
+
+        Button repostBtn = new Button("🔁 " + reply.repostCount());
+        repostBtn.getStyleClass().add("post-action-btn");
+        repostBtn.setStyle("-fx-font-size: 12px;");
+        if (reply.repostedByMe()) {
+            repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
+        }
+        repostBtn.setOnAction(e -> {
+            e.consume();
+            if (currentUser != null) {
+                postViewModel.repost(reply.id(), currentUser.id());
+            }
+        });
+
+        String likeSym = reply.likedByMe() ? "♥" : "♡";
+        Button likeBtn = new Button(likeSym + " " + reply.likeCount());
+        likeBtn.getStyleClass().add("post-action-btn");
+        likeBtn.setStyle("-fx-font-size: 12px;");
+        if (reply.likedByMe()) {
+            likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
+        }
+        likeBtn.setOnAction(e -> {
+            e.consume(); // prevent navigation trigger
+            if (currentUser != null) {
+                postViewModel.toggleLike(reply.id(), currentUser.id());
+            }
+        });
+
+        actions.getChildren().addAll(replyBtn, repostBtn, likeBtn);
+        card.getChildren().add(actions);
+
+        return card;
+    }
+
+    @FXML
+    private void onBackClicked() {
+        navigator.showHomeScreen();
+    }
+
+    @FXML
+    private void onDeleteFocalClicked() {
+        if (currentUser != null) {
+            postViewModel.deletePost(postId, currentUser.id());
+            navigator.showHomeScreen();
+        }
+    }
+
+    @FXML
+    private void onFocalLikeClicked() {
+        if (currentUser != null) {
+            postViewModel.toggleLike(postId, currentUser.id());
+        }
+    }
+
+    @FXML
+    private void onReplySubmitClicked() {
+        if (currentUser != null) {
+            postViewModel.newPostParentIdProperty().set(postId);
+            postViewModel.createPost(currentUser.id());
+            // reload data
+            loadData();
+        }
+    }
+
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            if (themeMode == ThemeMode.LIGHT) {
+                themeMode = ThemeMode.DARK;
+                themeToggleBtn.setText("☼ Light Mode");
+            } else {
+                themeMode = ThemeMode.LIGHT;
+                themeToggleBtn.setText("☾ Dark Mode");
+            }
+            fxNavigator.setThemeMode(themeMode);
+            fxNavigator.updateTheme();
+            updateLogo();
+            loadData();
+        }
+    }
+
+    private void updateLogo() {
+        String logoPath = (themeMode == ThemeMode.LIGHT)
+                ? "/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"
+                : "/arkheim/client/presentation/Assets/images/XCloneLogo_DarkMode_Transparent.png";
+        try {
+            logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+        } catch (Exception e) {
+            System.err.println("Could not load logo: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onSearchSubmitted() {
+        String query = searchField.getText() != null ? searchField.getText().trim() : "";
+        if (query.isEmpty()) {
+            if (searchResultsContainer != null) searchResultsContainer.getChildren().clear();
+        } else {
+            postViewModel.findPostsByWord(query, currentUser != null ? currentUser.id() : null);
+            renderSearchResults();
+        }
+    }
+
+    private void renderSearchResults() {
+        if (searchResultsContainer == null) return;
+        searchResultsContainer.getChildren().clear();
+        Label searchTitle = new Label("Search results");
+        searchTitle.getStyleClass().add("empty-title");
+        searchTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 4px 0 8px 0;");
+        searchResultsContainer.getChildren().add(searchTitle);
+
+        if (postViewModel.searchResultsProperty().isEmpty()) {
+            Label desc = new Label("No matching posts found.");
+            desc.getStyleClass().add("empty-desc");
+            searchResultsContainer.getChildren().add(desc);
+        } else {
+            for (PostDto reply : postViewModel.searchResultsProperty()) {
+                searchResultsContainer.getChildren().add(createReplyCard(reply));
+            }
+        }
+    }
+
+    @FXML
+    private void onSidebarPostClicked() {
+        navigator.showHomeScreen();
+    }
+
+    // Side nav actions
+    @FXML
+    private void onNavHomeClicked() {
+        navigator.showHomeScreen();
+    }
+
+    @FXML
+    private void onNavExploreClicked() {
+        searchField.requestFocus();
+    }
+
+
+
+    @FXML
+    private void onNavProfileClicked() {
+        if (currentUser != null) {
+            navigator.showProfileScreen(currentUser.id());
+        }
+    }
+
+    private void showMockAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().clear();
+        String styleFile = (themeMode == ThemeMode.LIGHT) ? "Style.css" : "DarkMode.css";
+        try {
+            dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/" + styleFile)).toExternalForm());
+        } catch (Exception ignored) {}
+        
+        alert.showAndWait();
+    }
+}
