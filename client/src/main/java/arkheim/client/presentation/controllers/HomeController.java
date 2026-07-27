@@ -7,15 +7,15 @@ import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FeedViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
 import arkheim.client.presentation.viewmodels.MediaViewModel;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -29,7 +29,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -37,14 +36,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class HomeController extends BaseController {
 
     @FXML
     private ImageView logoImageView;
+    @FXML
+    private ImageView navHomeIcon;
+    @FXML
+    private ImageView navExploreIcon;
+    @FXML
+    private ImageView navProfileIcon;
     @FXML
     private Circle userAvatarCircle;
     @FXML
@@ -67,6 +70,8 @@ public class HomeController extends BaseController {
     private Circle composerAvatarCircle;
     @FXML
     private TextArea composerTextArea;
+    @FXML
+    private Button composerMediaButton;
     @FXML
     private Button composerPostButton;
     @FXML
@@ -91,14 +96,13 @@ public class HomeController extends BaseController {
     private String pendingMediaUrl = null;
     private String pendingMediaFileName = null;
 
-    private ThemeMode themeMode = ThemeMode.LIGHT;
     private boolean bindingsInitialized = false;
     private UserDto currentUser;
 
     @FXML
     private void initialize() {
         // Initial setup for static elements
-        updateLogo();
+        updateIcons();
     }
 
     public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel, MediaViewModel mediaViewModel) {
@@ -362,7 +366,8 @@ public class HomeController extends BaseController {
 
         // Delete post support if current user matches post author
         if (currentUser != null && currentUser.id().equals(post.authorId())) {
-            Button deleteBtn = new Button("🗑");
+            Button deleteBtn = new Button();
+            IconUtils.setButtonIcon(deleteBtn, "trash", themeMode, 16);
             deleteBtn.getStyleClass().add("post-action-btn");
             deleteBtn.setStyle("-fx-text-fill: #E02424; -fx-padding: 4px;");
             deleteBtn.setOnAction(e -> {
@@ -383,9 +388,14 @@ public class HomeController extends BaseController {
         // Add badges for repost or reply
         if (post.isRepost() || post.repostedFromUsername() != null) {
             String origAuthor = post.repostedFromUsername() != null ? post.repostedFromUsername() : (post.repliedUsername() != null ? post.repliedUsername() : "user");
-            Label repostBadge = new Label("🔁 Reposted from @" + origAuthor);
-            repostBadge.getStyleClass().add("post-author-handle");
-            repostBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            HBox repostBadge = new HBox(6.0);
+            repostBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView repostIcon = IconUtils.createIconView("repost", themeMode, 14);
+            Label repostLabel = new Label("Reposted from @" + origAuthor);
+            repostLabel.getStyleClass().add("post-author-handle");
+            repostLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            repostBadge.getChildren().addAll(repostIcon, repostLabel);
+            repostBadge.setStyle("-fx-padding: 0 0 4px 0;");
             card.getChildren().add(0, repostBadge);
         } else if (post.parentPostId() != null) {
             String targetUser = post.repliedUsername() != null ? post.repliedUsername() : "user";
@@ -409,7 +419,8 @@ public class HomeController extends BaseController {
         HBox actionsRow = new HBox(40.0);
         actionsRow.getStyleClass().add("post-actions");
 
-        Button replyBtn = new Button("💬 " + post.replyCount());
+        Button replyBtn = new Button(" " + post.replyCount());
+        IconUtils.setButtonIcon(replyBtn, "comment", themeMode, 16);
         replyBtn.getStyleClass().add("post-action-btn");
         replyBtn.setOnAction(e -> {
             e.consume();
@@ -418,7 +429,8 @@ public class HomeController extends BaseController {
             }
         });
 
-        Button repostBtn = new Button("🔁 " + post.repostCount());
+        Button repostBtn = new Button(" " + post.repostCount());
+        IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 16);
         repostBtn.getStyleClass().add("post-action-btn");
         if (post.repostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -432,8 +444,9 @@ public class HomeController extends BaseController {
             }
         });
 
-        String likeSymbol = post.likedByMe() ? "♥" : "♡";
-        Button likeBtn = new Button(likeSymbol + " " + post.likeCount());
+        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        Button likeBtn = new Button(" " + post.likeCount());
+        IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 16);
         likeBtn.getStyleClass().add("post-action-btn");
         if (post.likedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -451,33 +464,48 @@ public class HomeController extends BaseController {
         return card;
     }
 
-    @FXML
-    private void onThemeToggleClicked() {
-        if (navigator instanceof JavaFxNavigator fxNavigator) {
-            if (themeMode == ThemeMode.LIGHT) {
-                themeMode = ThemeMode.DARK;
-                themeToggleBtn.setText("☼ Light Mode");
-            } else {
-                themeMode = ThemeMode.LIGHT;
-                themeToggleBtn.setText("☾ Dark Mode");
-            }
-            fxNavigator.setThemeMode(themeMode);
-            fxNavigator.updateTheme();
-            updateLogo();
-            if (feedViewModel != null) {
-                renderState(feedViewModel.getState());
-            }
+    @Override
+    public void setThemeMode(ThemeMode themeMode) {
+        super.setThemeMode(themeMode);
+        if (feedViewModel != null) {
+            renderState(feedViewModel.getState());
         }
     }
 
-    private void updateLogo() {
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            ThemeMode newMode = (themeMode == ThemeMode.LIGHT) ? ThemeMode.DARK : ThemeMode.LIGHT;
+            fxNavigator.setThemeMode(newMode);
+            fxNavigator.updateTheme();
+            setThemeMode(newMode);
+        }
+    }
+
+    @Override
+    public void updateIcons() {
         String logoPath = (themeMode == ThemeMode.LIGHT)
-                ? "/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"
-                : "/arkheim/client/presentation/Assets/images/XCloneLogo_DarkMode_Transparent.png";
+                ? "/arkheim/client/presentation/Assets/images/icons/light/XCloneLogo_LightMode_Transparent.png"
+                : "/arkheim/client/presentation/Assets/images/icons/dark/XCloneLogo_DarkMode_Transparent.png";
         try {
-            logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            if (logoImageView != null) {
+                logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            }
         } catch (Exception e) {
             System.err.println("Could not load logo: " + e.getMessage());
+        }
+        if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
+        if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
+        if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (composerMediaButton != null) IconUtils.setButtonIcon(composerMediaButton, "image", themeMode, 18);
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+        }
+        if (userAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (composerAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
     }
 

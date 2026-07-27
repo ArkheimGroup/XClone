@@ -5,6 +5,7 @@ import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.domain.ports.dtos.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
@@ -42,6 +43,12 @@ public class ProfileController extends BaseController {
 
     @FXML
     private ImageView logoImageView;
+    @FXML
+    private ImageView navHomeIcon;
+    @FXML
+    private ImageView navExploreIcon;
+    @FXML
+    private ImageView navProfileIcon;
     @FXML
     private Circle userAvatarCircle;
     @FXML
@@ -94,6 +101,8 @@ public class ProfileController extends BaseController {
     private TextField editPfpField;
     @FXML
     private DatePicker editDobPicker;
+    @FXML
+    private Button uploadAvatarBtn;
 
     @FXML
     private Label profileErrorLabel;
@@ -112,13 +121,12 @@ public class ProfileController extends BaseController {
     private PostViewModel postViewModel;
     private arkheim.client.presentation.viewmodels.MediaViewModel mediaViewModel;
 
-    private ThemeMode themeMode = ThemeMode.LIGHT;
     private UserDto currentUser;
     private UUID profileId;
 
     @FXML
     private void initialize() {
-        updateLogo();
+        updateIcons();
     }
 
     public void setViewModels(AuthViewModel authViewModel, UserViewModel userViewModel,
@@ -220,14 +228,16 @@ public class ProfileController extends BaseController {
         MediaUiUtils.loadAvatar(profileAvatarCircle, profile.pfpUrl(), themeMode);
 
         String dobText = profile.dateOfBirth() != null
-                ? "📅 Born " + profile.dateOfBirth().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
-                : "📅 Date of birth undisclosed";
+                ? "Born " + profile.dateOfBirth().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+                : "Date of birth undisclosed";
         profileDobLabel.setText(dobText);
+        IconUtils.setLabelIcon(profileDobLabel, "calendar", themeMode, 14);
 
         String joinedText = profile.createdAt() != null
-                ? "📅 Joined " + profile.createdAt().format(DateTimeFormatter.ofPattern("MMMM yyyy"))
-                : "📅 Joined recently";
+                ? "Joined " + profile.createdAt().format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+                : "Joined recently";
         profileJoinedLabel.setText(joinedText);
+        IconUtils.setLabelIcon(profileJoinedLabel, "calendar", themeMode, 14);
 
         followingCountLabel.setText(String.valueOf(profile.followingCount()));
         followersCountLabel.setText(String.valueOf(profile.followerCount()));
@@ -329,9 +339,14 @@ public class ProfileController extends BaseController {
 
         // Pinned badge at top of card
         if (isPinned) {
-            Label pinnedBadge = new Label("📌 Pinned");
-            pinnedBadge.getStyleClass().add("post-author-handle");
-            pinnedBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            HBox pinnedBadge = new HBox(6.0);
+            pinnedBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView pinIcon = IconUtils.createIconView("pin", themeMode, 14);
+            Label pinnedLabel = new Label("Pinned");
+            pinnedLabel.getStyleClass().add("post-author-handle");
+            pinnedLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            pinnedBadge.getChildren().addAll(pinIcon, pinnedLabel);
+            pinnedBadge.setStyle("-fx-padding: 0 0 4px 0;");
             card.getChildren().add(pinnedBadge);
         }
 
@@ -389,9 +404,11 @@ public class ProfileController extends BaseController {
 
         // Pin / Unpin button (only for own posts)
         if (currentUser != null && currentUser.id().equals(post.authorId())) {
-            Button pinBtn = new Button(isPinned ? "Unpin" : "📌");
+            Button pinBtn = new Button();
+            String iconName = isPinned ? "unpin" : "pin";
+            IconUtils.setButtonIcon(pinBtn, iconName, themeMode, 16);
             pinBtn.getStyleClass().add("post-action-btn");
-            pinBtn.setStyle("-fx-padding: 4px; -fx-font-size: 12px;");
+            pinBtn.setStyle("-fx-padding: 4px;");
             pinBtn.setOnAction(e -> {
                 e.consume();
                 if (isPinned) {
@@ -407,7 +424,8 @@ public class ProfileController extends BaseController {
 
         // Delete button
         if (currentUser != null && currentUser.id().equals(post.authorId())) {
-            Button deleteBtn = new Button("🗑");
+            Button deleteBtn = new Button();
+            IconUtils.setButtonIcon(deleteBtn, "trash", themeMode, 16);
             deleteBtn.getStyleClass().add("post-action-btn");
             deleteBtn.setStyle("-fx-text-fill: #E02424; -fx-padding: 4px;");
             deleteBtn.setOnAction(e -> {
@@ -427,9 +445,14 @@ public class ProfileController extends BaseController {
 
         if (post.isRepost() || post.repostedFromUsername() != null) {
             String origAuthor = post.repostedFromUsername() != null ? post.repostedFromUsername() : (post.repliedUsername() != null ? post.repliedUsername() : "user");
-            Label repostBadge = new Label("🔁 Reposted from @" + origAuthor);
-            repostBadge.getStyleClass().add("post-author-handle");
-            repostBadge.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 0 4px 0;");
+            HBox repostBadge = new HBox(6.0);
+            repostBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView repostIcon = IconUtils.createIconView("repost", themeMode, 14);
+            Label repostLabel = new Label("Reposted from @" + origAuthor);
+            repostLabel.getStyleClass().add("post-author-handle");
+            repostLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            repostBadge.getChildren().addAll(repostIcon, repostLabel);
+            repostBadge.setStyle("-fx-padding: 0 0 4px 0;");
             card.getChildren().add(0, repostBadge);
         } else if (post.parentPostId() != null) {
             String targetUser = post.repliedUsername() != null ? post.repliedUsername() : "user";
@@ -451,7 +474,8 @@ public class ProfileController extends BaseController {
         HBox actions = new HBox(40.0);
         actions.getStyleClass().add("post-actions");
 
-        Button replyBtn = new Button("💬 " + post.replyCount());
+        Button replyBtn = new Button(" " + post.replyCount());
+        IconUtils.setButtonIcon(replyBtn, "comment", themeMode, 14);
         replyBtn.getStyleClass().add("post-action-btn");
         replyBtn.setOnAction(e -> {
             e.consume();
@@ -460,7 +484,8 @@ public class ProfileController extends BaseController {
             }
         });
 
-        Button repostBtn = new Button("🔁 " + post.repostCount());
+        Button repostBtn = new Button(" " + post.repostCount());
+        IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 14);
         repostBtn.getStyleClass().add("post-action-btn");
         if (post.repostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -472,8 +497,9 @@ public class ProfileController extends BaseController {
             }
         });
 
-        String likeSym = post.likedByMe() ? "♥" : "♡";
-        Button likeBtn = new Button(likeSym + " " + post.likeCount());
+        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        Button likeBtn = new Button(" " + post.likeCount());
+        IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 14);
         likeBtn.getStyleClass().add("post-action-btn");
         if (post.likedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
@@ -632,31 +658,48 @@ public class ProfileController extends BaseController {
         dialog.showAndWait();
     }
 
-    @FXML
-    private void onThemeToggleClicked() {
-        if (navigator instanceof JavaFxNavigator fxNavigator) {
-            if (themeMode == ThemeMode.LIGHT) {
-                themeMode = ThemeMode.DARK;
-                themeToggleBtn.setText("☼ Light Mode");
-            } else {
-                themeMode = ThemeMode.LIGHT;
-                themeToggleBtn.setText("☾ Dark Mode");
-            }
-            fxNavigator.setThemeMode(themeMode);
-            fxNavigator.updateTheme();
-            updateLogo();
-            loadData();
+    @Override
+    public void setThemeMode(ThemeMode themeMode) {
+        super.setThemeMode(themeMode);
+        if (userViewModel != null && userViewModel.currentProfileProperty().get() != null) {
+            renderProfileDetails(userViewModel.currentProfileProperty().get());
+            renderTimeline();
         }
     }
 
-    private void updateLogo() {
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            ThemeMode newMode = (themeMode == ThemeMode.LIGHT) ? ThemeMode.DARK : ThemeMode.LIGHT;
+            fxNavigator.setThemeMode(newMode);
+            fxNavigator.updateTheme();
+            setThemeMode(newMode);
+        }
+    }
+
+    @Override
+    public void updateIcons() {
         String logoPath = (themeMode == ThemeMode.LIGHT)
-                ? "/arkheim/client/presentation/Assets/images/XCloneLogo_LightMode_Transparent.png"
-                : "/arkheim/client/presentation/Assets/images/XCloneLogo_DarkMode_Transparent.png";
+                ? "/arkheim/client/presentation/Assets/images/icons/light/XCloneLogo_LightMode_Transparent.png"
+                : "/arkheim/client/presentation/Assets/images/icons/dark/XCloneLogo_DarkMode_Transparent.png";
         try {
-            logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            if (logoImageView != null) {
+                logoImageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(logoPath))));
+            }
         } catch (Exception e) {
             System.err.println("Could not load logo: " + e.getMessage());
+        }
+        if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
+        if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
+        if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (uploadAvatarBtn != null) IconUtils.setButtonIcon(uploadAvatarBtn, "image", themeMode, 16);
+        if (profileDobLabel != null) IconUtils.setLabelIcon(profileDobLabel, "calendar", themeMode, 14);
+        if (profileJoinedLabel != null) IconUtils.setLabelIcon(profileJoinedLabel, "calendar", themeMode, 14);
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+        }
+        if (userAvatarCircle != null && currentUser != null) {
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
     }
 

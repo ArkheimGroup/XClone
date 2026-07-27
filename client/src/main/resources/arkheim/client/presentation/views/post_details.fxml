@@ -29,17 +29,17 @@
         <!-- Navigation Links -->
         <VBox spacing="6.0" VBox.vgrow="ALWAYS">
             <HBox fx:id="navHome" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavHomeClicked">
-                <Label styleClass="nav-icon" text="⌂" style="-fx-font-size: 22px;"/>
+                <ImageView fx:id="navHomeIcon" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Home"/>
             </HBox>
             
             <HBox fx:id="navExplore" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavExploreClicked">
-                <Label styleClass="nav-icon" text="# " style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <ImageView fx:id="navExploreIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Explore"/>
             </HBox>
             
             <HBox fx:id="navProfile" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavProfileClicked">
-                <Label styleClass="nav-icon" text="👤" style="-fx-font-size: 20px;"/>
+                <ImageView fx:id="navProfileIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
                 <Label styleClass="nav-label" text="Profile"/>
             </HBox>
             
@@ -92,7 +92,7 @@
                                 <Label fx:id="focalAuthorHandle" text="\@handle" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
                             </VBox>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button fx:id="deleteFocalBtn" text="🗑" styleClass="post-action-btn" style="-fx-text-fill: #E02424;" visible="false" managed="false" onAction="#onDeleteFocalClicked"/>
+                            <Button fx:id="deleteFocalBtn" styleClass="post-action-btn" style="-fx-text-fill: #E02424;" visible="false" managed="false" onAction="#onDeleteFocalClicked"/>
                         </HBox>
                         
                         <!-- Content Body -->
@@ -126,9 +126,9 @@
                         
                         <!-- Quick Action icons -->
                         <HBox spacing="60.0" alignment="CENTER">
-                            <Button text="💬" styleClass="composer-icon-btn"/>
-                            <Button text="🔁" styleClass="composer-icon-btn"/>
-                            <Button fx:id="focalLikeBtn" text="♡" styleClass="composer-icon-btn" onAction="#onFocalLikeClicked"/>
+                            <Button fx:id="focalReplyBtn" styleClass="composer-icon-btn"/>
+                            <Button fx:id="focalRepostBtn" styleClass="composer-icon-btn"/>
+                            <Button fx:id="focalLikeBtn" styleClass="composer-icon-btn" onAction="#onFocalLikeClicked"/>
                         </HBox>
                     </VBox>
                     

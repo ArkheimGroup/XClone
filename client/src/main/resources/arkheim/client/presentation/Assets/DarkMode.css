@@ -428,7 +428,7 @@
 
 /* Landing / Login Screen Styles */
 .x-logo-giant {
-    -fx-background-image: url("images/XCloneLogo_DarkMode_Transparent.png");
+    -fx-background-image: url("images/icons/dark/XCloneLogo_DarkMode_Transparent.png");
     -fx-background-repeat: no-repeat;
     -fx-background-position: center;
     -fx-background-size: contain;

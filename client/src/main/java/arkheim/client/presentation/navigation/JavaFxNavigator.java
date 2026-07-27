@@ -80,6 +80,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         LoginController controller = loader.getController();
+        controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
@@ -107,6 +108,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         RegisterController controller = loader.getController();
+        controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
@@ -131,6 +133,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         HomeController controller = loader.getController();
+        controller.setThemeMode(themeMode);
 
         // Inject Infrastructure Adapters conforming to Domain Ports
         FeedPort feedPort = new TcpFeedAdapter("localhost", 8082);
@@ -172,6 +175,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         ProfileController controller = loader.getController();
+        controller.setThemeMode(themeMode);
 
         UserPort userPort = new HttpUserAdapter();
         FollowPort followPort = new HttpFollowAdapter();
@@ -209,6 +213,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         PostDetailsController controller = loader.getController();
+        controller.setThemeMode(themeMode);
 
         PostPort postPort = new HttpPostAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
