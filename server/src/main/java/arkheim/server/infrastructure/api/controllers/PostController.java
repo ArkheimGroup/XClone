@@ -127,6 +127,12 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    /**
+     * Retrieves every post authored by user
+     * @param username username of the user requesting for its posts
+     * HTTP Method: GET
+     * Endpoint: /api/posts/user/{username}
+     */
     @GetMapping("/user/{username}")
     public ResponseEntity<List<PostResponse>> getUserPosts(@PathVariable String username){
         List<PostResponse> posts = postService.getUserPosts(username);

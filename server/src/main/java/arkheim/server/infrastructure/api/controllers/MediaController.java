@@ -5,6 +5,7 @@ import arkheim.server.application.services.MediaService;
 import arkheim.server.domain.entities.Media;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -80,6 +81,21 @@ public class MediaController {
     public ResponseEntity<Void> deleteMedia(@PathVariable UUID mediaId) {
         mediaService.deleteMedia(mediaId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Uploads a media file to the server and registers it in the database.
+     * HTTP Method: POST
+     * Endpoint: /api/media/upload
+     * @param file the binary file to upload
+     * @param uploadedBy the optional UUID of the user uploading the file
+     */
+    @PostMapping("/upload")
+    public ResponseEntity<Media> uploadMedia(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "uploadedBy", required = false) UUID uploadedBy) {
+        Media media = mediaService.uploadAndRegisterMedia(file, uploadedBy);
+        return ResponseEntity.ok(media);
     }
 
     /**
