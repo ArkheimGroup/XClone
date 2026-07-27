@@ -1,9 +1,26 @@
 package arkheim.client.presentation.navigation;
 
+import arkheim.client.domain.ports.FeedPort;
+import arkheim.client.domain.ports.HashtagPort;
+import arkheim.client.domain.ports.PostPort;
+import arkheim.client.domain.ports.FollowPort;
+import arkheim.client.domain.ports.UserPort;
+import arkheim.client.infrastructure.adapter.HttpHashtagAdapter;
+import arkheim.client.infrastructure.adapter.TcpFeedAdapter;
+import arkheim.client.infrastructure.adapter.HttpPostAdapter;
+import arkheim.client.infrastructure.adapter.HttpFollowAdapter;
+import arkheim.client.infrastructure.adapter.HttpUserAdapter;
 import arkheim.client.presentation.controllers.LoginController;
 import arkheim.client.presentation.controllers.RegisterController;
+import arkheim.client.presentation.controllers.HomeController;
+import arkheim.client.presentation.controllers.ProfileController;
+import arkheim.client.presentation.controllers.PostDetailsController;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
+import arkheim.client.presentation.viewmodels.FeedViewModel;
+import arkheim.client.presentation.viewmodels.FollowViewModel;
+import arkheim.client.presentation.viewmodels.UserViewModel;
+import arkheim.client.presentation.viewmodels.PostViewModel;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -47,9 +64,10 @@ public class JavaFxNavigator implements Navigator {
 
     public void updateTheme() {
         Scene scene = stage.getScene();
-        addStyle(scene);
-        stage.setScene(scene);
-        stage.show();
+        if (scene != null) {
+            scene.getStylesheets().clear();
+            addStyle(scene);
+        }
     }
 
     private void addStyle(Scene scene) {
@@ -81,6 +99,9 @@ public class JavaFxNavigator implements Navigator {
         addStyle(scene);
 
         stage.setScene(scene);
+        stage.setWidth(1000);
+        stage.setHeight(600);
+        stage.centerOnScreen();
         stage.show();
     }
 
@@ -110,6 +131,109 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showHomeScreen() {
-        // load home.fxml
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/arkheim/client/presentation/views/home.fxml")
+        );
+
+        Parent root;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load home.fxml\n" + e);
+        }
+
+        HomeController controller = loader.getController();
+
+        // Inject Infrastructure Adapters conforming to Domain Ports
+        FeedPort feedPort = new TcpFeedAdapter("localhost", 8082);
+        PostPort postPort = new HttpPostAdapter();
+        FollowPort followPort = new HttpFollowAdapter();
+        HashtagPort hashtagPort = new HttpHashtagAdapter();
+
+        // Build presentation viewmodels
+        FeedViewModel feedViewModel = new FeedViewModel(feedPort, postPort, hashtagPort);
+        FollowViewModel followViewModel = new FollowViewModel(followPort);
+
+        // Inject dependencies into HomeController
+        controller.setViewModels(authViewModel, feedViewModel, followViewModel);
+        controller.setNavigator(this);
+
+        Scene scene = new Scene(root);
+        addStyle(scene);
+
+        stage.setScene(scene);
+        stage.setWidth(1280);
+        stage.setHeight(800);
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    @Override
+    public void showProfileScreen(java.util.UUID userId) {
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/arkheim/client/presentation/views/profile.fxml")
+        );
+
+        Parent root;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load profile.fxml\n" + e);
+        }
+
+        ProfileController controller = loader.getController();
+
+        UserPort userPort = new HttpUserAdapter();
+        FollowPort followPort = new HttpFollowAdapter();
+        PostPort postPort = new HttpPostAdapter();
+        HashtagPort hashtagPort = new HttpHashtagAdapter();
+
+        UserViewModel userViewModel = new UserViewModel(userPort);
+        FollowViewModel followViewModel = new FollowViewModel(followPort);
+        PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
+
+        controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, userId);
+        controller.setNavigator(this);
+
+        Scene scene = new Scene(root);
+        addStyle(scene);
+
+        stage.setScene(scene);
+        stage.setWidth(1280);
+        stage.setHeight(800);
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    @Override
+    public void showPostDetailsScreen(java.util.UUID postId) {
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/arkheim/client/presentation/views/post_details.fxml")
+        );
+
+        Parent root;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load post_details.fxml\n" + e);
+        }
+
+        PostDetailsController controller = loader.getController();
+
+        PostPort postPort = new HttpPostAdapter();
+        HashtagPort hashtagPort = new HttpHashtagAdapter();
+        PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
+
+        controller.setViewModels(authViewModel, postViewModel, postId);
+        controller.setNavigator(this);
+
+        Scene scene = new Scene(root);
+        addStyle(scene);
+
+        stage.setScene(scene);
+        stage.setWidth(1280);
+        stage.setHeight(800);
+        stage.centerOnScreen();
+        stage.show();
     }
 }

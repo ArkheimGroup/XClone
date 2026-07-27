@@ -1,9 +1,9 @@
 package arkheim.client.presentation.navigation;
 
-import java.io.IOException;
-
 public interface Navigator {
     void showLoginScreen();
     void showRegisterScreen();
     void showHomeScreen();
+    void showProfileScreen(java.util.UUID userId);
+    void showPostDetailsScreen(java.util.UUID postId);
 }
