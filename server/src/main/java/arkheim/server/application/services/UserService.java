@@ -7,6 +7,7 @@ import arkheim.server.application.exception.ErrorCode;
 import arkheim.server.application.exception.NotFoundException;
 import arkheim.server.domain.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class UserService {
@@ -59,19 +60,24 @@ public class UserService {
         }
 
         // Update user
+        String pfpUrl = (request.pfpUrl() != null && !request.pfpUrl().isBlank()) ? request.pfpUrl() : user.getPfpUrl(); // this approach would only update the actual updated fields
+        String name = (request.name() != null && !request.name().isBlank()) ? request.name() : user.getName();
+        String biography = request.biography() != null ? request.biography() : user.getBiography();
+        LocalDateTime datOfBirth = request.dateOfBirth() != null ? request.dateOfBirth() : user.getDateOfBirth();
+
         User updatedUser = new User(
                 request.userId(),
                 user.getUsername(),
                 user.getPasswordHash(),
-                request.name(),
+                name,
                 user.getEmail(),
-                request.biography(),
+                biography,
                 user.getCreatedAt(),
-                request.pfpUrl(),
+                pfpUrl,
                 user.getFollowerCount(),
                 user.getFollowingCount(),
                 user.getPinnedPostId(),
-                request.dateOfBirth()
+                datOfBirth
         );
         userRepository.updateProfile(updatedUser);
 

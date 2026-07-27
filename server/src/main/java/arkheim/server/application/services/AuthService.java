@@ -39,7 +39,7 @@ public class AuthService {
         }
 
         // Confirm the login by returning a UserResponse
-        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getName());
+        return new UserResponse(user);
     }
 
     /**
@@ -73,6 +73,6 @@ public class AuthService {
         userRepository.save(newUser);
 
         // Return a UserResponse
-        return new UserResponse(newUser.getId(), newUser.getUsername(), newUser.getEmail(), newUser.getName());
+        return new UserResponse(newUser);
     }
 }
