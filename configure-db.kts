@@ -25,7 +25,7 @@ val lines = propertiesFile.readLines()
 // Extract default values from current configurations if they aren't placeholders
 var currentHost = "localhost"
 var currentPort = "3306"
-var currentDb = "xclone"
+var currentDb = "x_clone"
 var currentUser = "root"
 var currentPassword = ""
 
