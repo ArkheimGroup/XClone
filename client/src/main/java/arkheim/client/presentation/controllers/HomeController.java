@@ -132,11 +132,9 @@ public class HomeController extends BaseController {
         // Reactive binding: Whenever the FeedUiState changes, re-render the view
         feedViewModel.uiStateProperty().addListener((obs, oldState, newState) -> renderState(newState));
 
-        // Composer Input binding: Send updates to state
+        // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.equals(feedViewModel.getState().composerText())) {
-                feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(newVal));
-            }
+            updateComposerPostButtonState();
         });
 
         // Trigger first feed load
@@ -149,24 +147,25 @@ public class HomeController extends BaseController {
         bindingsInitialized = true;
     }
 
+    private void updateComposerPostButtonState() {
+        if (composerPostButton == null || composerTextArea == null) return;
+        boolean isTextEmpty = composerTextArea.getText() == null || composerTextArea.getText().strip().isEmpty();
+        boolean isMediaEmpty = pendingMediaUrl == null;
+        boolean isPosting = feedViewModel != null && feedViewModel.getState().isPosting();
+        composerPostButton.setDisable(isPosting || (isTextEmpty && isMediaEmpty));
+    }
+
     /**
      * Renders the UI nodes depending on the current FeedUiState snapshot.
      */
     private void renderState(FeedUiState state) {
-        // Sync composer text field
-        if (!Objects.equals(composerTextArea.getText(), state.composerText())) {
-            composerTextArea.setText(state.composerText());
-        }
-
         // Sync search field if search is cleared
         if (!state.isSearching() && searchField != null && searchField.getText() != null && !searchField.getText().isEmpty()) {
             searchField.setText("");
         }
 
         // Enable/Disable composer post button
-        boolean isComposerTextEmpty = state.composerText() == null || state.composerText().strip().isEmpty();
-        boolean isComposerEmpty = isComposerTextEmpty && pendingMediaUrl == null;
-        composerPostButton.setDisable(state.isPosting() || isComposerEmpty);
+        updateComposerPostButtonState();
 
         // Update tab indicators active styles
         updateTabStyles(state.activeTab());
@@ -527,10 +526,15 @@ public class HomeController extends BaseController {
     @FXML
     private void onComposerPostClicked() {
         if (currentUser != null) {
+            String text = composerTextArea != null ? composerTextArea.getText() : "";
+            feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(text != null ? text : ""));
             feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), pendingMediaUrl));
+            if (composerTextArea != null) {
+                composerTextArea.setText("");
+            }
             pendingMediaUrl = null;
             pendingMediaFileName = null;
-            renderState(feedViewModel.getState());
+            updateComposerPostButtonState();
         }
     }
 
