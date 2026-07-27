@@ -36,6 +36,11 @@ public interface MediaPort {
     void deleteMedia(UUID mediaId);
 
     /**
+     * HTTP: POST /api/media/upload
+     */
+    MediaDto uploadMedia(java.io.File file, UUID uploadedBy);
+
+    /**
      * HTTP: GET /api/media/post/{postId}
      */
     List<MediaDto> getMediaForPost(UUID postId);

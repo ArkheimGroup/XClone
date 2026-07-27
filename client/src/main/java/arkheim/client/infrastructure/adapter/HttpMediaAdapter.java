@@ -3,16 +3,12 @@ package arkheim.client.infrastructure.adapter;
 import arkheim.client.domain.ports.MediaPort;
 import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.infrastructure.ApiClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
+import java.io.File;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
@@ -67,22 +63,48 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
     }
 
     @Override
+    public MediaDto uploadMedia(File file, UUID uploadedBy) {
+        try {
+            String boundary = "---Boundary" + System.currentTimeMillis();
+            String mimeType = Files.probeContentType(file.toPath());
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
+            }
+
+            String fileHeader = "--" + boundary + "\r\n"
+                    + "Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n"
+                    + "Content-Type: " + mimeType + "\r\n\r\n";
+
+            String fieldsAndFooter = "\r\n--" + boundary + "\r\n"
+                    + "Content-Disposition: form-data; name=\"uploadedBy\"\r\n\r\n"
+                    + (uploadedBy != null ? uploadedBy : "")
+                    + "\r\n--" + boundary + "--\r\n";
+
+            HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.concat(
+                    HttpRequest.BodyPublishers.ofString(fileHeader),
+                    HttpRequest.BodyPublishers.ofFile(file.toPath()),
+                    HttpRequest.BodyPublishers.ofString(fieldsAndFooter)
+            );
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/api/media/upload"))
+                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                    .POST(bodyPublisher)
+                    .build();
+
+            return send(request, MediaDto.class, "Media Upload");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload media file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public List<MediaDto> getMediaForPost(UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/post/" + postId))
                 .GET()
                 .build();
 
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Media request failed with HTTP " + response.statusCode() + ": " + response.body());
-            }
-            return gson.fromJson(response.body(), MEDIA_LIST_TYPE);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Media HTTP request failed", e);
-        }
+        return send(request, MEDIA_LIST_TYPE, "Media");
     }
 }
