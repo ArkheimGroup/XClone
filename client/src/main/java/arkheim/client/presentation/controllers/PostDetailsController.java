@@ -129,6 +129,16 @@ public class PostDetailsController extends BaseController {
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
 
+        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                this.currentUser = newVal;
+                if (userDisplayName != null) userDisplayName.setText(newVal.name());
+                if (userHandleName != null) userHandleName.setText("@" + newVal.username());
+                if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
+                if (replyComposerAvatar != null) MediaUiUtils.loadAvatar(replyComposerAvatar, newVal.pfpUrl(), themeMode);
+            }
+        });
+
         initializeStateBindings();
         loadData();
     }

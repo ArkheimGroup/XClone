@@ -143,6 +143,15 @@ public class ProfileController extends BaseController {
             MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
 
+        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                this.currentUser = newVal;
+                if (userDisplayName != null) userDisplayName.setText(newVal.name());
+                if (userHandleName != null) userHandleName.setText("@" + newVal.username());
+                if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
+            }
+        });
+
         initializeStateBindings();
         loadData();
     }
@@ -272,8 +281,20 @@ public class ProfileController extends BaseController {
                     arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
                     if (uploadedMedia != null) {
                         Platform.runLater(() -> {
+                            userViewModel.loadFormFromCurrentProfile();
                             userViewModel.editPfpUrlProperty().set(uploadedMedia.url());
                             MediaUiUtils.loadAvatar(profileAvatarCircle, uploadedMedia.url(), themeMode);
+                            if (profileId != null) {
+                                userViewModel.updateProfile(profileId);
+                                UserProfileDto updatedProfile = userViewModel.currentProfileProperty().get();
+                                if (updatedProfile != null && authViewModel != null) {
+                                    authViewModel.updateCurrentUserDetails(updatedProfile.name(), updatedProfile.pfpUrl());
+                                    this.currentUser = authViewModel.currentUserProperty().get();
+                                    if (currentUser != null && userAvatarCircle != null) {
+                                        MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+                                    }
+                                }
+                            }
                         });
                     }
                 } catch (Exception e) {
@@ -618,7 +639,7 @@ public class ProfileController extends BaseController {
                 row.setStyle("-fx-padding: 8px; -fx-background-radius: 8px; -fx-cursor: hand;");
 
                 Circle avatar = new Circle(18.0);
-                avatar.setFill(Color.web(themeMode == ThemeMode.LIGHT ? "#E7E7E8" : "#16181C"));
+                MediaUiUtils.loadAvatar(avatar, user.pfpUrl(), themeMode);
                 avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
 
                 VBox info = new VBox(2.0);
