@@ -117,6 +117,16 @@ public class AuthViewModel {
         }
     }
 
+    /**
+     * Updates name and pfpUrl of current logged in user state.
+     */
+    public void updateCurrentUserDetails(String newName, String newPfpUrl) {
+        UserDto current = currentUser.get();
+        if (current != null) {
+            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl));
+        }
+    }
+
     // Getters
 
     // --- login property getters ---
