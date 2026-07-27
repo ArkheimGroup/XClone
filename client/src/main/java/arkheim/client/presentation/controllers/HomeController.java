@@ -558,11 +558,9 @@ public class HomeController extends BaseController {
     @FXML
     private void onMediaAttachmentClicked() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Media File");
+        fileChooser.setTitle("Select Image File");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Media Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.mp4", "*.mkv", "*.avi", "*.mov"),
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
-                new FileChooser.ExtensionFilter("Video Files", "*.mp4", "*.mkv", "*.avi", "*.mov"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
