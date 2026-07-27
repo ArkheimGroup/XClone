@@ -1,26 +1,14 @@
 package arkheim.client.presentation.navigation;
 
-import arkheim.client.domain.ports.FeedPort;
-import arkheim.client.domain.ports.HashtagPort;
-import arkheim.client.domain.ports.PostPort;
-import arkheim.client.domain.ports.FollowPort;
-import arkheim.client.domain.ports.UserPort;
-import arkheim.client.infrastructure.adapter.HttpHashtagAdapter;
-import arkheim.client.infrastructure.adapter.TcpFeedAdapter;
-import arkheim.client.infrastructure.adapter.HttpPostAdapter;
-import arkheim.client.infrastructure.adapter.HttpFollowAdapter;
-import arkheim.client.infrastructure.adapter.HttpUserAdapter;
+import arkheim.client.domain.ports.*;
+import arkheim.client.infrastructure.adapter.*;
 import arkheim.client.presentation.controllers.LoginController;
 import arkheim.client.presentation.controllers.RegisterController;
 import arkheim.client.presentation.controllers.HomeController;
 import arkheim.client.presentation.controllers.ProfileController;
 import arkheim.client.presentation.controllers.PostDetailsController;
 import arkheim.client.presentation.theme.ThemeMode;
-import arkheim.client.presentation.viewmodels.AuthViewModel;
-import arkheim.client.presentation.viewmodels.FeedViewModel;
-import arkheim.client.presentation.viewmodels.FollowViewModel;
-import arkheim.client.presentation.viewmodels.UserViewModel;
-import arkheim.client.presentation.viewmodels.PostViewModel;
+import arkheim.client.presentation.viewmodels.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,14 +30,14 @@ public class JavaFxNavigator implements Navigator {
         this.authViewModel = authViewModel;
 
         try {
-            lightStyle = Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/Style.css")).toExternalForm();
+            lightStyle = Objects.requireNonNull(JavaFxNavigator.class.getResource("/arkheim/client/presentation/Assets/Style.css")).toExternalForm();
         }
         catch (NullPointerException e) {
             throw new RuntimeException("Could not load the css file\n" + e);
         }
 
         try {
-            darkStyle = Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/DarkMode.css")).toExternalForm();
+            darkStyle = Objects.requireNonNull(JavaFxNavigator.class.getResource("/arkheim/client/presentation/Assets/DarkMode.css")).toExternalForm();
         }
         catch (NullPointerException e) {
             throw new RuntimeException("Could not load the css file\n" + e);
@@ -149,13 +137,15 @@ public class JavaFxNavigator implements Navigator {
         PostPort postPort = new HttpPostAdapter();
         FollowPort followPort = new HttpFollowAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
+        MediaPort mediaPort = new HttpMediaAdapter();
 
         // Build presentation viewmodels
         FeedViewModel feedViewModel = new FeedViewModel(feedPort, postPort, hashtagPort);
         FollowViewModel followViewModel = new FollowViewModel(followPort);
+        MediaViewModel mediaViewModel = new MediaViewModel(mediaPort);
 
         // Inject dependencies into HomeController
-        controller.setViewModels(authViewModel, feedViewModel, followViewModel);
+        controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel);
         controller.setNavigator(this);
 
         Scene scene = new Scene(root);

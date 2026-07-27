@@ -1,14 +1,18 @@
 package arkheim.client.presentation.controllers;
 
+import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FeedViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
+import arkheim.client.presentation.viewmodels.MediaViewModel;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -29,6 +33,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -81,6 +87,9 @@ public class HomeController extends BaseController {
     private AuthViewModel authViewModel;
     private FeedViewModel feedViewModel;
     private FollowViewModel followViewModel;
+    private MediaViewModel mediaViewModel;
+    private String pendingMediaUrl = null;
+    private String pendingMediaFileName = null;
 
     private ThemeMode themeMode = ThemeMode.LIGHT;
     private boolean bindingsInitialized = false;
@@ -92,18 +101,25 @@ public class HomeController extends BaseController {
         updateLogo();
     }
 
-    public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel) {
+    public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel, MediaViewModel mediaViewModel) {
         this.authViewModel = authViewModel;
         this.feedViewModel = feedViewModel;
         this.followViewModel = followViewModel;
+        this.mediaViewModel = mediaViewModel;
 
         this.currentUser = authViewModel.currentUserProperty().get();
         if (currentUser != null) {
             userDisplayName.setText(currentUser.name());
             userHandleName.setText("@" + currentUser.username());
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+            MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
 
         initializeStateBindings();
+    }
+
+    public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel) {
+        setViewModels(authViewModel, feedViewModel, followViewModel, new MediaViewModel(new arkheim.client.infrastructure.adapter.HttpMediaAdapter()));
     }
 
     private void initializeStateBindings() {
@@ -144,21 +160,30 @@ public class HomeController extends BaseController {
         }
 
         // Enable/Disable composer post button
-        boolean isComposerEmpty = state.composerText() == null || state.composerText().strip().isEmpty();
+        boolean isComposerTextEmpty = state.composerText() == null || state.composerText().strip().isEmpty();
+        boolean isComposerEmpty = isComposerTextEmpty && pendingMediaUrl == null;
         composerPostButton.setDisable(state.isPosting() || isComposerEmpty);
 
         // Update tab indicators active styles
         updateTabStyles(state.activeTab());
 
-        // Error message visibility
+        // Error & Media Attachment banner visibility
         if (state.error() != null) {
             feedErrorLabel.setText(state.error());
+            feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+            feedErrorLabel.setVisible(true);
+            feedErrorLabel.setManaged(true);
+        } else if (pendingMediaUrl != null) {
+            String name = pendingMediaFileName != null ? pendingMediaFileName : "attachment";
+            feedErrorLabel.setText("✓ Media attached (" + name + ")");
+            feedErrorLabel.setStyle("-fx-text-fill: #1D9BF0; -fx-font-weight: bold;");
             feedErrorLabel.setVisible(true);
             feedErrorLabel.setManaged(true);
         } else {
             feedErrorLabel.setVisible(false);
             feedErrorLabel.setManaged(false);
         }
+
 
         // Render main feed timeline elements in center column
         feedTimelineContainer.getChildren().clear();
@@ -276,8 +301,9 @@ public class HomeController extends BaseController {
 
         // Avatar
         Circle avatar = new Circle(20.0);
-        avatar.setFill(Color.web(themeMode == ThemeMode.LIGHT ? "#E7E7E8" : "#16181C"));
+        MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+
         avatar.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -369,15 +395,15 @@ public class HomeController extends BaseController {
             card.getChildren().add(1, replyingLabel);
         }
 
-        // Optional media attachment placeholder
+        // Render media attachment previews
         if (post.mediaUrls() != null && !post.mediaUrls().isEmpty()) {
-            StackPane mediaPane = new StackPane();
-            mediaPane.getStyleClass().add("post-media-placeholder");
-            Label mediaLabel = new Label("🖼 Monochrome Media Preview (" + post.mediaUrls().get(0) + ")");
-            mediaLabel.getStyleClass().add("post-media-placeholder-label");
-            mediaPane.getChildren().add(mediaLabel);
-            card.getChildren().add(mediaPane);
+            for (String mediaUrl : post.mediaUrls()) {
+                if (mediaUrl != null && !mediaUrl.isBlank()) {
+                    card.getChildren().add(MediaUiUtils.createMediaPreviewNode(mediaUrl, themeMode));
+                }
+            }
         }
+
 
         // Action icons bar (monochrome metrics)
         HBox actionsRow = new HBox(40.0);
@@ -455,6 +481,7 @@ public class HomeController extends BaseController {
         }
     }
 
+
     @FXML
     private void onTabForYouClicked() {
         if (currentUser != null) {
@@ -472,7 +499,10 @@ public class HomeController extends BaseController {
     @FXML
     private void onComposerPostClicked() {
         if (currentUser != null) {
-            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id()));
+            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), pendingMediaUrl));
+            pendingMediaUrl = null;
+            pendingMediaFileName = null;
+            renderState(feedViewModel.getState());
         }
     }
 
@@ -486,7 +516,7 @@ public class HomeController extends BaseController {
 
     @FXML
     private void onSidebarPostClicked() {
-        if (composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) {
+        if ((composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) || pendingMediaUrl != null) {
             onComposerPostClicked();
         } else if (composerTextArea != null) {
             composerTextArea.requestFocus();
@@ -495,10 +525,47 @@ public class HomeController extends BaseController {
 
     @FXML
     private void onMediaAttachmentClicked() {
-        // Mock attachment adding text
-        String currentText = composerTextArea.getText() == null ? "" : composerTextArea.getText();
-        composerTextArea.setText(currentText + " [Image: attached_photo.jpg] ");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Media File");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Media Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.mp4", "*.mkv", "*.avi", "*.mov"),
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
+                new FileChooser.ExtensionFilter("Video Files", "*.mp4", "*.mkv", "*.avi", "*.mov"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        Window window = composerTextArea != null && composerTextArea.getScene() != null
+                ? composerTextArea.getScene().getWindow()
+                : null;
+        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+
+        if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            new Thread(() -> {
+                try {
+                    MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    if (uploadedMedia != null) {
+                        Platform.runLater(() -> {
+                            pendingMediaUrl = uploadedMedia.url();
+                            pendingMediaFileName = selectedFile.getName();
+                            renderState(feedViewModel.getState());
+                        });
+                    }
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        if (feedErrorLabel != null) {
+                            feedErrorLabel.setText("Failed to upload media: " + e.getMessage());
+                            feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                            feedErrorLabel.setVisible(true);
+                            feedErrorLabel.setManaged(true);
+                        }
+                    });
+                }
+            }).start();
+        }
     }
+
+
+
 
     @FXML
     private void onEmojiClicked() {
@@ -537,7 +604,7 @@ public class HomeController extends BaseController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        
+
         // Apply monochrome styling to dialog if it is active
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().clear();
@@ -545,7 +612,8 @@ public class HomeController extends BaseController {
         try {
             dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/" + styleFile)).toExternalForm());
         } catch (Exception ignored) {}
-        
+
+
         alert.showAndWait();
     }
 }

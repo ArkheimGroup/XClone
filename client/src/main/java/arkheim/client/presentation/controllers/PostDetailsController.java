@@ -4,6 +4,7 @@ import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
 import javafx.beans.binding.Bindings;
@@ -114,6 +115,8 @@ public class PostDetailsController extends BaseController {
         if (currentUser != null) {
             userDisplayName.setText(currentUser.name());
             userHandleName.setText("@" + currentUser.username());
+            MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+            MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
 
         initializeStateBindings();
@@ -159,6 +162,7 @@ public class PostDetailsController extends BaseController {
         focalAuthorName.setText(post.authorName());
         focalAuthorHandle.setText("@" + post.authorUsername());
         focalContentText.setText(post.content());
+        MediaUiUtils.loadAvatar(focalAvatarCircle, post.authorPfpUrl(), themeMode);
 
         String dateText = post.createdAt() != null
                 ? post.createdAt().format(DateTimeFormatter.ofPattern("h:mm a · MMM dd, yyyy"))
@@ -185,12 +189,30 @@ public class PostDetailsController extends BaseController {
             deleteFocalBtn.setManaged(false);
         }
 
+        // Render focal post media attachment
+        if (focalMediaContainer != null) {
+            focalMediaContainer.getChildren().clear();
+            if (post.mediaUrls() != null && !post.mediaUrls().isEmpty()) {
+                for (String url : post.mediaUrls()) {
+                    if (url != null && !url.isBlank()) {
+                        focalMediaContainer.getChildren().add(MediaUiUtils.createMediaPreviewNode(url, themeMode));
+                    }
+                }
+                focalMediaContainer.setVisible(true);
+                focalMediaContainer.setManaged(true);
+            } else {
+                focalMediaContainer.setVisible(false);
+                focalMediaContainer.setManaged(false);
+            }
+        }
+
         // Render parent post preview if present
         parentPostContainer.getChildren().clear();
         if (post.parentPostId() != null) {
             renderParentPreview(post.parentPostId());
         }
     }
+
 
     private void renderParentPreview(UUID parentId) {
         // Mock loading parent post details since it is loaded via postPort
@@ -253,7 +275,7 @@ public class PostDetailsController extends BaseController {
 
         HBox header = new HBox(12.0);
         Circle avatar = new Circle(16.0);
-        avatar.setFill(Color.web(themeMode == ThemeMode.LIGHT ? "#E7E7E8" : "#16181C"));
+        MediaUiUtils.loadAvatar(avatar, reply.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
 
         VBox meta = new VBox(2.0);
@@ -316,7 +338,14 @@ public class PostDetailsController extends BaseController {
             Label replyingLabel = new Label("Replying to @" + targetUser);
             replyingLabel.getStyleClass().add("post-author-handle");
             replyingLabel.setStyle("-fx-font-size: 12px; -fx-padding: 0 0 2px 0;");
-            card.getChildren().add(1, replyingLabel);
+        }
+
+        if (reply.mediaUrls() != null && !reply.mediaUrls().isEmpty()) {
+            for (String mediaUrl : reply.mediaUrls()) {
+                if (mediaUrl != null && !mediaUrl.isBlank()) {
+                    card.getChildren().add(MediaUiUtils.createMediaPreviewNode(mediaUrl, themeMode));
+                }
+            }
         }
 
         HBox actions = new HBox(40.0);
@@ -483,14 +512,14 @@ public class PostDetailsController extends BaseController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        
+
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().clear();
         String styleFile = (themeMode == ThemeMode.LIGHT) ? "Style.css" : "DarkMode.css";
         try {
             dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/arkheim/client/presentation/Assets/" + styleFile)).toExternalForm());
         } catch (Exception ignored) {}
-        
+
         alert.showAndWait();
     }
 }
