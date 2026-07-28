@@ -395,6 +395,13 @@ public class ProfileController extends BaseController {
         MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
 
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(post.authorId());
+            }
+        });
 
         VBox meta = new VBox(2.0);
         HBox metaRow = new HBox(6.0);
@@ -402,9 +409,23 @@ public class ProfileController extends BaseController {
 
         Label name = new Label(post.authorName());
         name.getStyleClass().add("post-author-name");
+        name.setCursor(javafx.scene.Cursor.HAND);
+        name.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(post.authorId());
+            }
+        });
 
         Label handle = new Label("@" + post.authorUsername());
         handle.getStyleClass().add("post-author-handle");
+        handle.setCursor(javafx.scene.Cursor.HAND);
+        handle.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(post.authorId());
+            }
+        });
 
         Label dot = new Label("·");
         dot.getStyleClass().add("post-author-handle");

@@ -64,7 +64,7 @@
         <VBox spacing="10.0">
             <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
 
-            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;">
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;" onMouseClicked="#onNavProfileClicked">
                 <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
                 <VBox alignment="CENTER_LEFT">
                     <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>

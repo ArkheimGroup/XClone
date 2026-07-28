@@ -186,6 +186,24 @@ public class PostDetailsController extends BaseController {
         focalContentText.setText(post.content());
         MediaUiUtils.loadAvatar(focalAvatarCircle, post.authorPfpUrl(), themeMode);
 
+        if (post.authorId() != null) {
+            focalAuthorName.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorName.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+            focalAuthorHandle.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorHandle.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+            focalAvatarCircle.setCursor(javafx.scene.Cursor.HAND);
+            focalAvatarCircle.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+        }
+
         String dateText = post.createdAt() != null
                 ? post.createdAt().format(DateTimeFormatter.ofPattern("h:mm a · MMM dd, yyyy"))
                 : "Just now";
@@ -304,6 +322,11 @@ public class PostDetailsController extends BaseController {
         Circle avatar = new Circle(16.0);
         MediaUiUtils.loadAvatar(avatar, reply.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         VBox meta = new VBox(2.0);
         HBox metaRow = new HBox(6.0);
@@ -311,11 +334,19 @@ public class PostDetailsController extends BaseController {
 
         Label name = new Label(reply.authorName());
         name.getStyleClass().add("post-author-name");
-        name.setStyle("-fx-font-size: 14px;");
+        name.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        name.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         Label handle = new Label("@" + reply.authorUsername());
         handle.getStyleClass().add("post-author-handle");
-        handle.setStyle("-fx-font-size: 14px;");
+        handle.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        handle.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         Label dot = new Label("·");
         dot.getStyleClass().add("post-author-handle");

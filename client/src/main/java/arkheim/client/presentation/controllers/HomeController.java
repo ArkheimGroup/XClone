@@ -321,6 +321,7 @@ public class HomeController extends BaseController {
         Circle avatar = new Circle(20.0);
         MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(javafx.scene.Cursor.HAND);
 
         avatar.setOnMouseClicked(e -> {
             e.consume();
@@ -336,6 +337,7 @@ public class HomeController extends BaseController {
 
         Label nameLabel = new Label(post.authorName());
         nameLabel.getStyleClass().add("post-author-name");
+        nameLabel.setCursor(javafx.scene.Cursor.HAND);
         nameLabel.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -345,6 +347,13 @@ public class HomeController extends BaseController {
 
         Label handleLabel = new Label("@" + post.authorUsername());
         handleLabel.getStyleClass().add("post-author-handle");
+        handleLabel.setCursor(javafx.scene.Cursor.HAND);
+        handleLabel.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(post.authorId());
+            }
+        });
 
         Label dot = new Label("·");
         dot.getStyleClass().add("post-author-handle");
