@@ -148,14 +148,17 @@ public class JavaFxNavigator implements Navigator {
         FollowPort followPort = new HttpFollowAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
         MediaPort mediaPort = new HttpMediaAdapter();
+        UserPort userPort = new HttpUserAdapter();
 
         // Build presentation viewmodels
         FeedViewModel feedViewModel = new FeedViewModel(feedPort, postPort, hashtagPort);
         FollowViewModel followViewModel = new FollowViewModel(followPort);
         MediaViewModel mediaViewModel = new MediaViewModel(mediaPort);
+        UserViewModel userViewModel = new UserViewModel(userPort);
+        PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
 
         // Inject dependencies into HomeController
-        controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel);
+        controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel, userViewModel, postViewModel);
         controller.setNavigator(this);
 
         setRootOrNewScene(root, 1280, 800);
@@ -183,12 +186,14 @@ public class JavaFxNavigator implements Navigator {
         FollowPort followPort = new HttpFollowAdapter();
         PostPort postPort = new HttpPostAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
+        MediaPort mediaPort = new HttpMediaAdapter();
 
         UserViewModel userViewModel = new UserViewModel(userPort);
         FollowViewModel followViewModel = new FollowViewModel(followPort);
         PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
+        MediaViewModel mediaViewModel = new MediaViewModel(mediaPort);
 
-        controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, userId);
+        controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, mediaViewModel, userId);
         controller.setNavigator(this);
 
         setRootOrNewScene(root, 1280, 800);
@@ -214,9 +219,12 @@ public class JavaFxNavigator implements Navigator {
 
         PostPort postPort = new HttpPostAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
-        PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
+        UserPort userPort = new HttpUserAdapter();
 
-        controller.setViewModels(authViewModel, postViewModel, postId);
+        PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
+        UserViewModel userViewModel = new UserViewModel(userPort);
+
+        controller.setViewModels(authViewModel, postViewModel, userViewModel, postId);
         controller.setNavigator(this);
 
         setRootOrNewScene(root, 1280, 800);

@@ -3,6 +3,7 @@ package arkheim.client.presentation.controllers;
 import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.ports.dtos.UserProfileDto;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
@@ -13,6 +14,8 @@ import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FeedViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
 import arkheim.client.presentation.viewmodels.MediaViewModel;
+import arkheim.client.presentation.viewmodels.PostViewModel;
+import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -39,6 +42,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class HomeController extends BaseController {
+
+    private AuthViewModel authViewModel;
+    private FeedViewModel feedViewModel;
+    private FollowViewModel followViewModel;
+    private MediaViewModel mediaViewModel;
+    private UserViewModel userViewModel;
+    private PostViewModel postViewModel;
 
     @FXML
     private ImageView logoImageView;
@@ -95,10 +105,6 @@ public class HomeController extends BaseController {
     @FXML
     private VBox whoToFollowContainer;
 
-    private AuthViewModel authViewModel;
-    private FeedViewModel feedViewModel;
-    private FollowViewModel followViewModel;
-    private MediaViewModel mediaViewModel;
     private String pendingMediaUrl = null;
     private String pendingMediaFileName = null;
 
@@ -111,11 +117,20 @@ public class HomeController extends BaseController {
         updateIcons();
     }
 
-    public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel, MediaViewModel mediaViewModel) {
+    public void setViewModels(
+            AuthViewModel authViewModel,
+            FeedViewModel feedViewModel,
+            FollowViewModel followViewModel,
+            MediaViewModel mediaViewModel,
+            UserViewModel userViewModel,
+            PostViewModel postViewModel
+    ) {
         this.authViewModel = authViewModel;
         this.feedViewModel = feedViewModel;
         this.followViewModel = followViewModel;
         this.mediaViewModel = mediaViewModel;
+        this.userViewModel = userViewModel;
+        this.postViewModel = postViewModel;
 
         this.currentUser = authViewModel.currentUserProperty().get();
         if (currentUser != null) {
@@ -139,10 +154,6 @@ public class HomeController extends BaseController {
         });
 
         initializeStateBindings();
-    }
-
-    public void setViewModels(AuthViewModel authViewModel, FeedViewModel feedViewModel, FollowViewModel followViewModel) {
-        setViewModels(authViewModel, feedViewModel, followViewModel, new MediaViewModel(new arkheim.client.infrastructure.adapter.HttpMediaAdapter()));
     }
 
     private void initializeStateBindings() {
@@ -245,23 +256,108 @@ public class HomeController extends BaseController {
         // Render search results in right sidebar container
         if (searchResultsContainer != null) {
             searchResultsContainer.getChildren().clear();
-            if (state.isSearching()) {
-                Label searchTitle = new Label("Search results for \"" + state.searchQuery() + "\"");
+            if (state.isSearching() && state.searchQuery() != null && !state.searchQuery().isBlank()) {
+                String query = state.searchQuery().trim();
+                boolean isHashtag = query.startsWith("#");
+
+                Label searchTitle = new Label("Search results for \"" + query + "\"");
                 searchTitle.getStyleClass().add("empty-title");
                 searchTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 4px 0 8px 0;");
                 searchResultsContainer.getChildren().add(searchTitle);
 
+                if (!isHashtag) {
+                    // Pane 1: Users pane
+                    VBox usersPane = new VBox(6.0);
+                    Label usersHeader = new Label("Users");
+                    usersHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 4px 0 2px 0;");
+                    usersPane.getChildren().add(usersHeader);
+
+                    String usernameToSearch = query.startsWith("@") ? query.substring(1).trim() : query;
+
+                    new Thread(() -> {
+                        UserProfileDto userProfile = null;
+                        try {
+                            if (!usernameToSearch.isBlank() && userViewModel != null) {
+                                userProfile = userViewModel.fetchProfileByUsername(usernameToSearch);
+                            }
+                        } catch (Exception ignored) {}
+
+                        final UserProfileDto finalUser = userProfile;
+                        Platform.runLater(() -> {
+                            if (finalUser != null) {
+                                usersPane.getChildren().add(createUserSearchResultCard(finalUser));
+                            } else {
+                                Label noUsersLabel = new Label("No matching users found.");
+                                noUsersLabel.getStyleClass().add("empty-desc");
+                                usersPane.getChildren().add(noUsersLabel);
+                            }
+                        });
+                    }).start();
+
+                    searchResultsContainer.getChildren().add(usersPane);
+                }
+
+                // Pane 2: Posts pane
+                VBox postsPane = new VBox(6.0);
+                Label postsHeader = new Label("Posts");
+                postsHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 8px 0 2px 0;");
+                postsPane.getChildren().add(postsHeader);
+
                 if (state.searchResults().isEmpty()) {
                     Label noResultsLabel = new Label("No matching posts found.");
                     noResultsLabel.getStyleClass().add("empty-desc");
-                    searchResultsContainer.getChildren().add(noResultsLabel);
+                    postsPane.getChildren().add(noResultsLabel);
                 } else {
                     for (PostDto post : state.searchResults()) {
-                        searchResultsContainer.getChildren().add(createPostCard(post));
+                        postsPane.getChildren().add(createPostCard(post));
                     }
                 }
+
+                searchResultsContainer.getChildren().add(postsPane);
             }
         }
+    }
+
+    private Node createUserSearchResultCard(UserProfileDto user) {
+        HBox row = new HBox(12.0);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("post-card");
+        row.setStyle("-fx-padding: 10px 12px; -fx-background-radius: 8px; -fx-cursor: hand; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
+
+        Circle avatar = new Circle(18.0);
+        MediaUiUtils.loadAvatar(avatar, user.pfpUrl(), themeMode);
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+
+        VBox info = new VBox(2.0);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
+        nameLabel.getStyleClass().add("post-author-name");
+        nameLabel.setStyle("-fx-font-size: 14px;");
+
+        Label handleLabel = new Label("@" + user.username());
+        handleLabel.getStyleClass().add("post-author-handle");
+        handleLabel.setStyle("-fx-font-size: 13px;");
+
+        info.getChildren().addAll(nameLabel, handleLabel);
+
+        Button viewBtn = new Button("View");
+        viewBtn.getStyleClass().add("button-secondary");
+        viewBtn.setStyle("-fx-font-size: 12px; -fx-padding: 4px 12px;");
+        viewBtn.setOnAction(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+
+        row.getChildren().addAll(avatar, info, viewBtn);
+        row.setOnMouseClicked(e -> {
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+        return row;
     }
 
     private void updateTabStyles(FeedUiState.TabType activeTab) {
@@ -497,9 +593,8 @@ public class HomeController extends BaseController {
         }
         repostBtn.setOnAction(e -> {
             e.consume();
-            if (currentUser != null) {
-                arkheim.client.infrastructure.adapter.HttpPostAdapter adapter = new arkheim.client.infrastructure.adapter.HttpPostAdapter();
-                adapter.createPost(currentUser.id(), "", null, post.id());
+            if (currentUser != null && postViewModel != null) {
+                postViewModel.repost(post.id(), currentUser.id());
                 feedViewModel.processEvent(new FeedUiEvent.LoadFeed(currentUser.id()));
             }
         });

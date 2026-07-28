@@ -9,6 +9,7 @@ import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.FollowViewModel;
+import arkheim.client.presentation.viewmodels.MediaViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
@@ -34,6 +35,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -121,7 +124,7 @@ public class ProfileController extends BaseController {
     private UserViewModel userViewModel;
     private FollowViewModel followViewModel;
     private PostViewModel postViewModel;
-    private arkheim.client.presentation.viewmodels.MediaViewModel mediaViewModel;
+    private MediaViewModel mediaViewModel;
 
     private UserDto currentUser;
     private UUID profileId;
@@ -131,13 +134,19 @@ public class ProfileController extends BaseController {
         updateIcons();
     }
 
-    public void setViewModels(AuthViewModel authViewModel, UserViewModel userViewModel,
-                              FollowViewModel followViewModel, PostViewModel postViewModel, UUID profileId) {
+    public void setViewModels(
+            AuthViewModel authViewModel,
+            UserViewModel userViewModel,
+            FollowViewModel followViewModel,
+            PostViewModel postViewModel,
+            MediaViewModel mediaViewModel,
+            UUID profileId
+    ) {
         this.authViewModel = authViewModel;
         this.userViewModel = userViewModel;
         this.followViewModel = followViewModel;
         this.postViewModel = postViewModel;
-        this.mediaViewModel = new arkheim.client.presentation.viewmodels.MediaViewModel(new arkheim.client.infrastructure.adapter.HttpMediaAdapter());
+        this.mediaViewModel = mediaViewModel;
         this.profileId = profileId;
 
         this.currentUser = authViewModel.currentUserProperty().get();
@@ -793,20 +802,108 @@ public class ProfileController extends BaseController {
     private void renderSearchResults() {
         if (searchResultsContainer == null) return;
         searchResultsContainer.getChildren().clear();
-        Label searchTitle = new Label("Search results");
+
+        String query = searchField.getText() != null ? searchField.getText().trim() : "";
+        if (query.isEmpty()) return;
+
+        boolean isHashtag = query.startsWith("#");
+
+        Label searchTitle = new Label("Search results for \"" + query + "\"");
         searchTitle.getStyleClass().add("empty-title");
         searchTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 4px 0 8px 0;");
         searchResultsContainer.getChildren().add(searchTitle);
 
+        if (!isHashtag) {
+            // Pane 1: Users pane
+            VBox usersPane = new VBox(6.0);
+            Label usersHeader = new Label("Users");
+            usersHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 4px 0 2px 0;");
+            usersPane.getChildren().add(usersHeader);
+
+            String usernameToSearch = query.startsWith("@") ? query.substring(1).trim() : query;
+
+            new Thread(() -> {
+                UserProfileDto userProfile = null;
+                try {
+                    if (!usernameToSearch.isBlank() && userViewModel != null) {
+                        userProfile = userViewModel.fetchProfileByUsername(usernameToSearch);
+                    }
+                } catch (Exception ignored) {}
+
+                final UserProfileDto finalUser = userProfile;
+                Platform.runLater(() -> {
+                    if (finalUser != null) {
+                        usersPane.getChildren().add(createUserSearchResultCard(finalUser));
+                    } else {
+                        Label noUsersLabel = new Label("No matching users found.");
+                        noUsersLabel.getStyleClass().add("empty-desc");
+                        usersPane.getChildren().add(noUsersLabel);
+                    }
+                });
+            }).start();
+
+            searchResultsContainer.getChildren().add(usersPane);
+        }
+
+        // Pane 2: Posts pane
+        VBox postsPane = new VBox(6.0);
+        Label postsHeader = new Label("Posts");
+        postsHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 8px 0 2px 0;");
+        postsPane.getChildren().add(postsHeader);
+
         if (postViewModel.searchResultsProperty().isEmpty()) {
             Label desc = new Label("No matching posts found.");
             desc.getStyleClass().add("empty-desc");
-            searchResultsContainer.getChildren().add(desc);
+            postsPane.getChildren().add(desc);
         } else {
             for (PostDto post : postViewModel.searchResultsProperty()) {
-                searchResultsContainer.getChildren().add(createPostCard(post));
+                postsPane.getChildren().add(createPostCard(post));
             }
         }
+
+        searchResultsContainer.getChildren().add(postsPane);
+    }
+
+    private Node createUserSearchResultCard(UserProfileDto user) {
+        HBox row = new HBox(12.0);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("post-card");
+        row.setStyle("-fx-padding: 10px 12px; -fx-background-radius: 8px; -fx-cursor: hand; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
+
+        Circle avatar = new Circle(18.0);
+        MediaUiUtils.loadAvatar(avatar, user.pfpUrl(), themeMode);
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+
+        VBox info = new VBox(2.0);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
+        nameLabel.getStyleClass().add("post-author-name");
+        nameLabel.setStyle("-fx-font-size: 14px;");
+
+        Label handleLabel = new Label("@" + user.username());
+        handleLabel.getStyleClass().add("post-author-handle");
+        handleLabel.setStyle("-fx-font-size: 13px;");
+
+        info.getChildren().addAll(nameLabel, handleLabel);
+
+        Button viewBtn = new Button("View");
+        viewBtn.getStyleClass().add("button-secondary");
+        viewBtn.setStyle("-fx-font-size: 12px; -fx-padding: 4px 12px;");
+        viewBtn.setOnAction(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+
+        row.getChildren().addAll(avatar, info, viewBtn);
+        row.setOnMouseClicked(e -> {
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+        return row;
     }
 
     @FXML

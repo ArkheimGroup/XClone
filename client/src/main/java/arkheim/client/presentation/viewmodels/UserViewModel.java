@@ -60,6 +60,18 @@ public class UserViewModel {
     }
 
     /**
+     * Synchronously/directly fetches a user profile by username via {@link UserPort#getUserProfileByUsername}.
+     */
+    public UserProfileDto fetchProfileByUsername(String username) {
+        if (username == null || username.isBlank()) return null;
+        try {
+            return userPort.getUserProfileByUsername(username.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * Copies values from {@link #currentProfileProperty()} into the edit
      * form fields. Call this when entering edit mode so the form starts
      * from the currently loaded profile rather than blank values.
