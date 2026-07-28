@@ -1,5 +1,7 @@
 package arkheim.client.presentation.controllers;
 
+import arkheim.client.presentation.navigation.JavaFxNavigator;
+import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import javafx.beans.binding.Bindings;
 import javafx.css.PseudoClass;
@@ -26,6 +28,9 @@ public class LoginController extends BaseController {
 
     @FXML
     private Hyperlink goToRegisterLink;
+
+    @FXML
+    private Button themeToggleBtn;
 
     private AuthViewModel authViewModel;
     private boolean bindingsInitialized = false;
@@ -61,6 +66,23 @@ public class LoginController extends BaseController {
         );
 
         bindingsInitialized = true;
+    }
+
+    @Override
+    public void updateIcons() {
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+        }
+    }
+
+    @FXML
+    private void onThemeToggleClicked() {
+        if (navigator instanceof JavaFxNavigator fxNavigator) {
+            ThemeMode newMode = (themeMode == ThemeMode.LIGHT) ? ThemeMode.DARK : ThemeMode.LIGHT;
+            fxNavigator.setThemeMode(newMode);
+            fxNavigator.updateTheme();
+            setThemeMode(newMode);
+        }
     }
 
     @FXML
