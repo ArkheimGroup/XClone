@@ -92,6 +92,8 @@ public class ProfileController extends BaseController {
     private Label followingCountLabel;
     @FXML
     private Label followersCountLabel;
+    @FXML
+    private Label postsCountLabel;
 
     @FXML
     private VBox editProfileFormBox;
@@ -328,7 +330,14 @@ public class ProfileController extends BaseController {
 
     private void renderTimeline() {
         profileTimelineContainer.getChildren().clear();
-        headerPostCount.setText(postViewModel.userPostsProperty().size() + " posts");
+        int count = postViewModel.userPostsProperty().size();
+        String postsText = count + (count == 1 ? " post" : " posts");
+        if (headerPostCount != null) {
+            headerPostCount.setText(postsText);
+        }
+        if (postsCountLabel != null) {
+            postsCountLabel.setText(String.valueOf(count));
+        }
 
         if (postViewModel.userPostsProperty().isEmpty()) {
             VBox emptyBox = new VBox(12.0);

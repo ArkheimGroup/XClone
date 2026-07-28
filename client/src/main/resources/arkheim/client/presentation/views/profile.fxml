@@ -118,6 +118,10 @@
                         </HBox>
 
                         <HBox spacing="20.0" style="-fx-padding: 6px 0px 0px 0px;">
+                            <HBox spacing="4.0">
+                                <Label fx:id="postsCountLabel" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                                <Label text="Posts" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                            </HBox>
                             <HBox spacing="4.0" style="-fx-cursor: hand;" onMouseClicked="#onFollowingClicked">
                                 <Label fx:id="followingCountLabel" text="0" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
                                 <Label text="Following" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
