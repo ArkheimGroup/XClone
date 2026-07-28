@@ -127,6 +127,16 @@ public class AuthViewModel {
         }
     }
 
+    /**
+     * Logs out the current user, clearing session and form states.
+     */
+    public void logout() {
+        currentUser.set(null);
+        email.set("");
+        password.set("");
+        errorMessage.set("");
+    }
+
     // Getters
 
     // --- login property getters ---

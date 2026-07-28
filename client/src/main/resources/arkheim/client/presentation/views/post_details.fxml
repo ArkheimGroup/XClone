@@ -43,6 +43,11 @@
                 <Label styleClass="nav-label" text="Profile"/>
             </HBox>
             
+            <HBox fx:id="navLogout" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavLogoutClicked">
+                <ImageView fx:id="navLogoutIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
+                <Label styleClass="nav-label" text="Logout"/>
+            </HBox>
+            
             <Button fx:id="sidebarPostButton" text="Post" prefWidth="220.0" styleClass="button-primary" onAction="#onSidebarPostClicked">
                 <VBox.margin>
                     <Insets top="16.0"/>

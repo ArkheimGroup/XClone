@@ -50,6 +50,8 @@ public class ProfileController extends BaseController {
     @FXML
     private ImageView navProfileIcon;
     @FXML
+    private ImageView navLogoutIcon;
+    @FXML
     private Circle userAvatarCircle;
     @FXML
     private Label userDisplayName;
@@ -720,6 +722,7 @@ public class ProfileController extends BaseController {
         if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
         if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
         if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (navLogoutIcon != null) navLogoutIcon.setImage(IconUtils.getIconImage("door", themeMode));
         if (uploadAvatarBtn != null) IconUtils.setButtonIcon(uploadAvatarBtn, "image", themeMode, 16);
         if (profileDobLabel != null) IconUtils.setLabelIcon(profileDobLabel, "calendar", themeMode, 14);
         if (profileJoinedLabel != null) IconUtils.setLabelIcon(profileJoinedLabel, "calendar", themeMode, 14);
@@ -784,6 +787,16 @@ public class ProfileController extends BaseController {
     private void onNavProfileClicked() {
         if (currentUser != null) {
             navigator.showProfileScreen(currentUser.id());
+        }
+    }
+
+    @FXML
+    private void onNavLogoutClicked() {
+        if (authViewModel != null) {
+            authViewModel.logout();
+        }
+        if (navigator != null) {
+            navigator.showLoginScreen();
         }
     }
 

@@ -45,6 +45,8 @@ public class PostDetailsController extends BaseController {
     @FXML
     private ImageView navProfileIcon;
     @FXML
+    private ImageView navLogoutIcon;
+    @FXML
     private Circle userAvatarCircle;
     @FXML
     private Label userDisplayName;
@@ -492,6 +494,7 @@ public class PostDetailsController extends BaseController {
         if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
         if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
         if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (navLogoutIcon != null) navLogoutIcon.setImage(IconUtils.getIconImage("door", themeMode));
         if (themeToggleBtn != null) {
             themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
         }
@@ -558,6 +561,16 @@ public class PostDetailsController extends BaseController {
     private void onNavProfileClicked() {
         if (currentUser != null) {
             navigator.showProfileScreen(currentUser.id());
+        }
+    }
+
+    @FXML
+    private void onNavLogoutClicked() {
+        if (authViewModel != null) {
+            authViewModel.logout();
+        }
+        if (navigator != null) {
+            navigator.showLoginScreen();
         }
     }
 
