@@ -593,9 +593,8 @@ public class HomeController extends BaseController {
         }
         repostBtn.setOnAction(e -> {
             e.consume();
-            if (currentUser != null && postViewModel != null) {
-                postViewModel.repost(post.id(), currentUser.id());
-                feedViewModel.processEvent(new FeedUiEvent.LoadFeed(currentUser.id()));
+            if (currentUser != null && feedViewModel != null) {
+                feedViewModel.processEvent(new FeedUiEvent.ToggleRepost(post.id(), currentUser.id()));
             }
         });
 

@@ -629,6 +629,13 @@ public class PostDetailsController extends BaseController {
     }
 
     @FXML
+    private void onFocalRepostClicked() {
+        if (currentUser != null && postId != null) {
+            postViewModel.repost(postId, currentUser.id());
+        }
+    }
+
+    @FXML
     private void onReplySubmitClicked() {
         if (currentUser != null) {
             postViewModel.newPostParentIdProperty().set(postId);

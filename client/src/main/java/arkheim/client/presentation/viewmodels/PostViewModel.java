@@ -226,11 +226,50 @@ public class PostViewModel {
     public void repost(UUID postId, UUID authorId) {
         errorMessage.set("");
         try {
-            postPort.createPost(authorId, "", null, postId);
+            PostDto current = findPostById(postId);
+            boolean alreadyReposted = current != null && current.repostedByMe();
+
+            if (alreadyReposted) {
+                List<PostDto> userTimeline = postPort.getUserTimeline(authorId);
+                PostDto repostToDelete = null;
+                if (userTimeline != null) {
+                    for (PostDto p : userTimeline) {
+                        if (p.isRepost() && postId.equals(p.parentPostId())) {
+                            repostToDelete = p;
+                            break;
+                        }
+                    }
+                }
+                if (repostToDelete != null) {
+                    postPort.deletePost(repostToDelete.id(), authorId);
+                }
+            } else {
+                postPort.createPost(authorId, "", null, postId);
+            }
+
             replaceWherePresent(postId, this::withToggledRepost);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
         }
+    }
+
+    private PostDto findPostById(UUID postId) {
+        if (currentPost.get() != null && currentPost.get().id().equals(postId)) {
+            return currentPost.get();
+        }
+        for (PostDto p : timeline) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : userPosts) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : replies) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : searchResults) {
+            if (p.id().equals(postId)) return p;
+        }
+        return null;
     }
 
     private PostDto withToggledRepost(PostDto p) {

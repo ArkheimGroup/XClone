@@ -132,7 +132,7 @@
                         <!-- Quick Action icons -->
                         <HBox spacing="60.0" alignment="CENTER">
                             <Button fx:id="focalReplyBtn" styleClass="composer-icon-btn"/>
-                            <Button fx:id="focalRepostBtn" styleClass="composer-icon-btn"/>
+                            <Button fx:id="focalRepostBtn" styleClass="composer-icon-btn" onAction="#onFocalRepostClicked"/>
                             <Button fx:id="focalLikeBtn" styleClass="composer-icon-btn" onAction="#onFocalLikeClicked"/>
                         </HBox>
                     </VBox>
