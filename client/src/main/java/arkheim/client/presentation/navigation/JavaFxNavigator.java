@@ -53,16 +53,31 @@ public class JavaFxNavigator implements Navigator {
     public void updateTheme() {
         Scene scene = stage.getScene();
         if (scene != null) {
-            scene.getStylesheets().clear();
-            addStyle(scene);
+            applySceneTheme(scene);
         }
     }
 
-    private void addStyle(Scene scene) {
-        if (themeMode == ThemeMode.LIGHT) {
-            scene.getStylesheets().add(lightStyle);
-        } else {
+    private void applySceneTheme(Scene scene) {
+        if (scene == null) return;
+        scene.getStylesheets().clear();
+        if (themeMode == ThemeMode.DARK) {
+            scene.setFill(javafx.scene.paint.Color.web("#000000"));
             scene.getStylesheets().add(darkStyle);
+        } else {
+            scene.setFill(javafx.scene.paint.Color.web("#FFFFFF"));
+            scene.getStylesheets().add(lightStyle);
+        }
+    }
+
+    private void setRootOrNewScene(Parent root, double width, double height) {
+        Scene scene = stage.getScene();
+        if (scene != null) {
+            scene.setRoot(root);
+            applySceneTheme(scene);
+        } else {
+            scene = new Scene(root, width, height);
+            applySceneTheme(scene);
+            stage.setScene(scene);
         }
     }
 
@@ -84,12 +99,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
-        Scene scene = new Scene(root);
-        addStyle(scene);
-
-        stage.setScene(scene);
-        stage.setWidth(1000);
-        stage.setHeight(600);
+        setRootOrNewScene(root, 1000, 600);
         stage.centerOnScreen();
         stage.show();
     }
@@ -112,10 +122,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
-        Scene scene = new Scene(root);
-        addStyle(scene);
-
-        stage.setScene(scene);
+        setRootOrNewScene(root, 1000, 600);
         stage.show();
     }
 
@@ -151,12 +158,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel);
         controller.setNavigator(this);
 
-        Scene scene = new Scene(root);
-        addStyle(scene);
-
-        stage.setScene(scene);
-        stage.setWidth(1280);
-        stage.setHeight(800);
+        setRootOrNewScene(root, 1280, 800);
         stage.centerOnScreen();
         stage.show();
     }
@@ -189,12 +191,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, userId);
         controller.setNavigator(this);
 
-        Scene scene = new Scene(root);
-        addStyle(scene);
-
-        stage.setScene(scene);
-        stage.setWidth(1280);
-        stage.setHeight(800);
+        setRootOrNewScene(root, 1280, 800);
         stage.centerOnScreen();
         stage.show();
     }
@@ -222,12 +219,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, postViewModel, postId);
         controller.setNavigator(this);
 
-        Scene scene = new Scene(root);
-        addStyle(scene);
-
-        stage.setScene(scene);
-        stage.setWidth(1280);
-        stage.setHeight(800);
+        setRootOrNewScene(root, 1280, 800);
         stage.centerOnScreen();
         stage.show();
     }
