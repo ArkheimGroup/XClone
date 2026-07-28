@@ -119,6 +119,9 @@ public class HomeController extends BaseController {
             userHandleName.setText("@" + currentUser.username());
             MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
             MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
+            if (followViewModel != null) {
+                new Thread(() -> followViewModel.loadFollowing(currentUser.id())).start();
+            }
         }
 
         authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
@@ -363,14 +366,25 @@ public class HomeController extends BaseController {
 
         // Follow button for other users' posts
         if (currentUser != null && !currentUser.id().equals(post.authorId()) && followViewModel != null) {
-            Button followBtn = new Button("Follow");
+            boolean isFollowing = followViewModel.isFollowingUser(currentUser.id(), post.authorId());
+            Button followBtn = new Button(isFollowing ? "Following" : "Follow");
             followBtn.getStyleClass().add("post-action-btn");
             followBtn.setStyle("-fx-border-color: -fx-border-color-muted; -fx-border-radius: 12px; -fx-padding: 2px 8px; -fx-font-size: 12px;");
+
+            followViewModel.lastFollowedUserIdProperty().addListener((obs, oldVal, changedUserId) -> {
+                if (changedUserId != null && post.authorId().equals(changedUserId)) {
+                    boolean nowFollowing = followViewModel.isFollowingUser(currentUser.id(), post.authorId());
+                    followBtn.setText(nowFollowing ? "Following" : "Follow");
+                }
+            });
+
             followBtn.setOnAction(e -> {
                 e.consume();
-                followViewModel.followUser(currentUser.id(), post.authorId());
-                followBtn.setText("Following");
-                followBtn.setDisable(true);
+                if (followViewModel.isFollowingUser(currentUser.id(), post.authorId())) {
+                    followViewModel.unfollowUser(currentUser.id(), post.authorId());
+                } else {
+                    followViewModel.followUser(currentUser.id(), post.authorId());
+                }
             });
             header.getChildren().add(followBtn);
         }
