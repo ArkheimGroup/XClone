@@ -55,6 +55,10 @@ public class PostViewModel {
      */
     public void createPost(UUID authorId){
         errorMessage.set("");
+        if (newPostContent.get() != null && newPostContent.get().length() > 280) {
+            errorMessage.set("Post content exceeds 280 character limit.");
+            return;
+        }
         try {
             PostDto created = postPort.createPost(
                     authorId,

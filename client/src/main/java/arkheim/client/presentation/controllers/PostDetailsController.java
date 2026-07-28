@@ -96,6 +96,8 @@ public class PostDetailsController extends BaseController {
     @FXML
     private TextArea replyTextArea;
     @FXML
+    private Label replyCharCountLabel;
+    @FXML
     private Button replyPostBtn;
 
     @FXML
@@ -151,10 +153,21 @@ public class PostDetailsController extends BaseController {
         // Sync composer text
         replyTextArea.textProperty().bindBidirectional(postViewModel.newPostContentProperty());
 
-        // Enable button only when text is typed
+        replyTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.length() > 280) {
+                replyTextArea.setText(newVal.substring(0, 280));
+                return;
+            }
+            updateReplyCharCounter(newVal != null ? newVal.length() : 0);
+        });
+
+        // Enable button only when valid text (1-280 chars) is typed
         replyPostBtn.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> postViewModel.newPostContentProperty().get().isBlank(),
+                        () -> {
+                            String text = postViewModel.newPostContentProperty().get();
+                            return text == null || text.isBlank() || text.length() > 280;
+                        },
                         postViewModel.newPostContentProperty()
                 )
         );
@@ -175,6 +188,20 @@ public class PostDetailsController extends BaseController {
         detailsErrorLabel.textProperty().bind(postViewModel.errorMessageProperty());
         detailsErrorLabel.visibleProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
         detailsErrorLabel.managedProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
+    }
+
+    private void updateReplyCharCounter(int currentLength) {
+        if (replyCharCountLabel != null) {
+            int remaining = 280 - currentLength;
+            replyCharCountLabel.setText(String.valueOf(remaining));
+            if (remaining <= 20) {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #E02424; -fx-padding: 0 8 0 0;");
+            } else if (remaining <= 50) {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #F59E0B; -fx-padding: 0 8 0 0;");
+            } else {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary; -fx-padding: 0 8 0 0;");
+            }
+        }
     }
 
     private void loadData() {

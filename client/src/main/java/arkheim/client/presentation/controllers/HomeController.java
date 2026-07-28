@@ -68,12 +68,16 @@ public class HomeController extends BaseController {
     @FXML
     private VBox tabFollowingIndicator;
 
+    public static final int MAX_POST_LENGTH = 280;
+
     @FXML
     private Circle composerAvatarCircle;
     @FXML
     private TextArea composerTextArea;
     @FXML
     private Button composerMediaButton;
+    @FXML
+    private Label composerCharCountLabel;
     @FXML
     private Button composerPostButton;
     @FXML
@@ -149,6 +153,11 @@ public class HomeController extends BaseController {
 
         // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.length() > MAX_POST_LENGTH) {
+                composerTextArea.setText(newVal.substring(0, MAX_POST_LENGTH));
+                return;
+            }
+            updateCharCounter(newVal != null ? newVal.length() : 0);
             updateComposerPostButtonState();
         });
 
@@ -162,12 +171,29 @@ public class HomeController extends BaseController {
         bindingsInitialized = true;
     }
 
+    private void updateCharCounter(int currentLength) {
+        if (composerCharCountLabel != null) {
+            int remaining = MAX_POST_LENGTH - currentLength;
+            composerCharCountLabel.setText(String.valueOf(remaining));
+            if (remaining <= 20) {
+                composerCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #E02424; -fx-padding: 0 8 0 0;");
+            } else if (remaining <= 50) {
+                composerCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #F59E0B; -fx-padding: 0 8 0 0;");
+            } else {
+                composerCharCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary; -fx-padding: 0 8 0 0;");
+            }
+        }
+    }
+
     private void updateComposerPostButtonState() {
         if (composerPostButton == null || composerTextArea == null) return;
-        boolean isTextEmpty = composerTextArea.getText() == null || composerTextArea.getText().strip().isEmpty();
+        String text = composerTextArea.getText();
+        int len = text == null ? 0 : text.strip().length();
+        boolean isTextEmpty = len == 0;
+        boolean isOverLimit = text != null && text.length() > MAX_POST_LENGTH;
         boolean isMediaEmpty = pendingMediaUrl == null;
         boolean isPosting = feedViewModel != null && feedViewModel.getState().isPosting();
-        composerPostButton.setDisable(isPosting || (isTextEmpty && isMediaEmpty));
+        composerPostButton.setDisable(isPosting || isOverLimit || (isTextEmpty && isMediaEmpty));
     }
 
     /**
