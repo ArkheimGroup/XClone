@@ -8,10 +8,12 @@ import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -251,19 +253,131 @@ public class PostDetailsController extends BaseController {
             }
         }
 
-        // Render parent post preview if present
+        // Render parent post chain if present
         parentPostContainer.getChildren().clear();
         if (post.parentPostId() != null) {
-            renderParentPreview(post.parentPostId());
+            UUID parentId = post.parentPostId();
+            UUID requesterId = currentUser != null ? currentUser.id() : null;
+            new Thread(() -> {
+                java.util.List<PostDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
+                Platform.runLater(() -> {
+                    if (chain != null && !chain.isEmpty()) {
+                        renderParentChain(chain);
+                    } else {
+                        renderParentFallback(parentId);
+                    }
+                });
+            }).start();
         }
     }
 
+    private void renderParentChain(java.util.List<PostDto> chain) {
+        parentPostContainer.getChildren().clear();
+        for (int i = 0; i < chain.size(); i++) {
+            PostDto parentPost = chain.get(i);
+            boolean isLast = (i == chain.size() - 1);
+            parentPostContainer.getChildren().add(createParentChainCard(parentPost, isLast));
+        }
+    }
 
-    private void renderParentPreview(UUID parentId) {
-        // Mock loading parent post details since it is loaded via postPort
-        // To build a premium layout we display a small connected node above
+    private Node createParentChainCard(PostDto parentPost, boolean isLast) {
+        HBox cardRow = new HBox(12.0);
+        cardRow.getStyleClass().add("post-card");
+        cardRow.setStyle("-fx-padding: 8px 16px 0px 16px; -fx-cursor: hand;");
+        cardRow.setOnMouseClicked(e -> {
+            if (navigator != null) {
+                navigator.showPostDetailsScreen(parentPost.id());
+            }
+        });
+
+        // Left Column: Avatar + Continuous Thread Connector Line
+        VBox leftCol = new VBox(2.0);
+        leftCol.setAlignment(Pos.TOP_CENTER);
+        leftCol.setMinWidth(36.0);
+        leftCol.setMaxWidth(36.0);
+
+        Circle avatar = new Circle(18.0);
+        MediaUiUtils.loadAvatar(avatar, parentPost.authorPfpUrl(), themeMode);
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(Cursor.HAND);
+        avatar.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Region line = new Region();
+        line.setStyle("-fx-background-color: -fx-border-color-muted; -fx-min-width: 2px; -fx-max-width: 2px;");
+        VBox.setVgrow(line, Priority.ALWAYS);
+
+        leftCol.getChildren().addAll(avatar, line);
+
+        // Right Column: Author Info & Content Body
+        VBox rightCol = new VBox(4.0);
+        HBox.setHgrow(rightCol, Priority.ALWAYS);
+        rightCol.setStyle("-fx-padding: 0 0 10px 0;");
+
+        HBox metaRow = new HBox(6.0);
+        metaRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label name = new Label(parentPost.authorName());
+        name.getStyleClass().add("post-author-name");
+        name.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        name.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Label handle = new Label("@" + parentPost.authorUsername());
+        handle.getStyleClass().add("post-author-handle");
+        handle.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        handle.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Label dot = new Label("·");
+        dot.getStyleClass().add("post-author-handle");
+
+        String time = parentPost.createdAt() != null
+                ? parentPost.createdAt().format(DateTimeFormatter.ofPattern("MMM dd"))
+                : "Just now";
+        Label timeLabel = new Label(time);
+        timeLabel.getStyleClass().add("post-timestamp");
+
+        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+
+        Node bodyNode = createFormattedPostBody(parentPost.content(), themeMode, hashtag -> {
+            if (navigator != null) {
+                navigator.showHomeScreen();
+            }
+        });
+
+        rightCol.getChildren().addAll(metaRow, bodyNode);
+
+        if (parentPost.mediaUrls() != null && !parentPost.mediaUrls().isEmpty()) {
+            VBox mediaBox = new VBox(8.0);
+            for (String url : parentPost.mediaUrls()) {
+                if (url != null && !url.isBlank()) {
+                    mediaBox.getChildren().add(MediaUiUtils.createMediaPreviewNode(url, themeMode));
+                }
+            }
+            rightCol.getChildren().add(mediaBox);
+        }
+
+        cardRow.getChildren().addAll(leftCol, rightCol);
+        return cardRow;
+    }
+
+    private void renderParentFallback(UUID parentId) {
+        parentPostContainer.getChildren().clear();
         HBox parentPreview = new HBox(12.0);
-        parentPreview.setStyle("-fx-padding: 12px 16px 4px 16px;");
+        parentPreview.setStyle("-fx-padding: 12px 16px 4px 16px; -fx-cursor: hand;");
 
         VBox leftConnector = new VBox(2.0);
         leftConnector.setAlignment(Pos.TOP_CENTER);
@@ -273,14 +387,16 @@ public class PostDetailsController extends BaseController {
         leftConnector.getChildren().addAll(avatar, line);
 
         VBox rightDetails = new VBox(4.0);
-        Label parentTitle = new Label("Show parent post in thread...");
+        Label parentTitle = new Label("View parent post in thread...");
         parentTitle.setStyle("-fx-font-size: 13px; -fx-font-style: italic;");
         parentTitle.getStyleClass().add("post-author-handle");
         rightDetails.getChildren().add(parentTitle);
 
         parentPreview.getChildren().addAll(leftConnector, rightDetails);
         parentPreview.setOnMouseClicked(e -> {
-            navigator.showPostDetailsScreen(parentId);
+            if (navigator != null) {
+                navigator.showPostDetailsScreen(parentId);
+            }
         });
         parentPostContainer.getChildren().add(parentPreview);
     }

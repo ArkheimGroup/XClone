@@ -124,6 +124,38 @@ public class PostViewModel {
     }
 
     /**
+     * Synchronously/directly fetches details of a post by ID via {@link PostPort#getPostDetails}.
+     */
+    public PostDto fetchPostDetails(UUID postId, UUID requesterId) {
+        if (postId == null) return null;
+        try {
+            return postPort.getPostDetails(postId, requesterId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Synchronously/directly fetches the parent chain up to maxDepth levels.
+     * Returns a list ordered from oldest parent (top) to immediate parent (bottom).
+     */
+    public List<PostDto> fetchParentChain(UUID immediateParentId, UUID requesterId) {
+        List<PostDto> chain = new ArrayList<>();
+        if (immediateParentId == null) return chain;
+
+        UUID currentId = immediateParentId;
+        int depth = 0;
+        while (currentId != null && depth < 10) {
+            PostDto parent = fetchPostDetails(currentId, requesterId);
+            if (parent == null) break;
+            chain.add(0, parent); // Prepend to order from oldest to newest
+            currentId = parent.parentPostId();
+            depth++;
+        }
+        return chain;
+    }
+
+    /**
      * Loads replies to a post via {@link PostPort#getPostReplies} and
      * replaces the contents of {@link #repliesProperty()}.
      */
