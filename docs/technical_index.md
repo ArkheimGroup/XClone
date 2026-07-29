@@ -5,3 +5,4 @@
 3. [Infrastructure report](./technical_docs/infrastructure_report.md)
 4. [Application report](./technical_docs/application_report.md)
 5. [ViewModels report](./technical_docs/viewmodels_report.md)
+6. [Database report](technical_docs/database_report.md)
