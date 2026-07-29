@@ -81,6 +81,11 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
+
+# Create uploads directory structure with ownership for appuser
+RUN mkdir -p /app/uploads/media /app/uploads/profile_pictures && \
+    chown -R appuser:appuser /app/uploads
+
 USER appuser
 
 # Copy the executable from the "package" stage.

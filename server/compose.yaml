@@ -32,7 +32,7 @@ services:
       - SPRING_SQL_INIT_MODE=always # This forces spring to always use schema.sql to initialize the Database
       - SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
     volumes:
-      - ./uploads:/app/uploads
+      - ../uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
