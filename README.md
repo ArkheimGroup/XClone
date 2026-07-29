@@ -128,3 +128,5 @@ This project wouldn't be possible without help of:
 For the icons: [Lucide icons](https://lucide.dev)  
 repo badges: [Shields.io](https://shields.io)  
 
+## License
+This project is licensed under GNU GPL v3, see [LICENSE](LICENSE) for more info.
