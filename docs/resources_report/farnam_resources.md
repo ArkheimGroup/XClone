@@ -1,5 +1,5 @@
 # Resources
-In this document i would specify each resources i used for each part.
+In this document i specify each resources i used for each part.
 
 ---
 # Spring boot
@@ -8,6 +8,10 @@ https://youtu.be/gJrjgg1KVL4?si=prIU2LfXYoTpvILB
 https://spring.io/guides/tutorials/rest  
 https://www.baeldung.com/spring-bean  
 https://www.geeksforgeeks.org/springboot/spring-jdbc-template/
+https://spring.io/guides/gs/uploading-files
+https://www.baeldung.com/spring-boot-change-port
+https://www.baeldung.com/java-sealed-classes-interfaces
+https://docs.spring.io/spring-boot/how-to/data-initialization.html
 ---
 # RESTful API
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods  
@@ -36,3 +40,4 @@ https://medium.com/@rudrakshnanavaty/clean-architecture-7c1b3b4cb181
 # Etc
 https://youtu.be/-J3wNP6u5YU?si=DYHAXqYXaWlY9iEh  
 https://youtu.be/hxGOiiR9ZKg?si=GFx6XOwvR2_AOwmF  
+https://lucide.dev/icons/door-open
