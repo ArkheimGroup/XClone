@@ -1,0 +1,7 @@
+module:arkheim.client
+arkheim.client
+arkheim.client.domain.ports
+arkheim.client.domain.ports.dtos
+arkheim.client.infrastructure.adapter
+arkheim.client.presentation
+arkheim.client.presentation.utils

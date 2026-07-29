@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XClone JavaDoc Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: #1e293b; padding: 1.5rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: #38bdf8; }
+        .subtitle { font-size: 0.9rem; color: #94a3b8; margin-top: 0.2rem; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; padding: 3rem 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 2rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; }
+        .card:hover { transform: translateY(-4px); border-color: #38bdf8; box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.2); }
+        .card-icon { width: 48px; height: 48px; background: #0f172a; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: #38bdf8; }
+        .card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .card p { font-size: 0.9rem; color: #94a3b8; line-height: 1.5; }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; font-size: 0.9rem; font-weight: 600; color: #38bdf8; }
+        footer { margin-top: auto; padding: 1.5rem; text-align: center; font-size: 0.85rem; color: #64748b; border-top: 1px solid #1e293b; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>XClone Documentation Portal</h1>
+            <div class="subtitle">Compiled JavaDoc Documentation for Server and Client Modules</div>
+        </div>
+    </header>
+
+    <main class="cards">
+        <a href="server/index.html" class="card">
+            <div class="card-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M5 12a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2M5 12a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2"></path></svg>
+            </div>
+            <h2>Server JavaDoc</h2>
+            <p>Spring Boot backend application classes, REST controllers, entity models, services, security, and repository interfaces.</p>
+            <div class="btn">
+                Browse Server Docs &rarr;
+            </div>
+        </a>
+
+        <a href="client/index.html" class="card">
+            <div class="card-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <h2>Client JavaDoc</h2>
+            <p>JavaFX desktop client architecture, MVVM ViewModels, presentation controllers, network ports, and custom utilities.</p>
+            <div class="btn">
+                Browse Client Docs &rarr;
+            </div>
+        </a>
+    </main>
+
+    <footer>
+        XClone Project Documentation &bull; Generated using Maven JavaDoc Plugin
+    </footer>
+</body>
+</html>

@@ -1,0 +1,14 @@
+arkheim.server
+arkheim.server.application.dtos
+arkheim.server.application.dtos.responses
+arkheim.server.application.exception
+arkheim.server.application.ports
+arkheim.server.application.services
+arkheim.server.domain.entities
+arkheim.server.domain.repository
+arkheim.server.infrastructure.api
+arkheim.server.infrastructure.api.controllers
+arkheim.server.infrastructure.config
+arkheim.server.infrastructure.repository
+arkheim.server.infrastructure.socket
+arkheim.server.infrastructure.utils
