@@ -88,8 +88,8 @@ tree server/src/main/java/arkheim/server
 Client module also consists of three layers:
 #### 1. Domain Layer
 like server this layer has two folders:
-1. **Entities**: these are the core models of what is present on each row of the database, however they are different in few ways (e.g. they don't have a password field).
-2. **Ports**: Ports are the same thing as server's domain layer repositories, however due to naming convention they are not repositories as they don't access a database or a storage directly.
+1. **Entities**: these are the core business models of what is present on backend's entities, however they are different in few ways (e.g. they don't have a password field).
+2. **Ports**: Ports are the same thing as server's domain layer repositories, however due to naming convention they are not repositories as they don't access a database or a storage directly. They set contracts for corresponding adapters.
 #### 2. Presentation Layer
 This layer alone leverages another architecture itself: Model View ViewModel or MVVM.
 
@@ -99,6 +99,13 @@ This layer alone leverages another architecture itself: Model View ViewModel or 
 
 
 In this architecture, Views handles user interactions and sends the events to ViewModels where they perform the required task and manipulate the model which is present inside server's database.
+
+This layer has 5 packages:
+1. **controllers** : Includes controllers for each view in the project. A controller task is to handle user interaction with UI within each view and handling potential UI style changes.
+2. **navigation** : This package is consisted of one interface, introducing navigation functions, and its implementation. This package has the duty of switching between scenes. Whenever a View requests change in the scene, a method from the navigator is called, this method will load the corresponding FXML file and replaces the stage's scene and passes resources that the corresponding controller needs. Along with its prime duty, navigator also hold responsibility of changing and setting a scene's style according to its theme (dark/light mode) . 
+3. **state** : Currently, this package is dedicated to Feed page only. It's consisted of this page's UI events and a state record. The UI events show what the user is capable of and what the Feed view model has to handle. The UI state record allows safe control over a complex page like Feed page and used for dynamic rendering.
+4. **theme** : This package is only consisted of one enum representing style theme (light / dark mode)
+5. **viewmodels** : Includes view models, a view model task is to handle backend/port execution and change in states and shared UI properties.
 #### 3. Infrastructure Layer
 Inside this layer there are **Adapters** which adapts (implements) Ports inside domain layer to DI into ViewModels.
 ## Diagram
@@ -109,7 +116,67 @@ Inside this layer there are **Adapters** which adapts (implements) Ports inside 
 ## Tree 
 
 ```Tree
-# TO BE ADDED
+├───domain
+│   ├───entities
+│   │   ├─── Hashtag.java
+│   │   ├─── Like.java
+│   │   ├─── Media.java
+│   │   ├─── Post.java
+│   │   └─── User.java
+│   └───ports
+│       ├───dtos
+│       │   ├─── HashtagDto.java
+│       │   ├─── MediaDto.java
+│       │   ├─── PostDto.java
+│       │   ├─── UserDto.java
+│       │   └─── UserProfileDto.java
+│       ├─── AuthPort.java
+│       ├─── FeedPort.java
+│       ├─── FollowPort.java
+│       ├─── HashtagPort.java
+│       ├─── MediaPort.java
+│       ├─── PostPort.java
+│       └─── UserPort.java
+├───infrastructure
+│   ├───adapter
+│   │   ├─── HttpAuthAdapter.java
+│   │   ├─── HttpFollowAdapter.java
+│   │   ├─── HttpHashtagAdapter.java
+│   │   ├─── HttpMediaAdapter.java
+│   │   ├─── HttpPostAdapter.java
+│   │   ├─── HttpUserAdapter.java
+│   │   └─── TcpFeedAdapter.java
+│   ├─── ApiClient.java
+│   └─── LocalDateTimeAdapter.java
+├───presentation
+│   ├───controllers
+│   │   ├─── BaseController.java
+│   │   ├─── HomeController.java
+│   │   ├─── LoginController.java
+│   │   ├─── PostController.java
+│   │   ├─── ProfileController.java
+│   │   └─── RegisterController.java
+│   ├───navigation
+│   │   ├─── JavaFxNavigator.java
+│   │   └─── Navigator.java
+│   ├───state
+│   │   ├─── FeedUiEvent.java
+│   │   └─── FeedUiState.java
+│   ├───theme
+│   │   └─── ThemeMode.java
+│   ├───utils
+│   │   ├─── IconUtils.java
+│   │   └─── MediaUiUtills.java
+│   ├───viewmodels
+│   │   ├─── AuthViewModel.java
+│   │   ├─── FeedViewModel.java
+│   │   ├─── FollowViewModel.java
+│   │   ├─── HashtagViewModel.java
+│   │   ├─── MediaViewModel.java
+│   │   ├─── PostViewModel.java
+│   │   └─── UserViewModel.java
+│   └─── MainApplication.java
+└─── Launcher.java
 ```
 
 To replicate the actual tree, run inside root of XClone:
