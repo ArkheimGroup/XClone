@@ -118,6 +118,9 @@ mvn clean package
 ```bash
 java -jar target/*.jar
 ```
+or you can download the jar file from releases tab.
+
+
 ---
 ## Credits
 This project wouldn't be possible without help of:  
