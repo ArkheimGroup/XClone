@@ -43,6 +43,11 @@
                 <Label styleClass="nav-label" text="Profile"/>
             </HBox>
             
+            <HBox fx:id="navLogout" alignment="CENTER_LEFT" spacing="16.0" styleClass="nav-item" onMouseClicked="#onNavLogoutClicked">
+                <ImageView fx:id="navLogoutIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true"/>
+                <Label styleClass="nav-label" text="Logout"/>
+            </HBox>
+            
             <Button fx:id="sidebarPostButton" text="Post" prefWidth="220.0" styleClass="button-primary" onAction="#onSidebarPostClicked">
                 <VBox.margin>
                     <Insets top="16.0"/>
@@ -54,7 +59,7 @@
         <VBox spacing="10.0">
             <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
             
-            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;">
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;" onMouseClicked="#onNavProfileClicked">
                 <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
                 <VBox alignment="CENTER_LEFT">
                     <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
@@ -127,7 +132,7 @@
                         <!-- Quick Action icons -->
                         <HBox spacing="60.0" alignment="CENTER">
                             <Button fx:id="focalReplyBtn" styleClass="composer-icon-btn"/>
-                            <Button fx:id="focalRepostBtn" styleClass="composer-icon-btn"/>
+                            <Button fx:id="focalRepostBtn" styleClass="composer-icon-btn" onAction="#onFocalRepostClicked"/>
                             <Button fx:id="focalLikeBtn" styleClass="composer-icon-btn" onAction="#onFocalLikeClicked"/>
                         </HBox>
                     </VBox>
@@ -142,7 +147,8 @@
                                 
                                 <Label fx:id="detailsErrorLabel" styleClass="error-label" visible="false" managed="false"/>
                                 
-                                <HBox alignment="CENTER_RIGHT">
+                                <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                                    <Label fx:id="replyCharCountLabel" text="280" style="-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary; -fx-padding: 0 8 0 0;"/>
                                     <Button fx:id="replyPostBtn" text="Reply" styleClass="button-primary" style="-fx-padding: 8px 16px; -fx-font-size: 13px;" onAction="#onReplySubmitClicked"/>
                                 </HBox>
                             </VBox>

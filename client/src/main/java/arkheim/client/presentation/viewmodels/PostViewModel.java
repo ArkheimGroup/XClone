@@ -55,6 +55,10 @@ public class PostViewModel {
      */
     public void createPost(UUID authorId){
         errorMessage.set("");
+        if (newPostContent.get() != null && newPostContent.get().length() > 280) {
+            errorMessage.set("Post content exceeds 280 character limit.");
+            return;
+        }
         try {
             PostDto created = postPort.createPost(
                     authorId,
@@ -124,6 +128,38 @@ public class PostViewModel {
     }
 
     /**
+     * Synchronously/directly fetches details of a post by ID via {@link PostPort#getPostDetails}.
+     */
+    public PostDto fetchPostDetails(UUID postId, UUID requesterId) {
+        if (postId == null) return null;
+        try {
+            return postPort.getPostDetails(postId, requesterId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Synchronously/directly fetches the parent chain up to maxDepth levels.
+     * Returns a list ordered from oldest parent (top) to immediate parent (bottom).
+     */
+    public List<PostDto> fetchParentChain(UUID immediateParentId, UUID requesterId) {
+        List<PostDto> chain = new ArrayList<>();
+        if (immediateParentId == null) return chain;
+
+        UUID currentId = immediateParentId;
+        int depth = 0;
+        while (currentId != null && depth < 10) {
+            PostDto parent = fetchPostDetails(currentId, requesterId);
+            if (parent == null) break;
+            chain.add(0, parent); // Prepend to order from oldest to newest
+            currentId = parent.parentPostId();
+            depth++;
+        }
+        return chain;
+    }
+
+    /**
      * Loads replies to a post via {@link PostPort#getPostReplies} and
      * replaces the contents of {@link #repliesProperty()}.
      */
@@ -190,11 +226,50 @@ public class PostViewModel {
     public void repost(UUID postId, UUID authorId) {
         errorMessage.set("");
         try {
-            postPort.createPost(authorId, "", null, postId);
+            PostDto current = findPostById(postId);
+            boolean alreadyReposted = current != null && current.repostedByMe();
+
+            if (alreadyReposted) {
+                List<PostDto> userTimeline = postPort.getUserTimeline(authorId);
+                PostDto repostToDelete = null;
+                if (userTimeline != null) {
+                    for (PostDto p : userTimeline) {
+                        if (p.isRepost() && postId.equals(p.parentPostId())) {
+                            repostToDelete = p;
+                            break;
+                        }
+                    }
+                }
+                if (repostToDelete != null) {
+                    postPort.deletePost(repostToDelete.id(), authorId);
+                }
+            } else {
+                postPort.createPost(authorId, "", null, postId);
+            }
+
             replaceWherePresent(postId, this::withToggledRepost);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());
         }
+    }
+
+    private PostDto findPostById(UUID postId) {
+        if (currentPost.get() != null && currentPost.get().id().equals(postId)) {
+            return currentPost.get();
+        }
+        for (PostDto p : timeline) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : userPosts) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : replies) {
+            if (p.id().equals(postId)) return p;
+        }
+        for (PostDto p : searchResults) {
+            if (p.id().equals(postId)) return p;
+        }
+        return null;
     }
 
     private PostDto withToggledRepost(PostDto p) {

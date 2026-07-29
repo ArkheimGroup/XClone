@@ -2,16 +2,20 @@ package arkheim.client.presentation.controllers;
 
 import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.ports.dtos.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
 import arkheim.client.presentation.utils.IconUtils;
 import arkheim.client.presentation.utils.MediaUiUtils;
 import arkheim.client.presentation.viewmodels.AuthViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
+import arkheim.client.presentation.viewmodels.UserViewModel;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -44,6 +48,8 @@ public class PostDetailsController extends BaseController {
     private ImageView navExploreIcon;
     @FXML
     private ImageView navProfileIcon;
+    @FXML
+    private ImageView navLogoutIcon;
     @FXML
     private Circle userAvatarCircle;
     @FXML
@@ -92,6 +98,8 @@ public class PostDetailsController extends BaseController {
     @FXML
     private TextArea replyTextArea;
     @FXML
+    private Label replyCharCountLabel;
+    @FXML
     private Button replyPostBtn;
 
     @FXML
@@ -107,6 +115,7 @@ public class PostDetailsController extends BaseController {
 
     private AuthViewModel authViewModel;
     private PostViewModel postViewModel;
+    private UserViewModel userViewModel;
 
     private UserDto currentUser;
     private UUID postId;
@@ -116,9 +125,10 @@ public class PostDetailsController extends BaseController {
         updateIcons();
     }
 
-    public void setViewModels(AuthViewModel authViewModel, PostViewModel postViewModel, UUID postId) {
+    public void setViewModels(AuthViewModel authViewModel, PostViewModel postViewModel, UserViewModel userViewModel, UUID postId) {
         this.authViewModel = authViewModel;
         this.postViewModel = postViewModel;
+        this.userViewModel = userViewModel;
         this.postId = postId;
 
         this.currentUser = authViewModel.currentUserProperty().get();
@@ -147,10 +157,21 @@ public class PostDetailsController extends BaseController {
         // Sync composer text
         replyTextArea.textProperty().bindBidirectional(postViewModel.newPostContentProperty());
 
-        // Enable button only when text is typed
+        replyTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.length() > 280) {
+                replyTextArea.setText(newVal.substring(0, 280));
+                return;
+            }
+            updateReplyCharCounter(newVal != null ? newVal.length() : 0);
+        });
+
+        // Enable button only when valid text (1-280 chars) is typed
         replyPostBtn.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> postViewModel.newPostContentProperty().get().isBlank(),
+                        () -> {
+                            String text = postViewModel.newPostContentProperty().get();
+                            return text == null || text.isBlank() || text.length() > 280;
+                        },
                         postViewModel.newPostContentProperty()
                 )
         );
@@ -173,6 +194,20 @@ public class PostDetailsController extends BaseController {
         detailsErrorLabel.managedProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
     }
 
+    private void updateReplyCharCounter(int currentLength) {
+        if (replyCharCountLabel != null) {
+            int remaining = 280 - currentLength;
+            replyCharCountLabel.setText(String.valueOf(remaining));
+            if (remaining <= 20) {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #E02424; -fx-padding: 0 8 0 0;");
+            } else if (remaining <= 50) {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #F59E0B; -fx-padding: 0 8 0 0;");
+            } else {
+                replyCharCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-text-secondary; -fx-padding: 0 8 0 0;");
+            }
+        }
+    }
+
     private void loadData() {
         postViewModel.loadPostDetails(postId, currentUser != null ? currentUser.id() : null);
         postViewModel.loadPostReplies(postId, currentUser != null ? currentUser.id() : null);
@@ -183,6 +218,24 @@ public class PostDetailsController extends BaseController {
         focalAuthorHandle.setText("@" + post.authorUsername());
         focalContentText.setText(post.content());
         MediaUiUtils.loadAvatar(focalAvatarCircle, post.authorPfpUrl(), themeMode);
+
+        if (post.authorId() != null) {
+            focalAuthorName.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorName.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+            focalAuthorHandle.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorHandle.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+            focalAvatarCircle.setCursor(javafx.scene.Cursor.HAND);
+            focalAvatarCircle.setOnMouseClicked(e -> {
+                e.consume();
+                if (navigator != null) navigator.showProfileScreen(post.authorId());
+            });
+        }
 
         String dateText = post.createdAt() != null
                 ? post.createdAt().format(DateTimeFormatter.ofPattern("h:mm a · MMM dd, yyyy"))
@@ -231,19 +284,131 @@ public class PostDetailsController extends BaseController {
             }
         }
 
-        // Render parent post preview if present
+        // Render parent post chain if present
         parentPostContainer.getChildren().clear();
         if (post.parentPostId() != null) {
-            renderParentPreview(post.parentPostId());
+            UUID parentId = post.parentPostId();
+            UUID requesterId = currentUser != null ? currentUser.id() : null;
+            new Thread(() -> {
+                java.util.List<PostDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
+                Platform.runLater(() -> {
+                    if (chain != null && !chain.isEmpty()) {
+                        renderParentChain(chain);
+                    } else {
+                        renderParentFallback(parentId);
+                    }
+                });
+            }).start();
         }
     }
 
+    private void renderParentChain(java.util.List<PostDto> chain) {
+        parentPostContainer.getChildren().clear();
+        for (int i = 0; i < chain.size(); i++) {
+            PostDto parentPost = chain.get(i);
+            boolean isLast = (i == chain.size() - 1);
+            parentPostContainer.getChildren().add(createParentChainCard(parentPost, isLast));
+        }
+    }
 
-    private void renderParentPreview(UUID parentId) {
-        // Mock loading parent post details since it is loaded via postPort
-        // To build a premium layout we display a small connected node above
+    private Node createParentChainCard(PostDto parentPost, boolean isLast) {
+        HBox cardRow = new HBox(12.0);
+        cardRow.getStyleClass().add("post-card");
+        cardRow.setStyle("-fx-padding: 8px 16px 0px 16px; -fx-cursor: hand;");
+        cardRow.setOnMouseClicked(e -> {
+            if (navigator != null) {
+                navigator.showPostDetailsScreen(parentPost.id());
+            }
+        });
+
+        // Left Column: Avatar + Continuous Thread Connector Line
+        VBox leftCol = new VBox(2.0);
+        leftCol.setAlignment(Pos.TOP_CENTER);
+        leftCol.setMinWidth(36.0);
+        leftCol.setMaxWidth(36.0);
+
+        Circle avatar = new Circle(18.0);
+        MediaUiUtils.loadAvatar(avatar, parentPost.authorPfpUrl(), themeMode);
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(Cursor.HAND);
+        avatar.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Region line = new Region();
+        line.setStyle("-fx-background-color: -fx-border-color-muted; -fx-min-width: 2px; -fx-max-width: 2px;");
+        VBox.setVgrow(line, Priority.ALWAYS);
+
+        leftCol.getChildren().addAll(avatar, line);
+
+        // Right Column: Author Info & Content Body
+        VBox rightCol = new VBox(4.0);
+        HBox.setHgrow(rightCol, Priority.ALWAYS);
+        rightCol.setStyle("-fx-padding: 0 0 10px 0;");
+
+        HBox metaRow = new HBox(6.0);
+        metaRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label name = new Label(parentPost.authorName());
+        name.getStyleClass().add("post-author-name");
+        name.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        name.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Label handle = new Label("@" + parentPost.authorUsername());
+        handle.getStyleClass().add("post-author-handle");
+        handle.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        handle.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && parentPost.authorId() != null) {
+                navigator.showProfileScreen(parentPost.authorId());
+            }
+        });
+
+        Label dot = new Label("·");
+        dot.getStyleClass().add("post-author-handle");
+
+        String time = parentPost.createdAt() != null
+                ? parentPost.createdAt().format(DateTimeFormatter.ofPattern("MMM dd"))
+                : "Just now";
+        Label timeLabel = new Label(time);
+        timeLabel.getStyleClass().add("post-timestamp");
+
+        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+
+        Node bodyNode = createFormattedPostBody(parentPost.content(), themeMode, hashtag -> {
+            if (navigator != null) {
+                navigator.showHomeScreen();
+            }
+        });
+
+        rightCol.getChildren().addAll(metaRow, bodyNode);
+
+        if (parentPost.mediaUrls() != null && !parentPost.mediaUrls().isEmpty()) {
+            VBox mediaBox = new VBox(8.0);
+            for (String url : parentPost.mediaUrls()) {
+                if (url != null && !url.isBlank()) {
+                    mediaBox.getChildren().add(MediaUiUtils.createMediaPreviewNode(url, themeMode));
+                }
+            }
+            rightCol.getChildren().add(mediaBox);
+        }
+
+        cardRow.getChildren().addAll(leftCol, rightCol);
+        return cardRow;
+    }
+
+    private void renderParentFallback(UUID parentId) {
+        parentPostContainer.getChildren().clear();
         HBox parentPreview = new HBox(12.0);
-        parentPreview.setStyle("-fx-padding: 12px 16px 4px 16px;");
+        parentPreview.setStyle("-fx-padding: 12px 16px 4px 16px; -fx-cursor: hand;");
 
         VBox leftConnector = new VBox(2.0);
         leftConnector.setAlignment(Pos.TOP_CENTER);
@@ -253,14 +418,16 @@ public class PostDetailsController extends BaseController {
         leftConnector.getChildren().addAll(avatar, line);
 
         VBox rightDetails = new VBox(4.0);
-        Label parentTitle = new Label("Show parent post in thread...");
+        Label parentTitle = new Label("View parent post in thread...");
         parentTitle.setStyle("-fx-font-size: 13px; -fx-font-style: italic;");
         parentTitle.getStyleClass().add("post-author-handle");
         rightDetails.getChildren().add(parentTitle);
 
         parentPreview.getChildren().addAll(leftConnector, rightDetails);
         parentPreview.setOnMouseClicked(e -> {
-            navigator.showPostDetailsScreen(parentId);
+            if (navigator != null) {
+                navigator.showPostDetailsScreen(parentId);
+            }
         });
         parentPostContainer.getChildren().add(parentPreview);
     }
@@ -302,6 +469,11 @@ public class PostDetailsController extends BaseController {
         Circle avatar = new Circle(16.0);
         MediaUiUtils.loadAvatar(avatar, reply.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         VBox meta = new VBox(2.0);
         HBox metaRow = new HBox(6.0);
@@ -309,11 +481,19 @@ public class PostDetailsController extends BaseController {
 
         Label name = new Label(reply.authorName());
         name.getStyleClass().add("post-author-name");
-        name.setStyle("-fx-font-size: 14px;");
+        name.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        name.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         Label handle = new Label("@" + reply.authorUsername());
         handle.getStyleClass().add("post-author-handle");
-        handle.setStyle("-fx-font-size: 14px;");
+        handle.setStyle("-fx-font-size: 14px; -fx-cursor: hand;");
+        handle.setOnMouseClicked(e -> {
+            e.consume();
+            if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
+        });
 
         Label dot = new Label("·");
         dot.getStyleClass().add("post-author-handle");
@@ -449,6 +629,13 @@ public class PostDetailsController extends BaseController {
     }
 
     @FXML
+    private void onFocalRepostClicked() {
+        if (currentUser != null && postId != null) {
+            postViewModel.repost(postId, currentUser.id());
+        }
+    }
+
+    @FXML
     private void onReplySubmitClicked() {
         if (currentUser != null) {
             postViewModel.newPostParentIdProperty().set(postId);
@@ -492,6 +679,7 @@ public class PostDetailsController extends BaseController {
         if (navHomeIcon != null) navHomeIcon.setImage(IconUtils.getIconImage("home", themeMode));
         if (navExploreIcon != null) navExploreIcon.setImage(IconUtils.getIconImage("search", themeMode));
         if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
+        if (navLogoutIcon != null) navLogoutIcon.setImage(IconUtils.getIconImage("door", themeMode));
         if (themeToggleBtn != null) {
             themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
         }
@@ -520,20 +708,108 @@ public class PostDetailsController extends BaseController {
     private void renderSearchResults() {
         if (searchResultsContainer == null) return;
         searchResultsContainer.getChildren().clear();
-        Label searchTitle = new Label("Search results");
+
+        String query = searchField.getText() != null ? searchField.getText().trim() : "";
+        if (query.isEmpty()) return;
+
+        boolean isHashtag = query.startsWith("#");
+
+        Label searchTitle = new Label("Search results for \"" + query + "\"");
         searchTitle.getStyleClass().add("empty-title");
         searchTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 4px 0 8px 0;");
         searchResultsContainer.getChildren().add(searchTitle);
 
+        if (!isHashtag) {
+            // Pane 1: Users pane
+            VBox usersPane = new VBox(6.0);
+            Label usersHeader = new Label("Users");
+            usersHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 4px 0 2px 0;");
+            usersPane.getChildren().add(usersHeader);
+
+            String usernameToSearch = query.startsWith("@") ? query.substring(1).trim() : query;
+
+            new Thread(() -> {
+                UserProfileDto userProfile = null;
+                try {
+                    if (!usernameToSearch.isBlank() && userViewModel != null) {
+                        userProfile = userViewModel.fetchProfileByUsername(usernameToSearch);
+                    }
+                } catch (Exception ignored) {}
+
+                final UserProfileDto finalUser = userProfile;
+                Platform.runLater(() -> {
+                    if (finalUser != null) {
+                        usersPane.getChildren().add(createUserSearchResultCard(finalUser));
+                    } else {
+                        Label noUsersLabel = new Label("No matching users found.");
+                        noUsersLabel.getStyleClass().add("empty-desc");
+                        usersPane.getChildren().add(noUsersLabel);
+                    }
+                });
+            }).start();
+
+            searchResultsContainer.getChildren().add(usersPane);
+        }
+
+        // Pane 2: Posts pane
+        VBox postsPane = new VBox(6.0);
+        Label postsHeader = new Label("Posts");
+        postsHeader.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -fx-text-primary; -fx-padding: 8px 0 2px 0;");
+        postsPane.getChildren().add(postsHeader);
+
         if (postViewModel.searchResultsProperty().isEmpty()) {
             Label desc = new Label("No matching posts found.");
             desc.getStyleClass().add("empty-desc");
-            searchResultsContainer.getChildren().add(desc);
+            postsPane.getChildren().add(desc);
         } else {
             for (PostDto reply : postViewModel.searchResultsProperty()) {
-                searchResultsContainer.getChildren().add(createReplyCard(reply));
+                postsPane.getChildren().add(createReplyCard(reply));
             }
         }
+
+        searchResultsContainer.getChildren().add(postsPane);
+    }
+
+    private Node createUserSearchResultCard(UserProfileDto user) {
+        HBox row = new HBox(12.0);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("post-card");
+        row.setStyle("-fx-padding: 10px 12px; -fx-background-radius: 8px; -fx-cursor: hand; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
+
+        Circle avatar = new Circle(18.0);
+        MediaUiUtils.loadAvatar(avatar, user.pfpUrl(), themeMode);
+        avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
+
+        VBox info = new VBox(2.0);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
+        nameLabel.getStyleClass().add("post-author-name");
+        nameLabel.setStyle("-fx-font-size: 14px;");
+
+        Label handleLabel = new Label("@" + user.username());
+        handleLabel.getStyleClass().add("post-author-handle");
+        handleLabel.setStyle("-fx-font-size: 13px;");
+
+        info.getChildren().addAll(nameLabel, handleLabel);
+
+        Button viewBtn = new Button("View");
+        viewBtn.getStyleClass().add("button-secondary");
+        viewBtn.setStyle("-fx-font-size: 12px; -fx-padding: 4px 12px;");
+        viewBtn.setOnAction(e -> {
+            e.consume();
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+
+        row.getChildren().addAll(avatar, info, viewBtn);
+        row.setOnMouseClicked(e -> {
+            if (navigator != null) {
+                navigator.showProfileScreen(user.id());
+            }
+        });
+        return row;
     }
 
     @FXML
@@ -558,6 +834,16 @@ public class PostDetailsController extends BaseController {
     private void onNavProfileClicked() {
         if (currentUser != null) {
             navigator.showProfileScreen(currentUser.id());
+        }
+    }
+
+    @FXML
+    private void onNavLogoutClicked() {
+        if (authViewModel != null) {
+            authViewModel.logout();
+        }
+        if (navigator != null) {
+            navigator.showLoginScreen();
         }
     }
 

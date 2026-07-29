@@ -109,6 +109,7 @@ public class FeedViewModel {
             case FeedUiEvent.UpdateComposerText e -> handleUpdateComposer(e.text());
             case FeedUiEvent.SubmitPost e -> handleSubmitPost(e.authorId(), e.mediaUrl());
             case FeedUiEvent.ToggleLike e -> handleToggleLike(e.postId(), e.userId());
+            case FeedUiEvent.ToggleRepost e -> handleToggleRepost(e.postId(), e.userId());
             case FeedUiEvent.DeletePost e -> handleDeletePost(e.postId(), e.userId());
             case FeedUiEvent.PerformSearch e -> handleSearch(e.query(), e.userId());
             case FeedUiEvent.ClearError ignored -> handleClearError();
@@ -208,6 +209,67 @@ public class FeedViewModel {
             uiState.set(uiState.get().withPosts(updatedPosts));
         } catch (Exception e) {
             uiState.set(uiState.get().withError("Could not update like state: " + e.getMessage()));
+        }
+    }
+
+    private void handleToggleRepost(UUID postId, UUID userId) {
+        try {
+            PostDto target = uiState.get().posts().stream()
+                    .filter(p -> p.id().equals(postId))
+                    .findFirst()
+                    .orElse(null);
+
+            boolean isAlreadyReposted = target != null && target.repostedByMe();
+
+            if (isAlreadyReposted) {
+                List<PostDto> userTimeline = postPort.getUserTimeline(userId);
+                PostDto repostToDelete = null;
+                if (userTimeline != null) {
+                    for (PostDto p : userTimeline) {
+                        if (p.isRepost() && postId.equals(p.parentPostId())) {
+                            repostToDelete = p;
+                            break;
+                        }
+                    }
+                }
+                if (repostToDelete != null) {
+                    postPort.deletePost(repostToDelete.id(), userId);
+                }
+            } else {
+                postPort.createPost(userId, "", null, postId);
+            }
+
+            List<PostDto> updatedPosts = uiState.get().posts().stream()
+                    .map(p -> {
+                        if (p.id().equals(postId)) {
+                            boolean nowReposted = !p.repostedByMe();
+                            int newRepostCount = nowReposted ? p.repostCount() + 1 : Math.max(0, p.repostCount() - 1);
+                            return new PostDto(
+                                    p.id(),
+                                    p.authorId(),
+                                    p.authorUsername(),
+                                    p.authorName(),
+                                    p.authorPfpUrl(),
+                                    p.content(),
+                                    p.mediaUrls(),
+                                    p.createdAt(),
+                                    p.likeCount(),
+                                    newRepostCount,
+                                    p.replyCount(),
+                                    p.parentPostId(),
+                                    p.repliedUsername(),
+                                    p.isRepost(),
+                                    p.repostedFromUsername(),
+                                    p.likedByMe(),
+                                    nowReposted
+                            );
+                        }
+                        return p;
+                    }).toList();
+
+            uiState.set(uiState.get().withPosts(updatedPosts));
+        } catch (Exception e) {
+            uiState.set(uiState.get().withError("Could not toggle repost state: " + e.getMessage()));
         }
     }
 

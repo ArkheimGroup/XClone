@@ -40,6 +40,11 @@ public sealed interface FeedUiEvent {
     record ToggleLike(UUID postId, UUID userId) implements FeedUiEvent {}
 
     /**
+     * Triggers reposting/un-reposting a specific post.
+     */
+    record ToggleRepost(UUID postId, UUID userId) implements FeedUiEvent {}
+
+    /**
      * Triggers deleting a specific post.
      */
     record DeletePost(UUID postId, UUID userId) implements FeedUiEvent {}

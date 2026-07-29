@@ -11,9 +11,12 @@
 
     <!-- Right panel: Sign up flows -->
     <StackPane minWidth="450.0" styleClass="landing-right-panel" HBox.hgrow="ALWAYS">
-        <VBox alignment="CENTER_LEFT" maxHeight="600.0" spacing="16.0" styleClass="landing-form-container">
+        <VBox alignment="CENTER_LEFT" maxHeight="600.0" spacing="12.0" styleClass="landing-form-container">
+            <HBox alignment="TOP_RIGHT">
+                <Button fx:id="themeToggleBtn" text="☼ Light Mode" styleClass="button-secondary" style="-fx-font-size: 13px; -fx-padding: 6px 12px;" onAction="#onThemeToggleClicked"/>
+            </HBox>
             
-            <VBox spacing="10.0" style="-fx-padding: 10px 0px 0px 0px;">
+            <VBox spacing="10.0" style="-fx-padding: 0px 0px 0px 0px;">
                 <Label style="-fx-padding: 0 0 10 0;" styleClass="form-title" text="Create your account" />
                 
                 <TextField fx:id="usernameField" prefHeight="40.0" promptText="Username" />
