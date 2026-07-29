@@ -8,6 +8,8 @@ Alongside `viewmodels`, the `presentation` package also contains `controllers`, 
 
 Each viewmodel wraps a corresponding port from `domain/ports` — `AuthPort`, `FeedPort`, `FollowPort`, `HashtagPort`, `MediaPort`, `PostPort`, `UserPort` — and exposes observable state and actions to the controllers, without the controllers ever talking to the ports directly.
 
+---
+
 ## ViewModels
 
 * **AuthViewModel** — wraps `AuthPort`. Handles login and registration flows, exposing the credentials/error state controllers bind to.

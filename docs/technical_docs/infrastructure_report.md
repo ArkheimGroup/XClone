@@ -28,6 +28,10 @@ There are two main types of adapters:
 ### ApiClient
 The `ApiClient` is an abstract helper class that simplifies making HTTP requests. It has some helper methods, plus some variables shared across adapters.
 
+### LocalDateTimeAdapter
+This class is a Gson compatibility adapter for `LocalDateTime`. It exists to deserialize several possible backend timestamp formats into one Java type. 
+This class will be removed in future version when the API contracts are enhanced. This helper was vibe coded to quickly fix current DateTime deserializing problems for Beta version.
+
 ### Tree
 
 ```Tree
