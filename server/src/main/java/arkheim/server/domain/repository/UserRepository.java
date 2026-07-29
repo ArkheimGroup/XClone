@@ -1,0 +1,36 @@
+package arkheim.server.domain.repository;
+
+import arkheim.server.domain.entities.User;
+
+import java.util.UUID;
+
+public interface UserRepository {
+    User findById(UUID id);
+    User findByUsername(String username);
+    User findByEmail(String email);
+    void save(User user);
+    void updateProfile(User user);
+    void delete(UUID id);
+
+    /**
+     * Atomic increment inside DB
+     * */
+    void incrementFollowerCount(UUID userId);
+
+    /**
+     * Atomic decrement inside DB
+     * */
+    void decrementFollowerCount(UUID userId);
+
+    /**
+     * Atomic increment inside DB
+     * */
+    void incrementFollowingCount(UUID userId);
+
+    /**
+     * Atomic decrement inside DB
+     * */
+    void decrementFollowingCount(UUID userId);
+
+    void updatePinnedPost(UUID userId, UUID postId);
+}

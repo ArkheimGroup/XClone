@@ -1,11 +1,9 @@
 package arkheim.client;
 
-import arkheim.client.Presentation.Controller;
-import arkheim.client.Presentation.MainApplication;
-import javafx.application.Application;
+import arkheim.client.presentation.MainApplication;
 
 public class Launcher {
     public static void main(String[] args) {
-        Application.launch(MainApplication.class, args);
+        MainApplication.main(args);
     }
 }

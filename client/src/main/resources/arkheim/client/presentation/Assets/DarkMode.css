@@ -1,0 +1,474 @@
+/* --- MONOCHROME DARK MODE STYLE SYSTEM --- */
+
+.root {
+    -fx-font-family: "Inter", -fx-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    
+    /* Design Tokens */
+    -fx-primary-bg: #000000;
+    -fx-secondary-bg: #16181C;
+    -fx-border-color-muted: #2F3336;
+    -fx-text-primary: #FFFFFF;
+    -fx-text-secondary: #71767B;
+    
+    /* Interactive States */
+    -fx-hover-overlay: rgba(255, 255, 255, 0.08);
+    -fx-active-overlay: rgba(255, 255, 255, 0.12);
+    -fx-button-bg: #FFFFFF;
+    -fx-button-text: #000000;
+    -fx-button-hover-bg: #E7E7E8;
+    
+    -fx-background-color: -fx-primary-bg;
+}
+
+/* Global Elements */
+.label {
+    -fx-text-fill: -fx-text-primary;
+}
+
+.post-body-text, .text-node {
+    -fx-fill: -fx-text-primary;
+}
+
+.text-field, .password-field, .text-area {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-text-fill: -fx-text-primary;
+    -fx-prompt-text-fill: -fx-text-secondary;
+    -fx-background-radius: 8px;
+    -fx-border-color: -fx-border-color-muted;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-padding: 10px 14px;
+    -fx-font-size: 14px;
+}
+
+.text-field .text, .password-field .text, .text-area .text {
+    -fx-fill: -fx-text-primary;
+}
+
+.button .text, .button-primary .text, .button-secondary .text {
+    -fx-fill: inherit;
+}
+
+.text-field:focused, .password-field:focused, .text-area:focused {
+    -fx-border-color: -fx-text-primary;
+}
+
+.hyperlink {
+    -fx-text-fill: -fx-text-primary;
+    -fx-underline: false;
+    -fx-font-weight: bold;
+}
+.hyperlink:hover {
+    -fx-underline: true;
+}
+
+/* Auth Screens Specific Styling */
+.auth-root {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.brand-panel {
+    -fx-background-color: -fx-secondary-bg;
+}
+.brand-title {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: 900;
+}
+
+.error-label {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: -fx-text-primary;
+    -fx-border-width: 1px;
+    -fx-padding: 8px;
+    -fx-border-radius: 4px;
+}
+
+/* Navigation & Sidebars */
+.left-sidebar {
+    -fx-background-color: -fx-primary-bg;
+    -fx-border-color: transparent -fx-border-color-muted transparent transparent;
+    -fx-border-width: 1px;
+    -fx-padding: 16px 24px;
+}
+
+.center-feed {
+    -fx-background-color: -fx-primary-bg;
+    -fx-border-color: transparent -fx-border-color-muted transparent transparent;
+    -fx-border-width: 1px;
+}
+
+.right-sidebar {
+    -fx-background-color: -fx-primary-bg;
+    -fx-padding: 16px 24px;
+}
+
+/* Nav Item styling */
+.nav-item {
+    -fx-padding: 12px 18px;
+    -fx-background-radius: 9999px;
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+.nav-item:hover {
+    -fx-background-color: -fx-hover-overlay;
+}
+.nav-item-active {
+    -fx-background-color: transparent;
+}
+.nav-item-active .label {
+    -fx-font-weight: 900;
+}
+
+.nav-icon {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: bold;
+}
+
+.nav-label {
+    -fx-font-size: 18px;
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: normal;
+}
+
+/* Custom Buttons */
+.button-primary {
+    -fx-background-color: -fx-button-bg;
+    -fx-text-fill: -fx-button-text;
+    -fx-background-radius: 9999px;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+    -fx-padding: 12px 24px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+.button-primary:hover {
+    -fx-background-color: -fx-button-hover-bg;
+}
+.button-primary:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.button-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-primary;
+    -fx-border-color: -fx-text-primary;
+    -fx-border-width: 1px;
+    -fx-border-radius: 9999px;
+    -fx-background-radius: 9999px;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+}
+.button-secondary:hover {
+    -fx-background-color: -fx-hover-overlay;
+}
+
+/* Timeline/Header Tabs */
+.sticky-header {
+    -fx-background-color: rgba(0, 0, 0, 0.85);
+    -fx-border-color: transparent transparent -fx-border-color-muted transparent;
+    -fx-border-width: 1px;
+}
+.header-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-padding: 12px 16px 4px 16px;
+}
+
+.tab-container {
+    -fx-background-color: transparent;
+}
+.tab-item {
+    -fx-padding: 14px 0px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-background-color: transparent;
+}
+.tab-item:hover {
+    -fx-background-color: -fx-hover-overlay;
+}
+.tab-item-active-indicator {
+    -fx-background-color: -fx-text-primary;
+    -fx-min-height: 4px;
+    -fx-max-height: 4px;
+    -fx-pref-height: 4px;
+    -fx-background-radius: 2px;
+}
+.tab-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary;
+}
+.tab-item-active .tab-label {
+    -fx-text-fill: -fx-text-primary;
+}
+
+/* Inline Post Composer */
+.composer {
+    -fx-padding: 16px;
+    -fx-border-color: transparent transparent -fx-border-color-muted transparent;
+    -fx-border-width: 1px;
+    -fx-background-color: -fx-primary-bg;
+}
+.composer-avatar {
+    -fx-background-color: -fx-border-color-muted;
+    -fx-background-radius: 9999px;
+}
+.composer-textarea {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-radius: 0px;
+    -fx-background-radius: 0px;
+    -fx-padding: 4px 0px;
+    -fx-font-size: 18px;
+    -fx-text-fill: -fx-text-primary;
+}
+.composer-textarea .content {
+    -fx-background-color: transparent;
+}
+.composer-textarea:focused {
+    -fx-border-color: transparent;
+}
+.composer-action-bar {
+    -fx-padding: 8px 0px 0px 0px;
+    -fx-border-color: transparent;
+}
+.composer-icon-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-primary;
+    -fx-cursor: hand;
+    -fx-padding: 8px;
+    -fx-background-radius: 9999px;
+}
+.composer-icon-btn:hover {
+    -fx-background-color: -fx-hover-overlay;
+}
+
+/* Post Cards */
+.post-card {
+    -fx-padding: 12px 16px;
+    -fx-border-color: transparent transparent -fx-border-color-muted transparent;
+    -fx-border-width: 1px;
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+.post-card:hover {
+    -fx-background-color: -fx-hover-overlay;
+}
+.post-avatar {
+    -fx-background-color: -fx-border-color-muted;
+    -fx-background-radius: 9999px;
+}
+.post-author-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-primary;
+}
+.post-author-name:hover {
+    -fx-underline: true;
+}
+.post-author-handle {
+    -fx-font-size: 15px;
+    -fx-text-fill: -fx-text-secondary;
+}
+.post-timestamp {
+    -fx-font-size: 15px;
+    -fx-text-fill: -fx-text-secondary;
+}
+.post-body {
+    -fx-font-size: 15px;
+    -fx-text-fill: -fx-text-primary;
+    -fx-line-spacing: 4px;
+}
+.post-media-placeholder {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: -fx-border-color-muted;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-background-radius: 16px;
+    -fx-min-height: 200px;
+    -fx-alignment: center;
+}
+.post-media-placeholder-label {
+    -fx-text-fill: -fx-text-secondary;
+    -fx-font-size: 14px;
+}
+
+/* Post Card Actions */
+.post-actions {
+    -fx-padding: 8px 0px 0px 0px;
+}
+.post-action-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-secondary;
+    -fx-cursor: hand;
+    -fx-padding: 6px 12px;
+    -fx-background-radius: 9999px;
+    -fx-font-size: 13px;
+}
+.post-action-btn:hover {
+    -fx-background-color: -fx-hover-overlay;
+    -fx-text-fill: -fx-text-primary;
+}
+
+/* Right Sidebar / Trending & Who to Follow */
+.search-container {
+    -fx-padding: 4px 0px 16px 0px;
+}
+.search-field {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 9999px;
+    -fx-border-radius: 9999px;
+    -fx-border-color: transparent;
+    -fx-padding: 12px 20px;
+    -fx-font-size: 14px;
+}
+.search-field:focused {
+    -fx-background-color: -fx-primary-bg;
+    -fx-border-color: -fx-text-primary;
+}
+
+.sidebar-panel {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 16px;
+    -fx-border-color: -fx-border-color-muted;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16px;
+}
+.sidebar-panel-title {
+    -fx-font-size: 19px;
+    -fx-font-weight: 800;
+    -fx-padding: 0px 0px 12px 0px;
+}
+
+.trend-item {
+    -fx-padding: 8px 0px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent transparent -fx-border-color-muted transparent;
+    -fx-border-width: 0px 0px 1px 0px;
+}
+.trend-item:hover {
+    -fx-opacity: 0.8;
+}
+.trend-category {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary;
+}
+.trend-tag {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-primary;
+}
+.trend-posts {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary;
+}
+
+.who-to-follow-item {
+    -fx-padding: 8px 0px;
+    -fx-border-color: transparent transparent -fx-border-color-muted transparent;
+    -fx-border-width: 0px 0px 1px 0px;
+}
+
+/* ScrollPane customizations */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-fit-to-width: true;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+.scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-width: 8px;
+}
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: -fx-border-color-muted;
+    -fx-background-radius: 4px;
+}
+.scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -fx-text-secondary;
+}
+.scroll-pane .scroll-bar:vertical .track,
+.scroll-pane .scroll-bar:vertical .increment-button,
+.scroll-pane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+}
+
+/* Loading Skeletons */
+.skeleton-bg {
+    -fx-background-color: #202327;
+    -fx-background-radius: 4px;
+}
+.skeleton-circle {
+    -fx-background-color: #202327;
+    -fx-background-radius: 9999px;
+}
+
+/* Empty State */
+.empty-container {
+    -fx-padding: 40px 20px;
+    -fx-alignment: center;
+}
+.empty-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -fx-text-primary;
+}
+.empty-desc {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-secondary;
+    -fx-text-alignment: center;
+}
+
+/* Landing / Login Screen Styles */
+.x-logo-giant {
+    -fx-background-image: url("images/icons/dark/XCloneLogo_DarkMode_Transparent.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-background-size: contain;
+    -fx-min-width: 250px;
+    -fx-min-height: 250px;
+    -fx-pref-width: 320px;
+    -fx-pref-height: 320px;
+    -fx-max-width: 400px;
+    -fx-max-height: 400px;
+}
+
+.landing-title {
+    -fx-font-size: 52px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.landing-subtitle {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.form-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.landing-form-container {
+    -fx-max-width: 380px;
+    -fx-pref-width: 380px;
+}
+
+.landing-left-panel {
+    -fx-background-color: -fx-primary-bg;
+    -fx-padding: 40px;
+}
+
+.landing-right-panel {
+    -fx-background-color: -fx-primary-bg;
+    -fx-padding: 40px 60px;
+}

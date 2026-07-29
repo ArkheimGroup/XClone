@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.RegisterController">
+    <!-- Left panel: Giant monochrome X logo -->
+    <StackPane minWidth="400.0" styleClass="landing-left-panel" HBox.hgrow="ALWAYS">
+        <Region styleClass="x-logo-giant" StackPane.alignment="CENTER" />
+    </StackPane>
+
+    <!-- Right panel: Sign up flows -->
+    <StackPane minWidth="450.0" styleClass="landing-right-panel" HBox.hgrow="ALWAYS">
+        <VBox alignment="CENTER_LEFT" maxHeight="600.0" spacing="12.0" styleClass="landing-form-container">
+            <HBox alignment="TOP_RIGHT">
+                <Button fx:id="themeToggleBtn" text="☼ Light Mode" styleClass="button-secondary" style="-fx-font-size: 13px; -fx-padding: 6px 12px;" onAction="#onThemeToggleClicked"/>
+            </HBox>
+            
+            <VBox spacing="10.0" style="-fx-padding: 0px 0px 0px 0px;">
+                <Label style="-fx-padding: 0 0 10 0;" styleClass="form-title" text="Create your account" />
+                
+                <TextField fx:id="usernameField" prefHeight="40.0" promptText="Username" />
+                <TextField fx:id="nameField" prefHeight="40.0" promptText="Full name" />
+                <TextField fx:id="emailField" prefHeight="40.0" promptText="Email" />
+                <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Password" />
+                <PasswordField fx:id="passwordRepetitionField" prefHeight="40.0" promptText="Confirm password" />
+                
+                <DatePicker fx:id="datePicker" prefHeight="40.0" prefWidth="380.0" promptText="Date of birth" />
+                
+                <Label fx:id="errorLabel" managed="false" styleClass="error-label" visible="false" wrapText="true" />
+                
+                <Button fx:id="registerButton" maxWidth="Infinity" onAction="#onRegisterClicked" prefHeight="45.0" styleClass="button-primary" text="Create account" />
+                
+                <VBox spacing="6.0" style="-fx-padding: 14px 0px 0px 0px;">
+                    <Label style="-fx-text-fill: -fx-text-secondary; -fx-font-size: 14px;" text="Already have an account?" />
+                    <Button maxWidth="Infinity" onAction="#onGoToLoginClicked" prefHeight="45.0" styleClass="button-secondary" text="Sign In" />
+                </VBox>
+            </VBox>
+        </VBox>
+    </StackPane>
+</HBox>
