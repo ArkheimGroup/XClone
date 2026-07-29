@@ -6,6 +6,7 @@ module arkheim.client {
     requires org.kordamp.bootstrapfx.core;
     requires java.net.http;
     requires com.google.gson;
+    requires java.desktop;
 
     opens arkheim.client.presentation to javafx.fxml;
     opens arkheim.client.presentation.Assets to javafx.graphics, javafx.fxml;
