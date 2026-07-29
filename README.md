@@ -23,17 +23,20 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
 - [Technical Documentations Index](./docs/technical_index.md)
 - AI Report
   - [Farnam's AI Report](./docs/ai_report/farnam_ai_report.md) 
+  - [Matin's AI Report](docs/ai_report/matin_ai_report.md)
+  - [Ramtin's AI Report](docs/ai_report/ramtin_ai_report.md)
 - Resources
   - [Farnam's Resources](./docs/resources_report/farnam_resources.md)
 ---
 ## Screenshots
-```
-UNDER CONSTRUCTION
-```
+<p align="center">
+<img src="resources/screenshots/sc1.png" width="49%" /> <img src="resources/screenshots/sc2.png" width="49%" />
+<img src="resources/screenshots/sc3.png" width="49%" /> <img src="resources/screenshots/sc4.png" width="50%" />
+</p>
 
 ---
 ## Tech Stack
-### Server
+###  Server
 | Field                      | Tehnology                                                                                                                                                   |
 |----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------| 
 | **Main language**          | ![Java](https://img.shields.io/badge/Java-black?style=for-the-badge&logo=openjdk&logoColor=white)                                                           |     
@@ -118,6 +121,10 @@ java -jar target/*.jar
 ---
 ## Credits
 This project wouldn't be possible without help of:  
-[Matin Ardestani](https://github.com/Matin-Ardestani): Application layer developer, Domain layer developer and advisor & Clinet general developer   
-[Ramtin Jafari](https://github.com/RamtinJafari): Front-end developer, Graphic designer & Infrastructure Assistant  
-[Farnam Jahangard](https://github.com/farnam-jhn): Infrastructure developer, Project manager & Architect 
+[Matin Ardestani](https://github.com/Matin-Ardestani)   
+[Ramtin Jafari](https://github.com/RamtinJafari)  
+[Farnam Jahangard](https://github.com/farnam-jhn)  
+
+For the icons: [Lucide icons](https://lucide.dev)  
+repo badges: [Shields.io](https://shields.io)  
+
