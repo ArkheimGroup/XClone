@@ -101,9 +101,9 @@ This layer alone leverages another architecture itself: Model View ViewModel or 
 In this architecture, Views handles user interactions and sends the events to ViewModels where they perform the required task and manipulate the model which is present inside server's database.
 
 This layer has 5 packages:
-1. **controllers** : Includes controllers for each view in the project. A controller task is to handle user interaction with UI within each view and handling potential UI style changes.
-2. **navigation** : This package is consisted of one interface, introducing navigation functions, and its implementation. This package has the duty of switching between scenes. Whenever a View requests change in the scene, a method from the navigator is called, this method will load the corresponding FXML file and replaces the stage's scene and passes resources that the corresponding controller needs. Along with its prime duty, navigator also hold responsibility of changing and setting a scene's style according to its theme (dark/light mode) . 
-3. **state** : Currently, this package is dedicated to Feed page only. It's consisted of this page's UI events and a state record. The UI events show what the user is capable of and what the Feed view model has to handle. The UI state record allows safe control over a complex page like Feed page and used for dynamic rendering.
+1. **controllers** : Includes controllers for each view in the project. A controller's duty is to handle user interactions with UI, handle UI changes, handle scene switching, making the calls to view models and binding FXML objects to their corresponding property inside the view model.
+2. **navigation** : This package contains navigation system. Responsible for switching between pages (scenes) and applying styling according to the theme.
+3. **state** : Currently, this package is dedicated to Home page only. It's consisted of this page's UI events contract and a state record.
 4. **theme** : This package is only consisted of one enum representing style theme (light / dark mode)
 5. **viewmodels** : Includes view models, a view model task is to handle backend/port execution and change in states and shared UI properties.
 #### 3. Infrastructure Layer
