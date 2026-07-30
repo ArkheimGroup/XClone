@@ -118,12 +118,19 @@ public class AuthViewModel {
     }
 
     /**
-     * Updates name and pfpUrl of current logged in user state.
+     * Updates details of current logged in user state.
      */
+    public void updateCurrentUserDetails(String newName, String newPfpUrl, String newBannerUrl, boolean isVerified) {
+        UserDto current = currentUser.get();
+        if (current != null) {
+            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl, newBannerUrl, isVerified));
+        }
+    }
+
     public void updateCurrentUserDetails(String newName, String newPfpUrl) {
         UserDto current = currentUser.get();
         if (current != null) {
-            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl));
+            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl, current.bannerUrl(), current.isVerified()));
         }
     }
 

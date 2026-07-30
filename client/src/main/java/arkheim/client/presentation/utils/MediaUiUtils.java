@@ -36,6 +36,7 @@ public class MediaUiUtils {
 
     public static final String BASE_URL = "http://127.0.0.1:8080";
     public static final String DEFAULT_PFP_URL = "uploads/profile_pictures/default_pfp.png";
+    public static final String DEFAULT_BANNER_URL = "uploads/banners/default_banner.png";
 
     /**
      * Resolves a media URL string to an absolute HTTP URL usable by JavaFX Image loader.
@@ -52,6 +53,60 @@ public class MediaUiUtils {
             return BASE_URL + trimmed;
         }
         return BASE_URL + "/" + trimmed;
+    }
+
+    /**
+     * Loads a banner image into a JavaFX ImageView.
+     * If bannerUrl is null or blank, falls back to default_banner.png.
+     * Clicking the banner opens it in full resolution modal with download capability.
+     */
+    public static void loadBanner(ImageView imageView, String bannerUrl, ThemeMode themeMode) {
+        if (imageView == null) return;
+
+        String targetUrl = (bannerUrl == null || bannerUrl.isBlank()) ? DEFAULT_BANNER_URL : bannerUrl;
+        String fullUrl = resolveFullUrl(targetUrl);
+
+        if (fullUrl != null) {
+            Image img = new Image(fullUrl, true);
+            Runnable applyImage = () -> {
+                if (!img.isError() && img.getWidth() > 0) {
+                    imageView.setImage(img);
+                } else if (!DEFAULT_BANNER_URL.equals(targetUrl)) {
+                    String defaultFullUrl = resolveFullUrl(DEFAULT_BANNER_URL);
+                    Image defaultImg = new Image(defaultFullUrl, true);
+                    if (defaultImg.getProgress() >= 1.0 && !defaultImg.isError()) {
+                        imageView.setImage(defaultImg);
+                    } else {
+                        defaultImg.progressProperty().addListener((o, ov, nv) -> {
+                            if (nv.doubleValue() >= 1.0 && !defaultImg.isError()) {
+                                Platform.runLater(() -> imageView.setImage(defaultImg));
+                            }
+                        });
+                    }
+                }
+            };
+
+            if (img.getProgress() >= 1.0) {
+                applyImage.run();
+            } else {
+                img.progressProperty().addListener((obs, oldVal, newVal) -> {
+                    if (newVal.doubleValue() >= 1.0) {
+                        Platform.runLater(applyImage);
+                    }
+                });
+                img.errorProperty().addListener((obs, oldVal, isError) -> {
+                    if (isError) {
+                        Platform.runLater(applyImage);
+                    }
+                });
+            }
+
+            imageView.setCursor(Cursor.HAND);
+            imageView.setOnMouseClicked(e -> {
+                e.consume();
+                showFullResolutionDialog(fullUrl, themeMode);
+            });
+        }
     }
 
     /**

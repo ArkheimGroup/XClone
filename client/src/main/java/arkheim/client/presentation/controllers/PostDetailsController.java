@@ -57,6 +57,8 @@ public class PostDetailsController extends BaseController {
     @FXML
     private Label userHandleName;
     @FXML
+    private ImageView userVerificationBadgeIcon;
+    @FXML
     private Button themeToggleBtn;
 
     @FXML
@@ -68,6 +70,8 @@ public class PostDetailsController extends BaseController {
     private Circle focalAvatarCircle;
     @FXML
     private Label focalAuthorName;
+    @FXML
+    private ImageView focalVerificationBadgeIcon;
     @FXML
     private Label focalAuthorHandle;
     @FXML
@@ -218,6 +222,17 @@ public class PostDetailsController extends BaseController {
         focalAuthorHandle.setText("@" + post.authorUsername());
         focalContentText.setText(post.content());
         MediaUiUtils.loadAvatar(focalAvatarCircle, post.authorPfpUrl(), themeMode);
+
+        if (focalVerificationBadgeIcon != null) {
+            if (post.authorVerified()) {
+                focalVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                focalVerificationBadgeIcon.setVisible(true);
+                focalVerificationBadgeIcon.setManaged(true);
+            } else {
+                focalVerificationBadgeIcon.setVisible(false);
+                focalVerificationBadgeIcon.setManaged(false);
+            }
+        }
 
         if (post.authorId() != null) {
             focalAuthorName.setCursor(javafx.scene.Cursor.HAND);
@@ -502,7 +517,12 @@ public class PostDetailsController extends BaseController {
         Label timeLabel = new Label(time);
         timeLabel.getStyleClass().add("post-timestamp");
 
-        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        if (reply.authorVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            metaRow.getChildren().addAll(name, badge, handle, dot, timeLabel);
+        } else {
+            metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        }
         meta.getChildren().add(metaRow);
 
         Region spacer = new Region();
@@ -688,6 +708,26 @@ public class PostDetailsController extends BaseController {
         }
         if (replyComposerAvatar != null && currentUser != null) {
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
+        }
+        if (userVerificationBadgeIcon != null) {
+            if (currentUser != null && currentUser.isVerified()) {
+                userVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                userVerificationBadgeIcon.setVisible(true);
+                userVerificationBadgeIcon.setManaged(true);
+            } else {
+                userVerificationBadgeIcon.setVisible(false);
+                userVerificationBadgeIcon.setManaged(false);
+            }
+        }
+        if (focalVerificationBadgeIcon != null && postViewModel != null && postViewModel.currentPostProperty().get() != null) {
+            if (postViewModel.currentPostProperty().get().authorVerified()) {
+                focalVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                focalVerificationBadgeIcon.setVisible(true);
+                focalVerificationBadgeIcon.setManaged(true);
+            } else {
+                focalVerificationBadgeIcon.setVisible(false);
+                focalVerificationBadgeIcon.setManaged(false);
+            }
         }
         if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
         if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);

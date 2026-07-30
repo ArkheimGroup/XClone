@@ -67,6 +67,8 @@ public class HomeController extends BaseController {
     @FXML
     private Label userHandleName;
     @FXML
+    private ImageView userVerificationBadgeIcon;
+    @FXML
     private Button themeToggleBtn;
 
     @FXML
@@ -141,6 +143,7 @@ public class HomeController extends BaseController {
             if (followViewModel != null) {
                 new Thread(() -> followViewModel.loadFollowing(currentUser.id())).start();
             }
+            updateIcons();
         }
 
         authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
@@ -150,6 +153,7 @@ public class HomeController extends BaseController {
                 if (userHandleName != null) userHandleName.setText("@" + newVal.username());
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
                 if (composerAvatarCircle != null) MediaUiUtils.loadAvatar(composerAvatarCircle, newVal.pfpUrl(), themeMode);
+                updateIcons();
             }
         });
 
@@ -331,15 +335,23 @@ public class HomeController extends BaseController {
         VBox info = new VBox(2.0);
         HBox.setHgrow(info, Priority.ALWAYS);
 
+        HBox nameRow = new HBox(4.0);
+        nameRow.setAlignment(Pos.CENTER_LEFT);
         Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
         nameLabel.getStyleClass().add("post-author-name");
         nameLabel.setStyle("-fx-font-size: 14px;");
+        nameRow.getChildren().add(nameLabel);
+
+        if (user.isVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            nameRow.getChildren().add(badge);
+        }
 
         Label handleLabel = new Label("@" + user.username());
         handleLabel.getStyleClass().add("post-author-handle");
         handleLabel.setStyle("-fx-font-size: 13px;");
 
-        info.getChildren().addAll(nameLabel, handleLabel);
+        info.getChildren().addAll(nameRow, handleLabel);
 
         Button viewBtn = new Button("View");
         viewBtn.getStyleClass().add("button-secondary");
@@ -486,7 +498,12 @@ public class HomeController extends BaseController {
         Label timeLabel = new Label(timeText);
         timeLabel.getStyleClass().add("post-timestamp");
 
-        metaRow.getChildren().addAll(nameLabel, handleLabel, dot, timeLabel);
+        if (post.authorVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            metaRow.getChildren().addAll(nameLabel, badge, handleLabel, dot, timeLabel);
+        } else {
+            metaRow.getChildren().addAll(nameLabel, handleLabel, dot, timeLabel);
+        }
         authorDetails.getChildren().add(metaRow);
 
         // Spacer to push delete button to the right
@@ -661,6 +678,16 @@ public class HomeController extends BaseController {
         }
         if (composerAvatarCircle != null && currentUser != null) {
             MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (userVerificationBadgeIcon != null) {
+            if (currentUser != null && currentUser.isVerified()) {
+                userVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                userVerificationBadgeIcon.setVisible(true);
+                userVerificationBadgeIcon.setManaged(true);
+            } else {
+                userVerificationBadgeIcon.setVisible(false);
+                userVerificationBadgeIcon.setManaged(false);
+            }
         }
     }
 

@@ -61,6 +61,8 @@ public class ProfileController extends BaseController {
     @FXML
     private Label userHandleName;
     @FXML
+    private ImageView userVerificationBadgeIcon;
+    @FXML
     private Button themeToggleBtn;
 
     @FXML
@@ -68,7 +70,11 @@ public class ProfileController extends BaseController {
     @FXML
     private Label headerProfileName;
     @FXML
+    private ImageView headerVerificationBadgeIcon;
+    @FXML
     private Label headerPostCount;
+    @FXML
+    private ImageView profileBannerImageView;
     @FXML
     private Circle profileAvatarCircle;
 
@@ -83,6 +89,8 @@ public class ProfileController extends BaseController {
     private VBox profileInfoBox;
     @FXML
     private Label profileNameLabel;
+    @FXML
+    private ImageView profileVerificationBadgeIcon;
     @FXML
     private Label profileHandleLabel;
     @FXML
@@ -108,6 +116,14 @@ public class ProfileController extends BaseController {
     private DatePicker editDobPicker;
     @FXML
     private Button uploadAvatarBtn;
+    @FXML
+    private Button uploadBannerBtn;
+    @FXML
+    private Button verifyUserBtn;
+    @FXML
+    private ImageView editVerificationBadgeIcon;
+    @FXML
+    private Label verificationStatusLabel;
 
     @FXML
     private Label profileErrorLabel;
@@ -247,7 +263,31 @@ public class ProfileController extends BaseController {
         profileHandleLabel.setText("@" + profile.username());
         profileBioLabel.setText(profile.biography() == null ? "" : profile.biography());
 
+        MediaUiUtils.loadBanner(profileBannerImageView, profile.bannerUrl(), themeMode);
         MediaUiUtils.loadAvatar(profileAvatarCircle, profile.pfpUrl(), themeMode);
+
+        Image badgeImg = IconUtils.getIconImage("verification_badge", themeMode);
+        if (profile.isVerified()) {
+            if (headerVerificationBadgeIcon != null) {
+                headerVerificationBadgeIcon.setImage(badgeImg);
+                headerVerificationBadgeIcon.setVisible(true);
+                headerVerificationBadgeIcon.setManaged(true);
+            }
+            if (profileVerificationBadgeIcon != null) {
+                profileVerificationBadgeIcon.setImage(badgeImg);
+                profileVerificationBadgeIcon.setVisible(true);
+                profileVerificationBadgeIcon.setManaged(true);
+            }
+        } else {
+            if (headerVerificationBadgeIcon != null) {
+                headerVerificationBadgeIcon.setVisible(false);
+                headerVerificationBadgeIcon.setManaged(false);
+            }
+            if (profileVerificationBadgeIcon != null) {
+                profileVerificationBadgeIcon.setVisible(false);
+                profileVerificationBadgeIcon.setManaged(false);
+            }
+        }
 
         String dobText = profile.dateOfBirth() != null
                 ? "Born " + profile.dateOfBirth().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
@@ -323,6 +363,92 @@ public class ProfileController extends BaseController {
                     });
                 }
             }).start();
+        }
+    }
+
+    @FXML
+    private void onUploadBannerClicked() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Banner Image");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        Window window = profileAvatarCircle != null && profileAvatarCircle.getScene() != null
+                ? profileAvatarCircle.getScene().getWindow()
+                : null;
+        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+
+        if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+            long maxSizeBytes = 15L * 1024 * 1024; // 15MB
+            if (selectedFile.length() > maxSizeBytes) {
+                if (profileErrorLabel != null) {
+                    profileErrorLabel.setText("Failed to upload banner: File size exceeds maximum limit of 15MB");
+                    profileErrorLabel.setVisible(true);
+                    profileErrorLabel.setManaged(true);
+                }
+                return;
+            }
+
+            new Thread(() -> {
+                try {
+                    arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    if (uploadedMedia != null) {
+                        Platform.runLater(() -> {
+                            userViewModel.loadFormFromCurrentProfile();
+                            userViewModel.editBannerUrlProperty().set(uploadedMedia.url());
+                            MediaUiUtils.loadBanner(profileBannerImageView, uploadedMedia.url(), themeMode);
+                            if (profileId != null) {
+                                userViewModel.updateProfile(profileId);
+                                UserProfileDto updatedProfile = userViewModel.currentProfileProperty().get();
+                                if (updatedProfile != null && authViewModel != null) {
+                                    authViewModel.updateCurrentUserDetails(updatedProfile.name(), updatedProfile.pfpUrl(), updatedProfile.bannerUrl(), updatedProfile.isVerified());
+                                    this.currentUser = authViewModel.currentUserProperty().get();
+                                }
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        if (profileErrorLabel != null) {
+                            profileErrorLabel.setText("Failed to upload banner: " + e.getMessage());
+                            profileErrorLabel.setVisible(true);
+                            profileErrorLabel.setManaged(true);
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
+    @FXML
+    private void onToggleVerificationClicked() {
+        if (userViewModel != null) {
+            boolean currentVerified = userViewModel.editIsVerifiedProperty().get();
+            userViewModel.editIsVerifiedProperty().set(!currentVerified);
+            updateEditVerificationUi();
+        }
+    }
+
+    private void updateEditVerificationUi() {
+        if (userViewModel == null) return;
+        boolean isVerified = userViewModel.editIsVerifiedProperty().get();
+        if (isVerified) {
+            if (verifyUserBtn != null) verifyUserBtn.setText("Verified ✓");
+            if (editVerificationBadgeIcon != null) {
+                editVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                editVerificationBadgeIcon.setVisible(true);
+                editVerificationBadgeIcon.setManaged(true);
+            }
+            if (verificationStatusLabel != null) verificationStatusLabel.setText("Account is verified");
+        } else {
+            if (verifyUserBtn != null) verifyUserBtn.setText("Get Verified");
+            if (editVerificationBadgeIcon != null) {
+                editVerificationBadgeIcon.setVisible(false);
+                editVerificationBadgeIcon.setManaged(false);
+            }
+            if (verificationStatusLabel != null) verificationStatusLabel.setText("Not verified");
         }
     }
 
@@ -452,7 +578,12 @@ public class ProfileController extends BaseController {
         Label timeLabel = new Label(time);
         timeLabel.getStyleClass().add("post-timestamp");
 
-        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        if (post.authorVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            metaRow.getChildren().addAll(name, badge, handle, dot, timeLabel);
+        } else {
+            metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        }
         meta.getChildren().add(metaRow);
 
         Region spacer = new Region();
@@ -608,6 +739,7 @@ public class ProfileController extends BaseController {
     @FXML
     private void onEditProfileClicked() {
         userViewModel.loadFormFromCurrentProfile();
+        updateEditVerificationUi();
         profileInfoBox.setVisible(false);
         profileInfoBox.setManaged(false);
         editProfileFormBox.setVisible(true);
@@ -627,7 +759,7 @@ public class ProfileController extends BaseController {
         userViewModel.updateProfile(profileId);
         UserProfileDto updatedProfile = userViewModel.currentProfileProperty().get();
         if (updatedProfile != null && authViewModel != null && currentUser != null && currentUser.id().equals(profileId)) {
-            authViewModel.updateCurrentUserDetails(updatedProfile.name(), updatedProfile.pfpUrl());
+            authViewModel.updateCurrentUserDetails(updatedProfile.name(), updatedProfile.pfpUrl(), updatedProfile.bannerUrl(), updatedProfile.isVerified());
             this.currentUser = authViewModel.currentUserProperty().get();
             if (currentUser != null) {
                 userDisplayName.setText(currentUser.name());
@@ -639,7 +771,7 @@ public class ProfileController extends BaseController {
         editProfileFormBox.setManaged(false);
         profileInfoBox.setVisible(true);
         profileInfoBox.setManaged(true);
-        // Refresh counts
+        // Refresh counts and profile details
         loadData();
     }
 
@@ -698,11 +830,20 @@ public class ProfileController extends BaseController {
                 avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
 
                 VBox info = new VBox(2.0);
+                HBox nameRow = new HBox(4.0);
+                nameRow.setAlignment(Pos.CENTER_LEFT);
                 Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
                 nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                nameRow.getChildren().add(nameLabel);
+
+                if (user.isVerified()) {
+                    ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+                    nameRow.getChildren().add(badge);
+                }
+
                 Label handleLabel = new Label("@" + user.username());
                 handleLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #71767B;");
-                info.getChildren().addAll(nameLabel, handleLabel);
+                info.getChildren().addAll(nameRow, handleLabel);
 
                 row.getChildren().addAll(avatar, info);
 
@@ -777,6 +918,7 @@ public class ProfileController extends BaseController {
         if (navProfileIcon != null) navProfileIcon.setImage(IconUtils.getIconImage("user", themeMode));
         if (navLogoutIcon != null) navLogoutIcon.setImage(IconUtils.getIconImage("door", themeMode));
         if (uploadAvatarBtn != null) IconUtils.setButtonIcon(uploadAvatarBtn, "image", themeMode, 16);
+        if (uploadBannerBtn != null) IconUtils.setButtonIcon(uploadBannerBtn, "image", themeMode, 16);
         if (profileDobLabel != null) IconUtils.setLabelIcon(profileDobLabel, "calendar", themeMode, 14);
         if (profileJoinedLabel != null) IconUtils.setLabelIcon(profileJoinedLabel, "calendar", themeMode, 14);
         if (themeToggleBtn != null) {
@@ -784,6 +926,25 @@ public class ProfileController extends BaseController {
         }
         if (userAvatarCircle != null && currentUser != null) {
             MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (userVerificationBadgeIcon != null) {
+            if (currentUser != null && currentUser.isVerified()) {
+                userVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                userVerificationBadgeIcon.setVisible(true);
+                userVerificationBadgeIcon.setManaged(true);
+            } else {
+                userVerificationBadgeIcon.setVisible(false);
+                userVerificationBadgeIcon.setManaged(false);
+            }
+        }
+        updateEditVerificationUi();
+        if (userViewModel != null && userViewModel.currentProfileProperty().get() != null) {
+            UserProfileDto p = userViewModel.currentProfileProperty().get();
+            Image badgeImg = IconUtils.getIconImage("verification_badge", themeMode);
+            if (p.isVerified()) {
+                if (headerVerificationBadgeIcon != null) headerVerificationBadgeIcon.setImage(badgeImg);
+                if (profileVerificationBadgeIcon != null) profileVerificationBadgeIcon.setImage(badgeImg);
+            }
         }
     }
 
