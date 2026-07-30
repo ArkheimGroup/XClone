@@ -89,8 +89,8 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public void save(User user) {
-        String sql = "INSERT INTO users (id, username, name, email, password_hash, biography, date_of_birth, pfp_url, follower_count, following_count, created_at, pinned_post_id)" +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (id, username, name, email, password_hash, biography, date_of_birth, pfp_url, banner_url, follower_count, following_count, created_at, pinned_post_id, is_verified) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
                 uuidToBytes(user.getId()),
                 user.getUsername(),
@@ -100,22 +100,26 @@ public class JdbcUserRepository implements UserRepository {
                 user.getBiography(),
                 user.getDateOfBirth(),
                 user.getPfpUrl(),
+                user.getBannerUrl(),
                 user.getFollowerCount(),
                 user.getFollowingCount(),
                 user.getCreatedAt(),
-                user.getPinnedPostId() != null ? uuidToBytes(user.getPinnedPostId()) : null
+                user.getPinnedPostId() != null ? uuidToBytes(user.getPinnedPostId()) : null,
+                user.isVerified()
         );
     }
 
     @Override
     public void updateProfile(User user) {
-        String sql = "UPDATE users SET name=?, biography=?, pfp_url=?, date_of_birth=?" +
+        String sql = "UPDATE users SET name=?, biography=?, pfp_url=?, banner_url=?, is_verified=?, date_of_birth=?" +
                 "WHERE id=?";
 
         jdbcTemplate.update(sql,
                 user.getName(),
                 user.getBiography(),
                 user.getPfpUrl(),
+                user.getBannerUrl(),
+                user.isVerified(),
                 user.getDateOfBirth(),
                 uuidToBytes(user.getId())
         );

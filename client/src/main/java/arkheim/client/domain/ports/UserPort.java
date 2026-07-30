@@ -20,7 +20,7 @@ public interface UserPort {
     /**
      * HTTP: PUT /api/users
      */
-    UserProfileDto updateProfile(UUID userId, String name, String biography, String pfpUrl, LocalDateTime dateOfBirth);
+    UserProfileDto updateProfile(UUID userId, String name, String biography, String pfpUrl, String bannerUrl, boolean isVerified, LocalDateTime dateOfBirth);
 
     /**
      * HTTP: PUT /api/users/{userId}/pin/{postId}

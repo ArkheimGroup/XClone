@@ -204,6 +204,7 @@ public class PostService {
                 author.getUsername(),
                 author.getName(),
                 author.getPfpUrl(),
+                author.isVerified(),
                 content,
                 mediaUrls,
                 post.getCreatedAt(),

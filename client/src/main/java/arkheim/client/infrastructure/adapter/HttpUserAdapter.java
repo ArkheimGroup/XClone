@@ -37,12 +37,14 @@ public class HttpUserAdapter extends ApiClient implements UserPort {
     }
 
     @Override
-    public UserProfileDto updateProfile(UUID userId, String name, String biography, String pfpUrl, LocalDateTime dateOfBirth) {
+    public UserProfileDto updateProfile(UUID userId, String name, String biography, String pfpUrl, String bannerUrl, boolean isVerified, LocalDateTime dateOfBirth) {
         JsonObject body = new JsonObject();
         body.addProperty("userId", userId.toString());
         body.addProperty("name", name);
         body.addProperty("biography", biography);
         body.addProperty("pfpUrl", pfpUrl);
+        body.addProperty("bannerUrl", bannerUrl);
+        body.addProperty("isVerified", isVerified);
         body.addProperty("dateOfBirth", dateOfBirth != null ? dateOfBirth.toString() : null);
 
         HttpRequest request = HttpRequest.newBuilder()

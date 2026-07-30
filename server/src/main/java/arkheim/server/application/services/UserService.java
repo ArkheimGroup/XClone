@@ -61,7 +61,7 @@ public class UserService {
 
         // Update user
         String pfpUrl = (request.pfpUrl() != null && !request.pfpUrl().isBlank()) ? request.pfpUrl() : user.getPfpUrl(); // this approach would only update the actual updated fields
-        String bannerUrl = (request.bannerUrl() != null && !request.bannerUrl().isBlank()) ? request.bannerUrl() : user.getPfpUrl();
+        String bannerUrl = (request.bannerUrl() != null && !request.bannerUrl().isBlank()) ? request.bannerUrl() : user.getBannerUrl();
         String name = (request.name() != null && !request.name().isBlank()) ? request.name() : user.getName();
         String biography = request.biography() != null ? request.biography() : user.getBiography();
         LocalDateTime datOfBirth = request.dateOfBirth() != null ? request.dateOfBirth() : user.getDateOfBirth();
