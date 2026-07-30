@@ -13,10 +13,12 @@ public class User {
     private String biography;
     private LocalDateTime dateOfBirth;
     private String pfpUrl;
+    private String bannerUrl;
     private int followerCount;
     private int followingCount;
     private LocalDateTime createdAt;
     private UUID pinnedPostId;
+    private boolean isVerified;
 
     /**
      * Used for registrations of new users
@@ -35,15 +37,17 @@ public class User {
         this.biography = "";
         this.createdAt = LocalDateTime.now();
         this.pfpUrl = "uploads/profile_pictures/default_pfp.png";
+        this.bannerUrl = "uploads/banners/default_banner.png";
         this.followerCount = 0;
         this.followingCount = 0;
         this.pinnedPostId = null;
+        this.isVerified = false;
     }
 
     /**
      * Used for already registered users,
      * */
-    public User(UUID id, String username, String name, String email, String biography, LocalDateTime dateOfBirth, String pfpUrl, int followerCount, int followingCount, LocalDateTime createdAt, UUID pinnedPostId){
+    public User(UUID id, String username, String name, String email, String biography, LocalDateTime dateOfBirth, String pfpUrl, String bannerUrl, int followerCount, int followingCount, LocalDateTime createdAt, UUID pinnedPostId, boolean isVerified){
         this.id = id;
         this.username = username;
         this.name = name;
@@ -51,10 +55,12 @@ public class User {
         this.biography = biography;
         this.dateOfBirth = dateOfBirth;
         this.pfpUrl = pfpUrl;
+        this.bannerUrl = bannerUrl;
         this.followerCount = followerCount;
         this.followingCount = followingCount;
         this.createdAt = createdAt;
         this.pinnedPostId = pinnedPostId;
+        this.isVerified = isVerified;
     }
 
 
@@ -166,6 +172,10 @@ public class User {
     public String getPfpUrl() {
         return pfpUrl;
     }
+
+    public String getBannerUrl() { return bannerUrl; }
+
+    public boolean isVerified() { return isVerified; }
 
     public int getFollowerCount() {
         return followerCount;
