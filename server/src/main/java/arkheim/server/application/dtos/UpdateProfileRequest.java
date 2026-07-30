@@ -8,5 +8,7 @@ public record UpdateProfileRequest(
         String name,
         String biography,
         String pfpUrl,
+        String bannerUrl,
+        boolean isVerified,
         LocalDateTime dateOfBirth
 ) {}
