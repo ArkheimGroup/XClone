@@ -38,12 +38,14 @@ public class JdbcUserRepository implements UserRepository {
         LocalDateTime dateOfBirth = dobTs != null ? dobTs.toLocalDateTime() : null;
 
         String pfpUrl = rs.getString("pfp_url");
+        String bannerUrl = rs.getString("banner_url");
         int followerCount = rs.getInt("follower_count");
         int followingCount = rs.getInt("following_count");
         byte[] pinnedPostBytes = rs.getBytes("pinned_post_id");
         UUID pinnedPostId = pinnedPostBytes != null ? bytesToUuid(pinnedPostBytes) : null;
+        boolean isVerified = rs.getBoolean("is_verified");
 
-        return new User(id, username, passwordHash, name, email,biography, createdAt, pfpUrl, followerCount, followingCount, pinnedPostId, dateOfBirth);
+        return new User(id, username, passwordHash, name, email,biography, createdAt, pfpUrl, bannerUrl,followerCount, followingCount, pinnedPostId, dateOfBirth, isVerified);
     }
 
     private final RowMapper<User> userRowMapper = ((rs, rowNum) -> mapRow(rs));
