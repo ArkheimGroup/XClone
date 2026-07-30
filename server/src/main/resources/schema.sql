@@ -14,6 +14,7 @@ CREATE TABLE users(
     biography VARCHAR(160),
     date_of_birth DATE,
     pfp_url VARCHAR(255) DEFAULT 'uploads/profile_pictures/default_pfp.png',
+    banner_url VARCHAR(255) DEFAULT 'uploads/banners/default_banner.png',
 
     -- Server side Information
     follower_count BIGINT DEFAULT 0,
@@ -21,7 +22,8 @@ CREATE TABLE users(
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     -- etc.
-    pinned_post_id BINARY(16)
+    pinned_post_id BINARY(16),
+    is_verified BOOLEAN default false
 );
 
 -- --------Posts table--------
