@@ -61,9 +61,11 @@ public class UserService {
 
         // Update user
         String pfpUrl = (request.pfpUrl() != null && !request.pfpUrl().isBlank()) ? request.pfpUrl() : user.getPfpUrl(); // this approach would only update the actual updated fields
+        String bannerUrl = (request.bannerUrl() != null && !request.bannerUrl().isBlank()) ? request.bannerUrl() : user.getPfpUrl();
         String name = (request.name() != null && !request.name().isBlank()) ? request.name() : user.getName();
         String biography = request.biography() != null ? request.biography() : user.getBiography();
         LocalDateTime datOfBirth = request.dateOfBirth() != null ? request.dateOfBirth() : user.getDateOfBirth();
+        boolean isVerified = request.isVerified();
 
         User updatedUser = new User(
                 request.userId(),
@@ -74,10 +76,12 @@ public class UserService {
                 biography,
                 user.getCreatedAt(),
                 pfpUrl,
+                bannerUrl,
                 user.getFollowerCount(),
                 user.getFollowingCount(),
                 user.getPinnedPostId(),
-                datOfBirth
+                datOfBirth,
+                isVerified
         );
         userRepository.updateProfile(updatedUser);
 
