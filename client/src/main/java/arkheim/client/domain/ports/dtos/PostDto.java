@@ -15,6 +15,7 @@ public record PostDto(
         String authorUsername,
         String authorName,
         String authorPfpUrl,
+        @SerializedName("authorVerified") boolean authorVerified,
         String content,
         List<String> mediaUrls,
         LocalDateTime createdAt,

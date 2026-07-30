@@ -69,6 +69,10 @@ public class User {
         this.isVerified = isVerified;
     }
 
+    public User(UUID id, String username, String passwordHash, String name, String email, String bioGraphy, LocalDateTime createdAt, String pfpUrl, int followerCount, int followingCount, UUID pinnedPostId, LocalDateTime dateOfBirth) {
+        this(id, username, passwordHash, name, email, bioGraphy, createdAt, pfpUrl, "uploads/banners/default_banner.png", followerCount, followingCount, pinnedPostId, dateOfBirth, false);
+    }
+
 
 
     public UUID getId() {

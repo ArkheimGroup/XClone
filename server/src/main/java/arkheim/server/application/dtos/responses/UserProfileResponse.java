@@ -13,10 +13,12 @@ public record UserProfileResponse(
         String biography,
         LocalDateTime dateOfBirth,
         String pfpUrl,
+        String bannerUrl,
         int followerCount,
         int followingCount,
         LocalDateTime createdAt,
-        UUID pinnedPostId
+        UUID pinnedPostId,
+        boolean isVerified
 ) {
     public UserProfileResponse(User user){
         this(
@@ -27,10 +29,12 @@ public record UserProfileResponse(
                 user.getBiography(),
                 user.getDateOfBirth(),
                 user.getPfpUrl(),
+                user.getBannerUrl(),
                 user.getFollowerCount(),
                 user.getFollowingCount(),
                 user.getCreatedAt(),
-                user.getPinnedPostId()
+                user.getPinnedPostId(),
+                user.isVerified()
         );
     }
 }
