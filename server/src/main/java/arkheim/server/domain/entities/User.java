@@ -15,10 +15,12 @@ public class User {
     private String biography;
     private LocalDateTime dateOfBirth;
     private String pfpUrl;
+    private String bannerUrl;
     private int followerCount;
     private int followingCount;
     private LocalDateTime createdAt;
     private UUID pinnedPostId;
+    private boolean isVerified;
 
 
     /**
@@ -40,15 +42,17 @@ public class User {
         this.biography = "";
         this.createdAt = LocalDateTime.now();
         this.pfpUrl = "uploads/profile_pictures/default_pfp.png";
+        this.bannerUrl = "uploads/banners/default_banner.png";
         this.followerCount = 0;
         this.followingCount = 0;
         this.pinnedPostId = null;
+        this.isVerified = false;
     }
 
     /**
      * Used for already registered users in database
      * */
-    public User(UUID id, String username, String passwordHash, String name, String email, String bioGraphy, LocalDateTime createdAt, String pfpUrl, int followerCount, int followingCount, UUID pinnedPostId, LocalDateTime dateOfBirth) {
+    public User(UUID id, String username, String passwordHash, String name, String email, String bioGraphy, LocalDateTime createdAt, String pfpUrl, String bannerUrl, int followerCount, int followingCount, UUID pinnedPostId, LocalDateTime dateOfBirth, boolean isVerified) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -57,10 +61,12 @@ public class User {
         this.biography = bioGraphy;
         this.createdAt = createdAt;
         this.pfpUrl = pfpUrl;
+        this.bannerUrl = bannerUrl;
         this.followerCount = followerCount;
         this.followingCount = followingCount;
         this.pinnedPostId = pinnedPostId;
         this.dateOfBirth = dateOfBirth;
+        this.isVerified = isVerified;
     }
 
 
@@ -99,6 +105,14 @@ public class User {
 
     public String getPfpUrl() {
         return pfpUrl;
+    }
+
+    public String getBannerUrl() {
+        return bannerUrl;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
     }
 
     public int getFollowerCount() {
