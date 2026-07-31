@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.UserRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
@@ -25,7 +25,7 @@ public class JdbcUserRepository implements UserRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private User mapRow(ResultSet rs) throws SQLException {
+    private UserEntity mapRow(ResultSet rs) throws SQLException {
         UUID id = bytesToUuid(rs.getBytes("id"));
         String username = rs.getString("username");
         String passwordHash = rs.getString("password_hash");
@@ -45,79 +45,79 @@ public class JdbcUserRepository implements UserRepository {
         UUID pinnedPostId = pinnedPostBytes != null ? bytesToUuid(pinnedPostBytes) : null;
         boolean isVerified = rs.getBoolean("is_verified");
 
-        return new User(id, username, passwordHash, name, email,biography, createdAt, pfpUrl, bannerUrl,followerCount, followingCount, pinnedPostId, dateOfBirth, isVerified);
+        return new UserEntity(id, username, passwordHash, name, email,biography, createdAt, pfpUrl, bannerUrl, followerCount, followingCount, pinnedPostId, dateOfBirth, isVerified);
     }
 
-    private final RowMapper<User> userRowMapper = ((rs, rowNum) -> mapRow(rs));
+    private final RowMapper<UserEntity> userRowMapper = ((rs, rowNum) -> mapRow(rs));
 
     /**
-     * @return User with specified UUID if found, else it would return null
+     * @return UserEntity with specified UUID if found, else it would return null
      * */
     @Override
-    public User findById(UUID id) {
+    public UserEntity findById(UUID id) {
         String sql = "SELECT * FROM users WHERE id=?";
         // JDBC Template queries always return a list no matter how many rows are found in the query
-        List<User> result = jdbcTemplate.query(sql, userRowMapper, (Object) uuidToBytes(id));
+        List<UserEntity> result = jdbcTemplate.query(sql, userRowMapper, (Object) uuidToBytes(id));
         return result.stream().findFirst().orElse(null);
     }
 
     /**
-     * @return User with specified username if found, else it would return null
+     * @return UserEntity with specified username if found, else it would return null
      * */
     @Override
-    public User findByUsername(String username) {
+    public UserEntity findByUsername(String username) {
         if (username == null){
             return null;
         }
         String sql = "SELECT * FROM users WHERE username=?";
-        List<User> result = jdbcTemplate.query(sql, userRowMapper, username);
+        List<UserEntity> result = jdbcTemplate.query(sql, userRowMapper, username);
         return result.stream().findFirst().orElse(null);
     }
 
     /**
-     * @return User with specified email if found, else it would return null
+     * @return UserEntity with specified email if found, else it would return null
      * */
     @Override
-    public User findByEmail(String email) {
+    public UserEntity findByEmail(String email) {
         if (email == null){
             return null;
         }
         String sql = "SELECT * FROM users WHERE email=?";
-        List<User> result = jdbcTemplate.query(sql, userRowMapper, email);
+        List<UserEntity> result = jdbcTemplate.query(sql, userRowMapper, email);
         return result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public void save(User user) {
+    public void save(UserEntity userEntity) {
         String sql = "INSERT INTO users (id, username, name, email, password_hash, biography, date_of_birth, pfp_url, follower_count, following_count, created_at, pinned_post_id)" +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
-                uuidToBytes(user.getId()),
-                user.getUsername(),
-                user.getName(),
-                user.getEmail(),
-                user.getPasswordHash(),
-                user.getBiography(),
-                user.getDateOfBirth(),
-                user.getPfpUrl(),
-                user.getFollowerCount(),
-                user.getFollowingCount(),
-                user.getCreatedAt(),
-                user.getPinnedPostId() != null ? uuidToBytes(user.getPinnedPostId()) : null
+                uuidToBytes(userEntity.getId()),
+                userEntity.getUsername(),
+                userEntity.getName(),
+                userEntity.getEmail(),
+                userEntity.getPasswordHash(),
+                userEntity.getBiography(),
+                userEntity.getDateOfBirth(),
+                userEntity.getPfpUrl(),
+                userEntity.getFollowerCount(),
+                userEntity.getFollowingCount(),
+                userEntity.getCreatedAt(),
+                userEntity.getPinnedPostId() != null ? uuidToBytes(userEntity.getPinnedPostId()) : null
         );
     }
 
     @Override
-    public void updateProfile(User user) {
+    public void updateProfile(UserEntity userEntity) {
         String sql = "UPDATE users SET name=?, biography=?, pfp_url=?, date_of_birth=?" +
                 "WHERE id=?";
 
         jdbcTemplate.update(sql,
-                user.getName(),
-                user.getBiography(),
-                user.getPfpUrl(),
-                user.getDateOfBirth(),
-                uuidToBytes(user.getId())
+                userEntity.getName(),
+                userEntity.getBiography(),
+                userEntity.getPfpUrl(),
+                userEntity.getDateOfBirth(),
+                uuidToBytes(userEntity.getId())
         );
     }
 
@@ -160,7 +160,7 @@ public class JdbcUserRepository implements UserRepository {
         jdbcTemplate.update(sql, (Object) uuidToBytes(userId));
     }
 
-    public RowMapper<User> getUserRowMapper(){
+    public RowMapper<UserEntity> getUserRowMapper(){
         return userRowMapper;
     }
 }

@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Represents a Post
+ * Represents a PostEntity
  * */
-public class Post {
+public class PostEntity {
     private final UUID id;
     private String authorUsername;
     private LocalDateTime createdAt;
@@ -21,7 +21,7 @@ public class Post {
      * @param repostPostId the reposted post's id (if exists)
      * @param replyPostId the replied post's id (if exists)
      * */
-    public Post(String authorUsername, String description, UUID replyPostId, UUID repostPostId) {
+    public PostEntity(String authorUsername, String description, UUID replyPostId, UUID repostPostId) {
         this.authorUsername = authorUsername;
         this.description = description;
         this.replyPostId = replyPostId;
@@ -34,7 +34,7 @@ public class Post {
     /**
      * Used for posts that already exit in database
      * */
-    public Post(UUID id, String authorUsername, LocalDateTime createdAt, String description, UUID replyPostId, UUID repostPostId) {
+    public PostEntity(UUID id, String authorUsername, LocalDateTime createdAt, String description, UUID replyPostId, UUID repostPostId) {
         this.id = id;
         this.authorUsername = authorUsername;
         this.createdAt = createdAt;

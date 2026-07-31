@@ -3,7 +3,7 @@ package arkheim.server.domain.entities;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class Like {
+public class LikeEntity {
     private final UUID userId;
     private final UUID postId;
     private final LocalDateTime createdAt;
@@ -13,7 +13,7 @@ public class Like {
      * @param userId user who liked the post's id
      * @param postId liked post's id
      * */
-    public Like(UUID userId, UUID postId) {
+    public LikeEntity(UUID userId, UUID postId) {
         this.userId = userId;
         this.postId = postId;
         this.createdAt = LocalDateTime.now();
@@ -21,7 +21,7 @@ public class Like {
     /**
      * Used for already existing likes
      */
-    public Like(UUID userId, UUID postId, LocalDateTime createdAt) {
+    public LikeEntity(UUID userId, UUID postId, LocalDateTime createdAt) {
         this.userId = userId;
         this.postId = postId;
         this.createdAt = createdAt;

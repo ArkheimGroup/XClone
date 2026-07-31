@@ -3,7 +3,7 @@ package arkheim.server.domain.entities;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class Media {
+public class MediaEntity {
     private final UUID id;
     private String url;
     private int width;
@@ -14,13 +14,13 @@ public class Media {
 
     /**
      * Creates new media related to a post
-     * @param url Media's url
-     * @param width Media's width
-     * @param height Media's height
-     * @param fileSize Media's file size
+     * @param url MediaEntity's url
+     * @param width MediaEntity's width
+     * @param height MediaEntity's height
+     * @param fileSize MediaEntity's file size
      * @param uploadedBy author's id
      * */
-    public Media(String url, int width, int height, long fileSize, UUID uploadedBy) {
+    public MediaEntity(String url, int width, int height, long fileSize, UUID uploadedBy) {
         this.id = UUID.randomUUID();
         this.url = url;
         this.width = width;
@@ -33,7 +33,7 @@ public class Media {
     /**
      * Used for already existing media
      * */
-    public Media(UUID id, String url, int width, int height, long fileSize, UUID uploadedBy, LocalDateTime createdAt) {
+    public MediaEntity(UUID id, String url, int width, int height, long fileSize, UUID uploadedBy, LocalDateTime createdAt) {
         this.id = id;
         this.url = url;
         this.width = width;

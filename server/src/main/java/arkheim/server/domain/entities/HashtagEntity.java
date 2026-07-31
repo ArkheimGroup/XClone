@@ -3,9 +3,9 @@ package arkheim.server.domain.entities;
 import java.util.UUID;
 
 /**
- * Represents a Hashtag
+ * Represents a HashtagEntity
  * */
-public class Hashtag {
+public class HashtagEntity {
     private final UUID id;
     private String name;
 
@@ -13,7 +13,7 @@ public class Hashtag {
      * Creates new hashtag
      * @param name Name of the hashtag
      * */
-    public Hashtag(String name) {
+    public HashtagEntity(String name) {
         this.name = name;
         this.id = UUID.randomUUID();
     }
@@ -21,7 +21,7 @@ public class Hashtag {
     /**
      * Used for already exiting hashtags
      * */
-    public Hashtag(UUID id, String name) {
+    public HashtagEntity(UUID id, String name) {
         this.id = id;
         this.name = name;
     }

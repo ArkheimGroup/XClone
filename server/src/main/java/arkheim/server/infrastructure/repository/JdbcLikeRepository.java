@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.LikeRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 
@@ -41,7 +41,7 @@ public class JdbcLikeRepository implements LikeRepository {
     }
 
     @Override
-    public List<User> findUsersWhoLiked(UUID postId) {
+    public List<UserEntity> findUsersWhoLiked(UUID postId) {
         String sql = "SELECT u.* FROM users u " +
                      "JOIN likes l ON u.id = l.user_id " +
                      "WHERE l.post_id = ?";

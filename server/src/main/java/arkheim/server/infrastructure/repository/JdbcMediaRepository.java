@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Media;
+import arkheim.server.domain.entities.MediaEntity;
 import arkheim.server.domain.repository.MediaRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
@@ -24,7 +24,7 @@ public class  JdbcMediaRepository implements MediaRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private Media mapRow(ResultSet rs) throws SQLException {
+    private MediaEntity mapRow(ResultSet rs) throws SQLException {
         UUID id = bytesToUuid(rs.getBytes("id"));
         String url = rs.getString("url");
         int width = rs.getInt("width");
@@ -34,27 +34,27 @@ public class  JdbcMediaRepository implements MediaRepository {
         UUID uploadedBy = uploadedByBytes != null ? bytesToUuid(uploadedByBytes) : null;
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
 
-        return new Media(id, url, width, height, fileSize, uploadedBy, createdAt);
+        return new MediaEntity(id, url, width, height, fileSize, uploadedBy, createdAt);
     }
 
-    private final RowMapper<Media> mediaRowMapper = (rs, rowNum) -> mapRow(rs);
+    private final RowMapper<MediaEntity> mediaRowMapper = (rs, rowNum) -> mapRow(rs);
 
     @Override
-    public Media findById(UUID id) {
+    public MediaEntity findById(UUID id) {
         String sql = "SELECT * FROM media WHERE id=?";
-        List<Media> result = jdbcTemplate.query(sql, mediaRowMapper, (Object) uuidToBytes(id));
+        List<MediaEntity> result = jdbcTemplate.query(sql, mediaRowMapper, (Object) uuidToBytes(id));
         return result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public Media findByUrl(String url) {
+    public MediaEntity findByUrl(String url) {
         String sql = "SELECT * FROM media WHERE url=?";
-        List<Media> result = jdbcTemplate.query(sql, mediaRowMapper, url);
+        List<MediaEntity> result = jdbcTemplate.query(sql, mediaRowMapper, url);
         return result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public List<Media> findByPostId(UUID postId) {
+    public List<MediaEntity> findByPostId(UUID postId) {
         String sql = "SELECT m.* FROM media m " +
                 "JOIN post_media pm ON m.id = pm.media_id " +
                 "WHERE pm.post_id = ?";
@@ -62,17 +62,17 @@ public class  JdbcMediaRepository implements MediaRepository {
     }
 
     @Override
-    public void save(Media media) {
-        String sql = "INSERT INTO media (id, url, width, height, file_size, uploaded_by, created_at) " +
+    public void save(MediaEntity mediaEntity) {
+        String sql = "INSERT INTO mediaEntity (id, url, width, height, file_size, uploaded_by, created_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
-                uuidToBytes(media.getId()),
-                media.getUrl(),
-                media.getWidth(),
-                media.getHeight(),
-                media.getFileSize(),
-                media.getUploadedBy() != null ? uuidToBytes(media.getUploadedBy()) : null,
-                media.getCreatedAt()
+                uuidToBytes(mediaEntity.getId()),
+                mediaEntity.getUrl(),
+                mediaEntity.getWidth(),
+                mediaEntity.getHeight(),
+                mediaEntity.getFileSize(),
+                mediaEntity.getUploadedBy() != null ? uuidToBytes(mediaEntity.getUploadedBy()) : null,
+                mediaEntity.getCreatedAt()
         );
     }
 

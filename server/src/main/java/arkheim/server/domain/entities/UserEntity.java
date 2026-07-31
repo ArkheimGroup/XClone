@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * Represents a registered user
  * */
-public class User {
+public class UserEntity {
     private final UUID id;
     private String username;
     private String name;
@@ -31,7 +31,7 @@ public class User {
      * @param email valid email
      * @param dateOfBirth user's date of birth
      * */
-    public User(String username, String passwordHash, String name, String email, LocalDateTime dateOfBirth) {
+    public UserEntity(String username, String passwordHash, String name, String email, LocalDateTime dateOfBirth) {
         this.username = username;
         this.passwordHash = passwordHash;
         this.name = name;
@@ -52,7 +52,7 @@ public class User {
     /**
      * Used for already registered users in database
      * */
-    public User(UUID id, String username, String passwordHash, String name, String email, String bioGraphy, LocalDateTime createdAt, String pfpUrl, String bannerUrl, int followerCount, int followingCount, UUID pinnedPostId, LocalDateTime dateOfBirth, boolean isVerified) {
+    public UserEntity(UUID id, String username, String passwordHash, String name, String email, String bioGraphy, LocalDateTime createdAt, String pfpUrl, String bannerUrl, int followerCount, int followingCount, UUID pinnedPostId, LocalDateTime dateOfBirth, boolean isVerified) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
