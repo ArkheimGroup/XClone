@@ -1,16 +1,13 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.domain.ports.UserPort;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
 import arkheim.client.infrastructure.ApiClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -57,32 +54,32 @@ public class HttpUserAdapter extends ApiClient implements UserPort {
     }
 
     @Override
-    public void pinPost(UUID userId, UUID postId) {
+    public ApiResponse pinPost(UUID userId, UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/users/" + userId + "/pin/" + postId))
                 .PUT(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        send(request, "User");
+        return send(request, "User");
     }
 
     @Override
-    public void unpinPost(UUID userId) {
+    public ApiResponse unpinPost(UUID userId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/users/" + userId + "/pin"))
                 .DELETE()
                 .build();
 
-        send(request, "User");
+        return send(request, "User");
     }
 
     @Override
-    public void deleteUser(UUID userId) {
+    public ApiResponse deleteUser(UUID userId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/users/" + userId))
                 .DELETE()
                 .build();
 
-        send(request, "User");
+        return send(request, "User");
     }
 }

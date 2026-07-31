@@ -1,9 +1,9 @@
 package arkheim.client.presentation.controllers;
 
-import arkheim.client.domain.ports.dtos.MediaDto;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
@@ -262,7 +262,7 @@ public class HomeController extends BaseController {
         } else if (state.posts().isEmpty()) {
             renderEmptyState();
         } else {
-            for (PostDto post : state.posts()) {
+            for (PostDetailDto post : state.posts()) {
                 feedTimelineContainer.getChildren().add(createPostCard(post));
             }
         }
@@ -320,10 +320,10 @@ public class HomeController extends BaseController {
                 if (state.searchResults().isEmpty()) {
                     Label noResultsLabel = new Label("No matching posts found.");
                     noResultsLabel.getStyleClass().add("empty-desc");
-                    postsPane.getChildren().add(noResultsLabel);
+                    searchResultsContainer.getChildren().add(noResultsLabel);
                 } else {
-                    for (PostDto post : state.searchResults()) {
-                        postsPane.getChildren().add(createPostCard(post));
+                    for (PostDetailDto post : state.searchResults()) {
+                        searchResultsContainer.getChildren().add(createPostCard(post));
                     }
                 }
 
@@ -447,10 +447,10 @@ public class HomeController extends BaseController {
     }
 
     /**
-     * Reusable, modular UI component mapping directly to domain PostDto entities.
+     * Reusable, modular UI component mapping directly to domain PostDetailDto models.
      * Integrates hover states, user actions, and deletes posts directly using events.
      */
-    private Node createPostCard(PostDto post) {
+    private Node createPostCard(PostDetailDto post) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
         card.setOnMouseClicked(e -> {
@@ -615,7 +615,7 @@ public class HomeController extends BaseController {
         Button repostBtn = new Button(" " + post.repostCount());
         IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 16);
         repostBtn.getStyleClass().add("post-action-btn");
-        if (post.repostedByMe()) {
+        if (post.isRepostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         repostBtn.setOnAction(e -> {
@@ -625,11 +625,11 @@ public class HomeController extends BaseController {
             }
         });
 
-        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        String likeIconName = post.isLikedByMe() ? "heart_full" : "heart";
         Button likeBtn = new Button(" " + post.likeCount());
         IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 16);
         likeBtn.getStyleClass().add("post-action-btn");
-        if (post.likedByMe()) {
+        if (post.isLikedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         likeBtn.setOnAction(e -> {

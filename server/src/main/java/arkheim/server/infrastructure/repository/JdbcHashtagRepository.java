@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Hashtag;
-import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.HashtagEntity;
+import arkheim.server.domain.entities.PostEntity;
 import arkheim.server.domain.repository.HashtagRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
@@ -27,31 +27,31 @@ public class JdbcHashtagRepository implements HashtagRepository {
         this.jdbcPostRepository = jdbcPostRepository;
     }
 
-    private Hashtag mapRow(ResultSet rs) throws SQLException {
+    private HashtagEntity mapRow(ResultSet rs) throws SQLException {
         UUID id = bytesToUuid(rs.getBytes("id"));
         String name = rs.getString("name");
 
-        return new Hashtag(id, name);
+        return new HashtagEntity(id, name);
     }
 
-    private final RowMapper<Hashtag> hashtagMapper = (rs, rowNum) -> mapRow(rs);
+    private final RowMapper<HashtagEntity> hashtagMapper = (rs, rowNum) -> mapRow(rs);
 
     @Override
-    public Hashtag findById(UUID id) {
+    public HashtagEntity findById(UUID id) {
         String sql = "SELECT * FROM hashtags WHERE id=?";
-        List<Hashtag> result = jdbcTemplate.query(sql, hashtagMapper, (Object) uuidToBytes(id));
+        List<HashtagEntity> result = jdbcTemplate.query(sql, hashtagMapper, (Object) uuidToBytes(id));
         return result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public Hashtag findByName(String name) {
+    public HashtagEntity findByName(String name) {
         String sql = "SELECT * FROM hashtags WHERE name=?";
-        List<Hashtag> result = jdbcTemplate.query(sql, hashtagMapper, name);
+        List<HashtagEntity> result = jdbcTemplate.query(sql, hashtagMapper, name);
         return  result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public List<Hashtag> findByPostId(UUID postId) {
+    public List<HashtagEntity> findByPostId(UUID postId) {
         String sql = "SELECT h.id, h.name FROM hashtags h " +
                 "JOIN post_hashtags ph ON h.id = ph.hashtag_id " +
                 "WHERE ph.post_id = ?";
@@ -59,7 +59,7 @@ public class JdbcHashtagRepository implements HashtagRepository {
     }
 
     @Override
-    public List<Post> findPostsByHashtag(String name) {
+    public List<PostEntity> findPostsByHashtag(String name) {
         String sql = "SELECT p.* FROM posts p " +
                 "JOIN post_hashtags ph ON ph.post_id = p.id " +
                 "JOIN hashtags h ON h.id = ph.hashtag_id " +
@@ -68,15 +68,15 @@ public class JdbcHashtagRepository implements HashtagRepository {
     }
 
     @Override
-    public Hashtag findOrCreate(String name) {
-        Hashtag hashtag = findByName(name);
-        if (hashtag != null) {
-            return hashtag;
+    public HashtagEntity findOrCreate(String name) {
+        HashtagEntity hashtagEntity = findByName(name);
+        if (hashtagEntity != null) {
+            return hashtagEntity;
         }
-        Hashtag newHashtag = new Hashtag(name);
+        HashtagEntity newHashtagEntity = new HashtagEntity(name);
         String sql = "INSERT INTO hashtags (id, name) VALUES (?, ?)";
-        jdbcTemplate.update(sql, uuidToBytes(newHashtag.getId()), newHashtag.getName());
-        return newHashtag;
+        jdbcTemplate.update(sql, uuidToBytes(newHashtagEntity.getId()), newHashtagEntity.getName());
+        return newHashtagEntity;
     }
 
     @Override

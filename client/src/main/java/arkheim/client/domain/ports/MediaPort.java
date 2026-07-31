@@ -1,47 +1,49 @@
 package arkheim.client.domain.ports;
 
-import arkheim.client.domain.ports.dtos.MediaDto;
+
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
 
 import java.util.List;
 import java.util.UUID;
 
 /**
  * Port for media management operations.
- *
+ * <p>
  * The infrastructure adapter implements this interface and is injected into
- * ViewModels from the composition root in Launcher}.
- *
- * Maps to server endpoints under /api/media}.
+ * ViewModels from the composition root in Launcher.
+ * <p>
+ * Maps to server endpoints under /dto/media.
  */
 public interface MediaPort {
 
     /**
-     * HTTP: POST /api/media
+     * HTTP: POST /dto/media
      */
     MediaDto registerMedia(String url, int width, int height, long fileSize, UUID uploadedBy);
 
     /**
-     * HTTP: POST /api/media/{mediaId}/link/{postId}
+     * HTTP: POST /dto/media/{mediaId}/link/{postId}
      */
-    void linkMediaToPost(UUID mediaId, UUID postId);
+    ApiResponse linkMediaToPost(UUID mediaId, UUID postId);
 
     /**
-     * HTTP: DELETE /api/media/{mediaId}/link/{postId}
+     * HTTP: DELETE /dto/media/{mediaId}/link/{postId}
      */
-    void unlinkMediaFromPost(UUID mediaId, UUID postId);
+    ApiResponse unlinkMediaFromPost(UUID mediaId, UUID postId);
 
     /**
-     * HTTP: DELETE /api/media/{mediaId}
+     * HTTP: DELETE /dto/media/{mediaId}
      */
-    void deleteMedia(UUID mediaId);
+    ApiResponse deleteMedia(UUID mediaId);
 
     /**
-     * HTTP: POST /api/media/upload
+     * HTTP: POST /dto/media/upload
      */
     MediaDto uploadMedia(java.io.File file, UUID uploadedBy);
 
     /**
-     * HTTP: GET /api/media/post/{postId}
+     * HTTP: GET /dto/media/post/{postId}
      */
     List<MediaDto> getMediaForPost(UUID postId);
 }

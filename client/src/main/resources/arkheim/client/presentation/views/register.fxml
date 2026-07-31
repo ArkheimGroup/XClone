@@ -21,9 +21,9 @@
                 
                 <TextField fx:id="usernameField" prefHeight="40.0" promptText="Username" />
                 <TextField fx:id="nameField" prefHeight="40.0" promptText="Full name" />
-                <TextField fx:id="emailField" prefHeight="40.0" promptText="Email" />
-                <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Password" />
-                <PasswordField fx:id="passwordRepetitionField" prefHeight="40.0" promptText="Confirm password" />
+                <TextField fx:id="emailField" prefHeight="40.0" promptText="Email" styleClass="email-field" />
+                <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Password" styleClass="password-field" />
+                <PasswordField fx:id="passwordRepetitionField" prefHeight="40.0" promptText="Confirm password" styleClass="password-field" />
                 
                 <DatePicker fx:id="datePicker" prefHeight="40.0" prefWidth="380.0" promptText="Date of birth" />
                 

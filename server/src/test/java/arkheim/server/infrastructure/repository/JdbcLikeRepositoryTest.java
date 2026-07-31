@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Post;
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +26,8 @@ public class JdbcLikeRepositoryTest {
     private JdbcPostRepository postRepository;
     private JdbcLikeRepository likeRepository;
 
-    private User testUser;
-    private Post testPost;
+    private UserEntity testUser;
+    private PostEntity testPost;
 
     @BeforeEach
     void setUp() {
@@ -35,7 +35,7 @@ public class JdbcLikeRepositoryTest {
         postRepository = new JdbcPostRepository(jdbcTemplate);
         likeRepository = new JdbcLikeRepository(jdbcTemplate, userRepository);
 
-        testUser = new User(
+        testUser = new UserEntity(
                 UUID.randomUUID(),
                 "like_user",
                 "pw",
@@ -51,7 +51,7 @@ public class JdbcLikeRepositoryTest {
         );
         userRepository.save(testUser);
 
-        testPost = new Post(
+        testPost = new PostEntity(
                 UUID.randomUUID(),
                 testUser.getUsername(),
                 LocalDateTime.now(),
@@ -75,7 +75,7 @@ public class JdbcLikeRepositoryTest {
         assertTrue(likeRepository.isLikedByUser(testUser.getId(), testPost.getId()));
         assertEquals(1, likeRepository.countLikesForPost(testPost.getId()));
 
-        List<User> usersWhoLiked = likeRepository.findUsersWhoLiked(testPost.getId());
+        List<UserEntity> usersWhoLiked = likeRepository.findUsersWhoLiked(testPost.getId());
         assertEquals(1, usersWhoLiked.size());
         assertEquals(testUser.getId(), usersWhoLiked.get(0).getId());
 

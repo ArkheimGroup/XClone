@@ -1,9 +1,11 @@
 package arkheim.server.application.services;
 
-import arkheim.server.application.exception.BadArgumentException;
-import arkheim.server.domain.entities.Media;
-import arkheim.server.application.exception.ErrorCode;
-import arkheim.server.application.exception.NotFoundException;
+import arkheim.server.application.features.Media.mapper.MediaMapper;
+import arkheim.server.application.models.Media;
+import arkheim.server.domain.entities.MediaEntity;
+import arkheim.server.domain.exception.BadArgumentException;
+import arkheim.server.domain.exception.ResultCode;
+import arkheim.server.domain.exception.NotFoundException;
 import arkheim.server.domain.repository.MediaRepository;
 
 import java.awt.image.BufferedImage;
@@ -22,13 +24,15 @@ import javax.imageio.ImageIO;
 
 public class MediaService {
     private final MediaRepository mediaRepository;
+    private final MediaMapper mediaMapper;
 
     public MediaService(MediaRepository mediaRepository) {
         this.mediaRepository = mediaRepository;
+        this.mediaMapper = new MediaMapper();
     }
 
     /**
-     * Registers a new uploaded {@link Media} entity in the database.
+     * Registers a new uploaded {@link MediaEntity} entity in the database.
      * @param url physical URL of the uploaded file
      * @param width width of the image/video if applicable
      * @param height height of the image/video if applicable
@@ -37,7 +41,7 @@ public class MediaService {
      * @return Created {@link Media} entity
      */
     public Media registerMedia(String url, int width, int height, long fileSize, UUID uploadedBy) {
-        Media media = new Media(
+        MediaEntity mediaEntity = new MediaEntity(
                 url,
                 width,
                 height,
@@ -45,31 +49,32 @@ public class MediaService {
                 uploadedBy
         );
 
-        mediaRepository.save(media);
-        return media;
+        mediaRepository.save(mediaEntity);
+
+        return mediaMapper.map(mediaEntity);
     }
 
     /**
-     * Links an existing {@link Media} entity to a post.
+     * Links an existing {@link MediaEntity} entity to a post.
      * @param postId the post's UUID
      * @param mediaId the media's UUID
      */
     public void linkMediaToPost(UUID postId, UUID mediaId) {
-        if(mediaRepository.findById(mediaId) == null){
-            throw new NotFoundException(ErrorCode.MEDIA_NOT_FOUND, "Media not found");
+        if (mediaRepository.findById(mediaId) == null){
+            throw new NotFoundException(ResultCode.MEDIA_NOT_FOUND, "Media not found");
         }
 
         mediaRepository.linkToPost(postId, mediaId);
     }
 
     /**
-     * Unlinks an existing {@link Media} entity from a post.
+     * Unlinks an existing {@link MediaEntity} entity from a post.
      * @param postId the post's UUID
      * @param mediaId the media's UUID
      */
     public void unlinkMediaFromPost(UUID postId, UUID mediaId) {
-        if(mediaRepository.findById(mediaId) == null) {
-            throw new NotFoundException(ErrorCode.MEDIA_NOT_FOUND, "Media not found");
+        if (mediaRepository.findById(mediaId) == null) {
+            throw new NotFoundException(ResultCode.MEDIA_NOT_FOUND, "Media not found");
         }
 
         mediaRepository.unLinkFromPost(postId, mediaId);
@@ -90,12 +95,12 @@ public class MediaService {
      */
     public Media uploadAndRegisterMedia(MultipartFile file, UUID uploadedBy) {
         if (file == null || file.isEmpty()) {
-            throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "Files can't be empty");
+            throw new BadArgumentException(ResultCode.INVALID_MEDIA_FILE, "Files can't be empty");
         }
 
         long maxSizeBytes = 15L * 1024 * 1024; // 15MB
         if (file.getSize() > maxSizeBytes) {
-            throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "File size exceeds maximum allowed limit of 15MB");
+            throw new BadArgumentException(ResultCode.INVALID_MEDIA_FILE, "File size exceeds maximum allowed limit of 15MB");
         }
 
         try {
@@ -111,7 +116,7 @@ public class MediaService {
             }
             List<String> allowedImageExtensions = List.of(".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp");
             if (!allowedImageExtensions.contains(extension)) {
-                throw new BadArgumentException(ErrorCode.INVALID_MEDIA_FILE, "Only image files (.png, .jpg, .jpeg, .gif, .bmp, .webp) are allowed");
+                throw new BadArgumentException(ResultCode.INVALID_MEDIA_FILE, "Only image files (.png, .jpg, .jpeg, .gif, .bmp, .webp) are allowed");
             }
             String fileName = UUID.randomUUID().toString() + extension; // to store files using UUID
             Path filePath = uploadDir.resolve(fileName);
@@ -143,6 +148,7 @@ public class MediaService {
      * @return List of {@link Media} items
      */
     public List<Media> getMediaForPost(UUID postId) {
-        return mediaRepository.findByPostId(postId);
+        List<MediaEntity> entities = mediaRepository.findByPostId(postId);
+        return entities.stream().map(mediaMapper::map).toList();
     }
 }

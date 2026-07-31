@@ -1,6 +1,6 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,11 +54,11 @@ public class HttpFollowAdapterTest {
     @Test
     public void testFollowAndUnfollowLifecycle() {
         // Initially, user A should not follow user B
-        assertFalse(followAdapter.isFollowing(userA.id(), userB.id()));
+        assertFalse(followAdapter.isFollowing(userA.id(), userB.id()).isFollowing());
 
         // User A follows user B
         followAdapter.followUser(userA.id(), userB.id());
-        assertTrue(followAdapter.isFollowing(userA.id(), userB.id()));
+        assertTrue(followAdapter.isFollowing(userA.id(), userB.id()).isFollowing());
 
         // Check following of A contains B
         List<UserDto> followingA = followAdapter.getFollowing(userA.id());
@@ -70,7 +70,7 @@ public class HttpFollowAdapterTest {
 
         // User A unfollows user B
         followAdapter.unfollowUser(userA.id(), userB.id());
-        assertFalse(followAdapter.isFollowing(userA.id(), userB.id()));
+        assertFalse(followAdapter.isFollowing(userA.id(), userB.id()).isFollowing());
 
         // Check following of A does not contain B anymore
         followingA = followAdapter.getFollowing(userA.id());

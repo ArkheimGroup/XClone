@@ -1,9 +1,13 @@
 package arkheim.server.infrastructure.api.controllers;
 
-import arkheim.server.application.dtos.UserLoginRequest;
-import arkheim.server.application.dtos.UserRegisterRequest;
-import arkheim.server.application.dtos.responses.UserResponse;
+import arkheim.server.application.dtos.GenericApiResponse;
+import arkheim.server.application.features.Authentication.commands.LoginCommand;
+import arkheim.server.application.features.Authentication.commands.RegisterCommand;
+import arkheim.server.application.features.User.dtos.GetUserDto;
+import arkheim.server.application.features.User.mapper.UserMapper;
+import arkheim.server.application.models.user.MinimalUser;
 import arkheim.server.application.services.AuthService;
+import arkheim.server.domain.exception.ResultCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,34 +21,38 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final UserMapper userMapper;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+        this.userMapper = new UserMapper();
     }
 
     /**
      * Authenticates a user with email and password.
      * HTTP Method: POST
      * Endpoint: /api/auth/login
-     * @param userLoginRequest the credentials payload containing email and raw password
-     * @return {@link ResponseEntity} containing {@link UserResponse} of the logged-in user
+     * @param loginCommand the credentials payload containing email and raw password
+     * @return {@link ResponseEntity<GenericApiResponse>} containing {@link GetUserDto} of the logged-in user
      */
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody UserLoginRequest userLoginRequest){
-        UserResponse response = authService.login(userLoginRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<GenericApiResponse<GetUserDto>> login(@RequestBody LoginCommand loginCommand){
+        MinimalUser response = authService.login(loginCommand);
+
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_REGISTERED, userMapper.map(response)));
     }
 
     /**
      * Registers a new user account.
      * HTTP Method: POST
      * Endpoint: /api/auth/register
-     * @param userRegisterRequest the registration payload containing details (username, name, email, raw password, date of birth)
-     * @return {@link ResponseEntity} containing {@link UserResponse} of the registered user
+     * @param registerCommand the registration payload containing details (username, name, email, raw password, date of birth)
+     * @return {@link ResponseEntity<GenericApiResponse>} containing {@link GetUserDto} of the registered user
      */
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody UserRegisterRequest userRegisterRequest){
-        UserResponse response = authService.register(userRegisterRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<GenericApiResponse<GetUserDto>> register(@RequestBody RegisterCommand registerCommand){
+        MinimalUser response = authService.register(registerCommand);
+
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_LOGGED_IN, userMapper.map(response)));
     }
 }

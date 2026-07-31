@@ -1,8 +1,8 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.HashtagDto;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.Hashtag.response.HashtagDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,34 +15,44 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpHashtagAdapterTest {
-    private HttpHashtagAdapter hashtagAdapter;
-    private HttpPostAdapter postAdapter;
     private HttpAuthAdapter authAdapter;
     private HttpUserAdapter userAdapter;
-    private List<UUID> createdUserIds;
-    private List<UUID> createdPostIds;
+    private HttpPostAdapter postAdapter;
+    private HttpHashtagAdapter hashtagAdapter;
 
     private UserDto testUser;
+    private List<UUID> createdPostIds;
+    private List<UUID> createdUserIds;
 
     @BeforeEach
     public void setUp() {
-        hashtagAdapter = new HttpHashtagAdapter();
-        postAdapter = new HttpPostAdapter();
         authAdapter = new HttpAuthAdapter();
         userAdapter = new HttpUserAdapter();
-        createdUserIds = new ArrayList<>();
-        createdPostIds = new ArrayList<>();
+        postAdapter = new HttpPostAdapter();
+        hashtagAdapter = new HttpHashtagAdapter();
 
-        String suffix = UUID.randomUUID().toString().substring(0, 8);
-        testUser = authAdapter.register("user_" + suffix, "Test User", "password", "user_" + suffix + "@test.com", LocalDateTime.now());
+        createdPostIds = new ArrayList<>();
+        createdUserIds = new ArrayList<>();
+
+        String uniqueUsername = "user_" + UUID.randomUUID().toString().substring(0, 8);
+        String uniqueEmail = uniqueUsername + "@test.com";
+
+        testUser = authAdapter.register(
+                uniqueUsername,
+                "Test User",
+                "Password123!",
+                uniqueEmail,
+                LocalDateTime.of(2000, 1, 1, 0, 0)
+        );
+        assertNotNull(testUser);
         createdUserIds.add(testUser.id());
     }
 
     @AfterEach
     public void tearDown() {
-        for (UUID postId : createdPostIds) {
+        for (UUID id : createdPostIds) {
             try {
-                postAdapter.deletePost(postId, testUser.id());
+                postAdapter.deletePost(id, testUser.id());
             } catch (Exception e) {}
         }
         for (UUID id : createdUserIds) {
@@ -57,7 +67,7 @@ public class HttpHashtagAdapterTest {
         String hashtagName = "testjunit_" + UUID.randomUUID().toString().substring(0, 8);
         String content = "This is a post with a unique hashtag #" + hashtagName;
         
-        PostDto post = postAdapter.createPost(testUser.id(), content, null, null);
+        PostDetailDto post = postAdapter.createPost(testUser.id(), content, null, null);
         assertNotNull(post);
         createdPostIds.add(post.id());
 
@@ -67,7 +77,7 @@ public class HttpHashtagAdapterTest {
         assertTrue(hashtags.stream().anyMatch(h -> h.name().equalsIgnoreCase(hashtagName)));
 
         // Get posts by hashtag
-        List<PostDto> posts = hashtagAdapter.getPostsByHashtag(hashtagName, testUser.id());
+        List<PostDetailDto> posts = hashtagAdapter.getPostsByHashtag(hashtagName, testUser.id());
         assertNotNull(posts);
         assertTrue(posts.stream().anyMatch(p -> p.id().equals(post.id())));
     }

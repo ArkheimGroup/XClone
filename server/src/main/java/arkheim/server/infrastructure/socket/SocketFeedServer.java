@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.socket;
 
-import arkheim.server.application.dtos.responses.PostResponse;
+import arkheim.server.application.features.Post.dtos.PostDetail;
 import arkheim.server.application.services.FeedService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -91,7 +91,7 @@ public class SocketFeedServer implements CommandLineRunner {
                 return;
             }
 
-            List<PostResponse> feed = feedService.getFollowingsFeed(userId);
+            List<PostDetail> feed = feedService.getFollowingsFeed(userId);
             String jsonFeed = gson.toJson(feed);
             writer.println(jsonFeed);
 

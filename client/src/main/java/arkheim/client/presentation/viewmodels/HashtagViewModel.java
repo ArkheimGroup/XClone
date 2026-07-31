@@ -1,8 +1,9 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.Hashtag.response.HashtagDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.ports.HashtagPort;
-import arkheim.client.domain.ports.dtos.HashtagDto;
-import arkheim.client.domain.ports.dtos.PostDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 import javafx.collections.*;
 
@@ -19,7 +20,7 @@ public class HashtagViewModel {
     private final HashtagPort hashtagPort;
 
     // --- posts tagged with the hashtag currently being browsed ---
-    private final ObservableList<PostDto> postsByHashtag = FXCollections.observableArrayList();
+    private final ObservableList<PostDetailDto> postsByHashtag = FXCollections.observableArrayList();
 
     // --- hashtags attached to a single post currently being viewed ---
     private final ObservableList<HashtagDto> hashtagsForPost = FXCollections.observableArrayList();
@@ -39,10 +40,10 @@ public class HashtagViewModel {
     public void loadPostsByHashtag(String hashtagName, UUID requesterId) {
         errorMessage.set("");
         try {
-            List<PostDto> loaded = hashtagPort.getPostsByHashtag(hashtagName, requesterId);
+            List<PostDetailDto> loaded = hashtagPort.getPostsByHashtag(hashtagName, requesterId);
             postsByHashtag.setAll(loaded);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -72,14 +73,12 @@ public class HashtagViewModel {
             List<HashtagDto> loaded = hashtagPort.getHashtagsForPost(postId);
             hashtagsForPost.setAll(loaded);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
-    // Getters
-
     // --- collection getters ---
-    public ObservableList<PostDto> postsByHashtagProperty() { return postsByHashtag; }
+    public ObservableList<PostDetailDto> postsByHashtagProperty() { return postsByHashtag; }
     public ObservableList<HashtagDto> hashtagsForPostProperty() { return hashtagsForPost; }
 
     // --- shared state getter ---

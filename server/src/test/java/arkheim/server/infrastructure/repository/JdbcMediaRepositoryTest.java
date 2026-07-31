@@ -1,8 +1,8 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Media;
-import arkheim.server.domain.entities.Post;
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.MediaEntity;
+import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +27,9 @@ public class JdbcMediaRepositoryTest {
     private JdbcPostRepository postRepository;
     private JdbcMediaRepository mediaRepository;
 
-    private User user;
-    private Post post;
-    private Media media;
+    private UserEntity user;
+    private PostEntity post;
+    private MediaEntity media;
 
     @BeforeEach
     void setUp() {
@@ -37,7 +37,7 @@ public class JdbcMediaRepositoryTest {
         postRepository = new JdbcPostRepository(jdbcTemplate);
         mediaRepository = new JdbcMediaRepository(jdbcTemplate);
 
-        user = new User(
+        user = new UserEntity(
                 UUID.randomUUID(),
                 "media_user",
                 "pw",
@@ -53,7 +53,7 @@ public class JdbcMediaRepositoryTest {
         );
         userRepository.save(user);
 
-        post = new Post(
+        post = new PostEntity(
                 UUID.randomUUID(),
                 user.getUsername(),
                 LocalDateTime.now(),
@@ -63,7 +63,7 @@ public class JdbcMediaRepositoryTest {
         );
         postRepository.save(post);
 
-        media = new Media(
+        media = new MediaEntity(
                 UUID.randomUUID(),
                 "http://example.com/image.png",
                 1920,
@@ -80,7 +80,7 @@ public class JdbcMediaRepositoryTest {
         mediaRepository.save(media);
 
         // 2. FindById
-        Media found = mediaRepository.findById(media.getId());
+        MediaEntity found = mediaRepository.findById(media.getId());
         assertNotNull(found);
         assertEquals(media.getUrl(), found.getUrl());
         assertEquals(media.getWidth(), found.getWidth());
@@ -92,7 +92,7 @@ public class JdbcMediaRepositoryTest {
         mediaRepository.linkToPost(post.getId(), media.getId());
 
         // 4. FindByPostId
-        List<Media> postMedia = mediaRepository.findByPostId(post.getId());
+        List<MediaEntity> postMedia = mediaRepository.findByPostId(post.getId());
         assertEquals(1, postMedia.size());
         assertEquals(media.getId(), postMedia.get(0).getId());
 

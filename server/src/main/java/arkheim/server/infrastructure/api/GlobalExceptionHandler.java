@@ -1,6 +1,7 @@
 package arkheim.server.infrastructure.api;
 
-import arkheim.server.application.exception.*;
+import arkheim.server.application.dtos.ApiResponse;
+import arkheim.server.domain.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -12,51 +13,39 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-// If ApiError is passed with no ErrorCode, frontend will avoid showing the message to a normal user
+// If ApiResponse is passed with no ResultCode, frontend will avoid showing the message to a normal user
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private ResponseEntity<ApiError> UserResponseHelper(BaseApplicationException ex, HttpStatus status) {
-        ApiError error = new ApiError(
-            ex.getCode(),
-            ex.getUserMessage(),
-            status
-        );
+    private ResponseEntity<ApiResponse> UserResponseHelper(BaseApplicationException ex, HttpStatus status) {
+        ApiResponse response = ApiResponse.failure(ex.getCode(), ex.getUserMessage());
 
         return ResponseEntity
                 .status(status)
-                .body(error);
+                .body(response);
     }
 
-    private ResponseEntity<ApiError> responseHelper(Exception ex, HttpStatus status) {
-        ApiError error = new ApiError(
-                null,
-                ex.getMessage(),
-                status
-        );
+    private ResponseEntity<ApiResponse> responseHelper(Exception ex, HttpStatus status) {
+        ApiResponse response = ApiResponse.failure(null, ex.getMessage());
 
         return ResponseEntity
                 .status(status)
-                .body(error);
+                .body(response);
     }
 
-    private ResponseEntity<ApiError> responseHelper(Exception ex, HttpStatus status, String message) {
-        ApiError error = new ApiError(
-                null,
-                message,
-                status
-        );
+    private ResponseEntity<ApiResponse> responseHelper(Exception ex, HttpStatus status, String message) {
+        ApiResponse response = ApiResponse.failure(null, message);
 
         return ResponseEntity
                 .status(status)
-                .body(error);
+                .body(response);
     }
 
     // Catches NotFoundException, equivalent to NoSuchElementException (maps to 404 Not Found)
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(NotFoundException ex) {
+    public ResponseEntity<ApiResponse> handleNotFound(NotFoundException ex) {
         logger.warn("Not found: {}", ex.getMessage());
 
         return UserResponseHelper(ex, HttpStatus.NOT_FOUND); // HTTP 404
@@ -64,7 +53,7 @@ public class GlobalExceptionHandler {
 
     // Catches ForbiddenException, equivalent to SecurityException (maps to 403 Forbidden)
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiError> handleForbidden(ForbiddenException ex) {
+    public ResponseEntity<ApiResponse> handleForbidden(ForbiddenException ex) {
         logger.warn("Access forbidden: {}", ex.getMessage());
 
         return UserResponseHelper(ex, HttpStatus.FORBIDDEN); // HTTP 403
@@ -72,7 +61,7 @@ public class GlobalExceptionHandler {
 
     // Catches ConflictException, equivalent to IllegalStateException (maps to 409 Conflict)
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
+    public ResponseEntity<ApiResponse> handleConflict(ConflictException ex) {
         logger.warn("Conflict error: {}", ex.getMessage());
 
         return UserResponseHelper(ex, HttpStatus.CONFLICT); // HTTP 409
@@ -80,7 +69,7 @@ public class GlobalExceptionHandler {
 
     // Catches BadArgumentException, equivalent to IllegalArgumentException (maps to 400 Bad Request)
     @ExceptionHandler(BadArgumentException.class)
-    public ResponseEntity<ApiError> handleBadRequest(BadArgumentException ex) {
+    public ResponseEntity<ApiResponse> handleBadRequest(BadArgumentException ex) {
         logger.warn("Bad request: {}", ex.getMessage());
 
         return UserResponseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 400
@@ -88,7 +77,7 @@ public class GlobalExceptionHandler {
 
     // Catches HttpMessageNotReadableException (malformed input)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ApiResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         logger.warn("Malformed JSON request: {}", ex.getMessage());
 
         return responseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 400
@@ -96,7 +85,7 @@ public class GlobalExceptionHandler {
 
     // Catches parameter/path variable type mismatch exceptions
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<ApiResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String message = String.format("Parameter '%s' should be of type '%s'", ex.getName(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
         logger.warn("Type mismatch error: {}", message);
 
@@ -105,7 +94,7 @@ public class GlobalExceptionHandler {
 
     // Catches unsupported HTTP methods exception
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiError> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+    public ResponseEntity<ApiResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         logger.warn("HTTP Method not supported: {}", ex.getMessage());
 
         return responseHelper(ex, HttpStatus.METHOD_NOT_ALLOWED); // HTTP 405
@@ -113,7 +102,7 @@ public class GlobalExceptionHandler {
 
     // Catches ResourceNotFoundException, equivalent to static resource or endpoint 404 errors
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiError> handleResourceNotFound(NoResourceFoundException ex) {
+    public ResponseEntity<ApiResponse> handleResourceNotFound(NoResourceFoundException ex) {
         logger.warn("Resource not found: {}", ex.getMessage());
 
         return responseHelper(
@@ -125,15 +114,15 @@ public class GlobalExceptionHandler {
 
     // Catches business customized exceptions, equivalent to other BaseApplicationException subclasses (returns HTTP 400)
     @ExceptionHandler(BaseApplicationException.class)
-    public ResponseEntity<ApiError> handleBaseException(BaseApplicationException ex) {
+    public ResponseEntity<ApiResponse> handleBaseException(BaseApplicationException ex) {
         logger.warn("Business related exception: {}", ex.getMessage());
 
-        return UserResponseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 200
+        return UserResponseHelper(ex, HttpStatus.BAD_REQUEST); // HTTP 400
     }
 
     // Catches generic unhandled RuntimeExceptions (returns HTTP 500 without leaking details)
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiError> handleGeneralRuntime(RuntimeException ex) {
+    public ResponseEntity<ApiResponse> handleGeneralRuntime(RuntimeException ex) {
         logger.error("Unhandled internal runtime error occurred", ex);
 
         return responseHelper(
@@ -145,7 +134,7 @@ public class GlobalExceptionHandler {
 
     // Catches any general unhandled exceptions (fallback to prevent stack trace leaks)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneralException(Exception ex) {
+    public ResponseEntity<ApiResponse> handleGeneralException(Exception ex) {
         logger.error("Unhandled internal server error occurred", ex);
 
         return responseHelper(

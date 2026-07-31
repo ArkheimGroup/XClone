@@ -1,8 +1,8 @@
 package arkheim.client.presentation.controllers;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
 import arkheim.client.presentation.utils.IconUtils;
@@ -188,7 +188,7 @@ public class PostDetailsController extends BaseController {
         });
 
         // Bind replies changes
-        postViewModel.repliesProperty().addListener((ListChangeListener<PostDto>) change -> {
+        postViewModel.repliesProperty().addListener((ListChangeListener<PostDetailDto>) change -> {
             renderReplies();
         });
 
@@ -217,7 +217,7 @@ public class PostDetailsController extends BaseController {
         postViewModel.loadPostReplies(postId, currentUser != null ? currentUser.id() : null);
     }
 
-    private void renderFocalPost(PostDto post) {
+    private void renderFocalPost(PostDetailDto post) {
         focalAuthorName.setText(post.authorName());
         focalAuthorHandle.setText("@" + post.authorUsername());
         focalContentText.setText(post.content());
@@ -261,13 +261,13 @@ public class PostDetailsController extends BaseController {
         metricsRepostsCount.setText(String.valueOf(post.repostCount()));
         metricsRepliesCount.setText(String.valueOf(post.replyCount()));
 
-        IconUtils.setButtonIcon(focalLikeBtn, post.likedByMe() ? "heart_full" : "heart", themeMode, 20);
+        IconUtils.setButtonIcon(focalLikeBtn, post.isLikedByMe() ? "heart_full" : "heart", themeMode, 20);
         focalLikeBtn.setText("");
         if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
         if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);
         if (deleteFocalBtn != null) IconUtils.setButtonIcon(deleteFocalBtn, "trash", themeMode, 16);
 
-        if (post.likedByMe()) {
+        if (post.isLikedByMe()) {
             focalLikeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         } else {
             focalLikeBtn.setStyle("");
@@ -305,7 +305,7 @@ public class PostDetailsController extends BaseController {
             UUID parentId = post.parentPostId();
             UUID requesterId = currentUser != null ? currentUser.id() : null;
             new Thread(() -> {
-                java.util.List<PostDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
+                java.util.List<PostDetailDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
                 Platform.runLater(() -> {
                     if (chain != null && !chain.isEmpty()) {
                         renderParentChain(chain);
@@ -317,16 +317,16 @@ public class PostDetailsController extends BaseController {
         }
     }
 
-    private void renderParentChain(java.util.List<PostDto> chain) {
+    private void renderParentChain(java.util.List<PostDetailDto> chain) {
         parentPostContainer.getChildren().clear();
         for (int i = 0; i < chain.size(); i++) {
-            PostDto parentPost = chain.get(i);
+            PostDetailDto parentPost = chain.get(i);
             boolean isLast = (i == chain.size() - 1);
             parentPostContainer.getChildren().add(createParentChainCard(parentPost, isLast));
         }
     }
 
-    private Node createParentChainCard(PostDto parentPost, boolean isLast) {
+    private Node createParentChainCard(PostDetailDto parentPost, boolean isLast) {
         HBox cardRow = new HBox(12.0);
         cardRow.getStyleClass().add("post-card");
         cardRow.setStyle("-fx-padding: 8px 16px 0px 16px; -fx-cursor: hand;");
@@ -462,13 +462,13 @@ public class PostDetailsController extends BaseController {
             emptyBox.getChildren().addAll(title, desc);
             repliesListContainer.getChildren().add(emptyBox);
         } else {
-            for (PostDto reply : postViewModel.repliesProperty()) {
+            for (PostDetailDto reply : postViewModel.repliesProperty()) {
                 repliesListContainer.getChildren().add(createReplyCard(reply));
             }
         }
     }
 
-    private Node createReplyCard(PostDto reply) {
+    private Node createReplyCard(PostDetailDto reply) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
         card.setStyle("-fx-padding: 12px 16px 12px 36px; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
@@ -552,7 +552,7 @@ public class PostDetailsController extends BaseController {
 
         card.getChildren().addAll(header, bodyNode);
 
-        PostDto parentPost = postViewModel.currentPostProperty().get();
+        PostDetailDto parentPost = postViewModel.currentPostProperty().get();
         if (reply.isRepost() || reply.repostedFromUsername() != null) {
             String origAuthor = reply.repostedFromUsername() != null ? reply.repostedFromUsername() : (reply.repliedUsername() != null ? reply.repliedUsername() : "user");
             HBox repostBadge = new HBox(6.0);
@@ -597,7 +597,7 @@ public class PostDetailsController extends BaseController {
         IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 14);
         repostBtn.getStyleClass().add("post-action-btn");
         repostBtn.setStyle("-fx-font-size: 12px;");
-        if (reply.repostedByMe()) {
+        if (reply.isRepostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
         }
         repostBtn.setOnAction(e -> {
@@ -607,12 +607,12 @@ public class PostDetailsController extends BaseController {
             }
         });
 
-        String likeIconName = reply.likedByMe() ? "heart_full" : "heart";
+        String likeIconName = reply.isLikedByMe() ? "heart_full" : "heart";
         Button likeBtn = new Button(" " + reply.likeCount());
         IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 14);
         likeBtn.getStyleClass().add("post-action-btn");
         likeBtn.setStyle("-fx-font-size: 12px;");
-        if (reply.likedByMe()) {
+        if (reply.isLikedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
         }
         likeBtn.setOnAction(e -> {
@@ -802,7 +802,7 @@ public class PostDetailsController extends BaseController {
             desc.getStyleClass().add("empty-desc");
             postsPane.getChildren().add(desc);
         } else {
-            for (PostDto reply : postViewModel.searchResultsProperty()) {
+            for (PostDetailDto reply : postViewModel.searchResultsProperty()) {
                 postsPane.getChildren().add(createReplyCard(reply));
             }
         }

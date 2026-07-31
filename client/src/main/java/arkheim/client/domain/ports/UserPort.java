@@ -1,6 +1,8 @@
 package arkheim.client.domain.ports;
 
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,32 +10,32 @@ import java.util.UUID;
 public interface UserPort {
 
     /**
-     * HTTP: GET /api/users/{userId}
+     * HTTP: GET /dto/users/{userId}
      */
     UserProfileDto getUserProfileById(UUID userId);
 
     /**
-     * HTTP: GET /api/users/username/{username}
+     * HTTP: GET /dto/users/username/{username}
      */
     UserProfileDto getUserProfileByUsername(String username);
 
     /**
-     * HTTP: PUT /api/users
+     * HTTP: PUT /dto/users
      */
     UserProfileDto updateProfile(UUID userId, String name, String biography, String pfpUrl, String bannerUrl, boolean isVerified, LocalDateTime dateOfBirth);
 
     /**
-     * HTTP: PUT /api/users/{userId}/pin/{postId}
+     * HTTP: PUT /dto/users/{userId}/pin/{postId}
      */
-    void pinPost(UUID userId, UUID postId);
+    ApiResponse pinPost(UUID userId, UUID postId);
 
     /**
-     * HTTP: DELETE /api/users/{userId}/pin
+     * HTTP: DELETE /dto/users/{userId}/pin
      */
-    void unpinPost(UUID userId);
+    ApiResponse unpinPost(UUID userId);
 
     /**
-     * HTTP: DELETE /api/users/{userId}
+     * HTTP: DELETE /dto/users/{userId}
      */
-    void deleteUser(UUID userId);
+    ApiResponse deleteUser(UUID userId);
 }

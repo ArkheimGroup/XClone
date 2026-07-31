@@ -1,8 +1,8 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.MediaDto;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +77,7 @@ public class HttpMediaAdapterTest {
         createdMediaIds.add(media.id());
 
         // Create a Post
-        PostDto post = postAdapter.createPost(testUser.id(), "A post that will have media linked", null, null);
+        PostDetailDto post = postAdapter.createPost(testUser.id(), "A post that will have media linked", null, null);
         assertNotNull(post);
         createdPostIds.add(post.id());
 

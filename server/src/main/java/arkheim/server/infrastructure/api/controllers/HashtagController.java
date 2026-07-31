@@ -1,8 +1,12 @@
 package arkheim.server.infrastructure.api.controllers;
 
-import arkheim.server.application.dtos.responses.PostResponse;
+import arkheim.server.application.dtos.GenericApiResponse;
+import arkheim.server.application.features.Hashtag.dtos.GetHashtagDto;
+import arkheim.server.application.features.Hashtag.mapper.HashtagMapper;
+import arkheim.server.application.features.Post.dtos.PostDetail;
+import arkheim.server.application.models.Hashtag;
 import arkheim.server.application.services.HashtagService;
-import arkheim.server.domain.entities.Hashtag;
+import arkheim.server.domain.exception.ResultCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +21,11 @@ import java.util.UUID;
 public class HashtagController {
 
     private final HashtagService hashtagService;
+    private final HashtagMapper hashtagMapper;
 
     public HashtagController(HashtagService hashtagService) {
         this.hashtagService = hashtagService;
+        this.hashtagMapper = new HashtagMapper();
     }
 
     /**
@@ -28,12 +34,13 @@ public class HashtagController {
      * Endpoint: /api/hashtags/{hashtagName}/posts
      * @param hashtagName the name of the hashtag (without the leading '#')
      * @param requesterId the UUID of the user requesting posts (for user-specific calculations)
-     * @return {@link ResponseEntity} containing a list of {@link PostResponse} containing the hashtag
+     * @return {@link ResponseEntity<GenericApiResponse>} containing a list of {@link PostDetail} containing the hashtag
      */
     @GetMapping("/{hashtagName}/posts")
-    public ResponseEntity<List<PostResponse>> getPostsByHashtag(@PathVariable String hashtagName, @RequestParam(required = false) UUID requesterId) {
-        List<PostResponse> posts = hashtagService.getPostsByHashtag(hashtagName, requesterId);
-        return ResponseEntity.ok(posts);
+    public ResponseEntity<GenericApiResponse<List<PostDetail>>> getPostsByHashtag(@PathVariable String hashtagName, @RequestParam(required = false) UUID requesterId) {
+        List<PostDetail> posts = hashtagService.getPostsByHashtag(hashtagName, requesterId);
+
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.POST_RETRIEVED, posts));
     }
 
     /**
@@ -41,11 +48,12 @@ public class HashtagController {
      * HTTP Method: GET
      * Endpoint: /api/hashtags/posts/{postId}
      * @param postId the UUID of the post
-     * @return {@link ResponseEntity} containing a list of {@link Hashtag} entities linked to the post
+     * @return {@link ResponseEntity<GenericApiResponse>} containing a list of {@link GetHashtagDto} models linked to the post
      */
     @GetMapping("/posts/{postId}")
-    public ResponseEntity<List<Hashtag>> getHashtagsForPost(@PathVariable UUID postId) {
+    public ResponseEntity<GenericApiResponse<List<GetHashtagDto>>> getHashtagsForPost(@PathVariable UUID postId) {
         List<Hashtag> hashtags = hashtagService.getHashtagsForPost(postId);
-        return ResponseEntity.ok(hashtags);
+
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.HASHTAG_RETRIEVED, hashtags.stream().map(hashtagMapper::map).toList()));
     }
 }

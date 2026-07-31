@@ -1,7 +1,7 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ public class HttpPostAdapterTest {
     public void testPostOperations() {
         // Create Post
         String content = "Hello world! This is my first test post.";
-        PostDto post = postAdapter.createPost(testUser.id(), content, null, null);
+        PostDetailDto post = postAdapter.createPost(testUser.id(), content, null, null);
         assertNotNull(post);
         assertNotNull(post.id());
         assertEquals(testUser.id(), post.authorId());
@@ -63,39 +63,39 @@ public class HttpPostAdapterTest {
         createdPostIds.add(post.id());
 
         // Get Post Details
-        PostDto details = postAdapter.getPostDetails(post.id(), testUser.id());
+        PostDetailDto details = postAdapter.getPostDetails(post.id(), testUser.id());
         assertNotNull(details);
         assertEquals(post.id(), details.id());
         assertEquals(content, details.content());
 
         // Toggle Like (Like)
-        assertFalse(details.likedByMe());
+        assertFalse(details.isLikedByMe());
         postAdapter.toggleLike(post.id(), testUser.id());
         
-        PostDto detailsLiked = postAdapter.getPostDetails(post.id(), testUser.id());
-        assertTrue(detailsLiked.likedByMe());
+        PostDetailDto detailsLiked = postAdapter.getPostDetails(post.id(), testUser.id());
+        assertTrue(detailsLiked.isLikedByMe());
         assertEquals(1, detailsLiked.likeCount());
 
         // Toggle Like again (Unlike)
         postAdapter.toggleLike(post.id(), testUser.id());
-        PostDto detailsUnliked = postAdapter.getPostDetails(post.id(), testUser.id());
-        assertFalse(detailsUnliked.likedByMe());
+        PostDetailDto detailsUnliked = postAdapter.getPostDetails(post.id(), testUser.id());
+        assertFalse(detailsUnliked.isLikedByMe());
         assertEquals(0, detailsUnliked.likeCount());
 
         // Get User Timeline
-        List<PostDto> timeline = postAdapter.getUserTimeline(testUser.username(), testUser.id());
+        List<PostDetailDto> timeline = postAdapter.getUserTimeline(testUser.id());
         assertNotNull(timeline);
         assertTrue(timeline.stream().anyMatch(p -> p.id().equals(post.id())));
 
         // Create Reply Post
         String replyContent = "Replying to first post!";
-        PostDto reply = postAdapter.createPost(testUser.id(), replyContent, null, post.id());
+        PostDetailDto reply = postAdapter.createPost(testUser.id(), replyContent, null, post.id());
         assertNotNull(reply);
         assertEquals(post.id(), reply.parentPostId());
         createdPostIds.add(reply.id());
 
         // Get Replies
-        List<PostDto> replies = postAdapter.getPostReplies(post.id(), testUser.id());
+        List<PostDetailDto> replies = postAdapter.getPostReplies(post.id(), testUser.id());
         assertNotNull(replies);
         assertTrue(replies.stream().anyMatch(r -> r.id().equals(reply.id())));
     }
