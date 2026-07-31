@@ -28,6 +28,8 @@ public abstract class BaseController {
         return themeMode;
     }
 
+    public abstract void cleanup();
+
     public abstract void updateIcons();
 
     protected Node createFormattedPostBody(String content, ThemeMode themeMode, Consumer<String> onHashtagClick) {

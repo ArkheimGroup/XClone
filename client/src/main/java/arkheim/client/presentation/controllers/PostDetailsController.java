@@ -12,6 +12,7 @@ import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -143,7 +144,10 @@ public class PostDetailsController extends BaseController {
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
 
-        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+        if (currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        currentUserListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 this.currentUser = newVal;
                 if (userDisplayName != null) userDisplayName.setText(newVal.name());
@@ -151,11 +155,16 @@ public class PostDetailsController extends BaseController {
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
                 if (replyComposerAvatar != null) MediaUiUtils.loadAvatar(replyComposerAvatar, newVal.pfpUrl(), themeMode);
             }
-        });
+        };
+        authViewModel.currentUserProperty().addListener(currentUserListener);
 
         initializeStateBindings();
         loadData();
     }
+
+    private ChangeListener<UserDto> currentUserListener;
+    private ChangeListener<PostDetailDto> currentPostListener;
+    private ListChangeListener<PostDetailDto> repliesListener;
 
     private void initializeStateBindings() {
         // Sync composer text
@@ -181,21 +190,45 @@ public class PostDetailsController extends BaseController {
         );
 
         // Bind focal post details changes
-        postViewModel.currentPostProperty().addListener((obs, oldVal, newVal) -> {
+        currentPostListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 renderFocalPost(newVal);
             }
-        });
+        };
+        postViewModel.currentPostProperty().addListener(currentPostListener);
 
         // Bind replies changes
-        postViewModel.repliesProperty().addListener((ListChangeListener<PostDetailDto>) change -> {
+        repliesListener = change -> {
             renderReplies();
-        });
+        };
+        postViewModel.repliesProperty().addListener(repliesListener);
 
         // Bind error messages
         detailsErrorLabel.textProperty().bind(postViewModel.errorMessageProperty());
         detailsErrorLabel.visibleProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
         detailsErrorLabel.managedProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
+    }
+
+    @Override
+    public void cleanup() {
+        if (postViewModel != null) {
+            if (replyTextArea != null) replyTextArea.textProperty().unbindBidirectional(postViewModel.newPostContentProperty());
+            if (currentPostListener != null) postViewModel.currentPostProperty().removeListener(currentPostListener);
+            if (repliesListener != null) postViewModel.repliesProperty().removeListener(repliesListener);
+        }
+        if (authViewModel != null && currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        if (replyPostBtn != null) {
+            replyPostBtn.disableProperty().unbind();
+        }
+        if (detailsErrorLabel != null) {
+            detailsErrorLabel.textProperty().unbind();
+            detailsErrorLabel.visibleProperty().unbind();
+            detailsErrorLabel.managedProperty().unbind();
+        }
+        if (focalMediaContainer != null) focalMediaContainer.getChildren().clear();
+        if (repliesListContainer != null) repliesListContainer.getChildren().clear();
     }
 
     private void updateReplyCharCounter(int currentLength) {

@@ -3,6 +3,7 @@ package arkheim.client.presentation.navigation;
 import arkheim.client.domain.ports.*;
 import arkheim.client.infrastructure.adapter.*;
 import arkheim.client.infrastructure.config.ClientConfig;
+import arkheim.client.presentation.controllers.BaseController;
 import arkheim.client.presentation.controllers.LoginController;
 import arkheim.client.presentation.controllers.RegisterController;
 import arkheim.client.presentation.controllers.HomeController;
@@ -27,6 +28,16 @@ public class JavaFxNavigator implements Navigator {
     private ThemeMode themeMode;
     private final String lightStyle;
     private final String darkStyle;
+    private BaseController activeController;
+
+    private void cleanupActiveController() {
+        if (activeController != null) {
+            try {
+                activeController.cleanup();
+            } catch (Exception ignored) {}
+            activeController = null;
+        }
+    }
 
     public JavaFxNavigator(Stage stage, AuthViewModel authViewModel, ThemeMode themeMode) {
         this.stage = stage;
@@ -93,6 +104,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showLoginScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/login.fxml")
         );
@@ -105,6 +117,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         LoginController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
@@ -116,6 +129,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showRegisterScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/register.fxml")
         );
@@ -128,6 +142,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         RegisterController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
@@ -139,6 +154,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showHomeScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/home.fxml")
         );
@@ -151,6 +167,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         HomeController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         // Inject Infrastructure Adapters conforming to Domain Ports
@@ -179,6 +196,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showProfileScreen(UUID userId) {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/profile.fxml")
         );
@@ -191,6 +209,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         ProfileController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         UserPort userPort = new HttpUserAdapter();
@@ -214,6 +233,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showPostDetailsScreen(UUID postId) {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/post_details.fxml")
         );
@@ -226,6 +246,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         PostDetailsController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         PostPort postPort = new HttpPostAdapter();

@@ -87,6 +87,27 @@ public class RegisterController extends BaseController {
         bindingsInitialized = true;
     }
 
+    @Override
+    public void cleanup() {
+        if (authViewModel != null) {
+            if (emailField != null) emailField.textProperty().unbindBidirectional(authViewModel.registerEmailProperty());
+            if (passwordField != null) passwordField.textProperty().unbindBidirectional(authViewModel.registerPasswordProperty());
+            if (passwordRepetitionField != null) passwordRepetitionField.textProperty().unbindBidirectional(authViewModel.registerPasswordRepetitionProperty());
+            if (usernameField != null) usernameField.textProperty().unbindBidirectional(authViewModel.registerUsernameProperty());
+            if (nameField != null) nameField.textProperty().unbindBidirectional(authViewModel.registerNameProperty());
+            if (datePicker != null) datePicker.valueProperty().unbindBidirectional(authViewModel.registerDateOfBirthProperty());
+        }
+        if (errorLabel != null) {
+            errorLabel.textProperty().unbind();
+            errorLabel.visibleProperty().unbind();
+            errorLabel.managedProperty().unbind();
+        }
+        if (registerButton != null) {
+            registerButton.disableProperty().unbind();
+        }
+        bindingsInitialized = false;
+    }
+
     private static boolean isBlank(String str) {
         return str == null || str.isBlank();
     }

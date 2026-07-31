@@ -4,6 +4,7 @@ import arkheim.client.domain.dtos.Media.response.MediaDto;
 import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.dtos.User.response.UserDto;
 import arkheim.client.domain.dtos.User.response.UserProfileDto;
+import arkheim.client.domain.models.User;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
 import arkheim.client.presentation.utils.IconUtils;
@@ -15,6 +16,7 @@ import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -191,18 +193,27 @@ public class ProfileController extends BaseController {
             }
         }
 
-        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+        if (currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        currentUserListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 this.currentUser = newVal;
                 if (userDisplayName != null) userDisplayName.setText(newVal.name());
                 if (userHandleName != null) userHandleName.setText("@" + newVal.username());
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
             }
-        });
+        };
+        authViewModel.currentUserProperty().addListener(currentUserListener);
 
         initializeStateBindings();
         loadData();
     }
+
+    private ChangeListener<UserDto> currentUserListener;
+    private ChangeListener<UserProfileDto> profileListener;
+    private ChangeListener<Boolean> isFollowingListener;
+    private ListChangeListener<PostDetailDto> userPostsListener;
 
     private void initializeStateBindings() {
         // Bind form fields to UserViewModel
@@ -211,21 +222,24 @@ public class ProfileController extends BaseController {
         editDobPicker.valueProperty().bindBidirectional(userViewModel.editDateOfBirthProperty());
 
         // Bind Profile changes
-        userViewModel.currentProfileProperty().addListener((obs, oldVal, newVal) -> {
+        profileListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 renderProfileDetails(newVal);
             }
-        });
+        };
+        userViewModel.currentProfileProperty().addListener(profileListener);
 
         // Bind Follow state changes
-        followViewModel.isFollowingProperty().addListener((obs, oldVal, newVal) -> {
+        isFollowingListener = (obs, oldVal, newVal) -> {
             updateFollowButtonVisibility(newVal);
-        });
+        };
+        followViewModel.isFollowingProperty().addListener(isFollowingListener);
 
         // Bind Timeline changes
-        postViewModel.userPostsProperty().addListener((ListChangeListener<PostDetailDto>) change -> {
+        userPostsListener = change -> {
             renderTimeline();
-        });
+        };
+        postViewModel.userPostsProperty().addListener(userPostsListener);
 
         // Bind Error messages
         profileErrorLabel.textProperty().bind(
@@ -251,6 +265,33 @@ public class ProfileController extends BaseController {
         // Bind Error label visibility
         profileErrorLabel.visibleProperty().bind(profileErrorLabel.textProperty().isNotEmpty());
         profileErrorLabel.managedProperty().bind(profileErrorLabel.textProperty().isNotEmpty());
+    }
+
+    @Override
+    public void cleanup() {
+        if (userViewModel != null) {
+            if (editNameField != null) editNameField.textProperty().unbindBidirectional(userViewModel.editNameProperty());
+            if (editBioArea != null) editBioArea.textProperty().unbindBidirectional(userViewModel.editBiographyProperty());
+            if (editDobPicker != null) editDobPicker.valueProperty().unbindBidirectional(userViewModel.editDateOfBirthProperty());
+            if (profileListener != null) userViewModel.currentProfileProperty().removeListener(profileListener);
+        }
+        if (authViewModel != null && currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        if (followViewModel != null && isFollowingListener != null) {
+            followViewModel.isFollowingProperty().removeListener(isFollowingListener);
+        }
+        if (postViewModel != null && userPostsListener != null) {
+            postViewModel.userPostsProperty().removeListener(userPostsListener);
+        }
+        if (profileErrorLabel != null) {
+            profileErrorLabel.textProperty().unbind();
+            profileErrorLabel.visibleProperty().unbind();
+            profileErrorLabel.managedProperty().unbind();
+        }
+        if (profileTimelineContainer != null) {
+            profileTimelineContainer.getChildren().clear();
+        }
     }
 
     private void loadData() {
@@ -614,19 +655,14 @@ public class ProfileController extends BaseController {
             followBtn.getStyleClass().add("post-action-btn");
             followBtn.setStyle("-fx-border-color: -fx-border-color-muted; -fx-border-radius: 12px; -fx-padding: 2px 8px; -fx-font-size: 12px;");
 
-            followViewModel.lastFollowedUserIdProperty().addListener((obs, oldVal, changedUserId) -> {
-                if (changedUserId != null && post.authorId().equals(changedUserId)) {
-                    boolean nowFollowing = followViewModel.isFollowingUser(currentUser.id(), post.authorId());
-                    followBtn.setText(nowFollowing ? "Following" : "Follow");
-                }
-            });
-
             followBtn.setOnAction(e -> {
                 e.consume();
                 if (followViewModel.isFollowingUser(currentUser.id(), post.authorId())) {
                     followViewModel.unfollowUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Follow");
                 } else {
                     followViewModel.followUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Following");
                 }
             });
             header.getChildren().add(followBtn);

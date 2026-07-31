@@ -17,6 +17,7 @@ import arkheim.client.presentation.viewmodels.MediaViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -155,7 +156,10 @@ public class HomeController extends BaseController {
             updateIcons();
         }
 
-        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+        if (currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        currentUserListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 this.currentUser = newVal;
                 if (userDisplayName != null) userDisplayName.setText(newVal.name());
@@ -164,16 +168,21 @@ public class HomeController extends BaseController {
                 if (composerAvatarCircle != null) MediaUiUtils.loadAvatar(composerAvatarCircle, newVal.pfpUrl(), themeMode);
                 updateIcons();
             }
-        });
+        };
+        authViewModel.currentUserProperty().addListener(currentUserListener);
 
         initializeStateBindings();
     }
+
+    private ChangeListener<UserDto> currentUserListener;
+    private ChangeListener<FeedUiState> feedStateListener;
 
     private void initializeStateBindings() {
         if (bindingsInitialized) return;
 
         // whenever feeduistate changes reload the ui
-        feedViewModel.uiStateProperty().addListener((obs, oldState, newState) -> renderState(newState));
+        feedStateListener = (obs, oldState, newState) -> renderState(newState);
+        feedViewModel.uiStateProperty().addListener(feedStateListener);
 
         // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -193,6 +202,23 @@ public class HomeController extends BaseController {
         // Render the initial state snapshot
         renderState(feedViewModel.getState());
         bindingsInitialized = true;
+    }
+
+    @Override
+    public void cleanup() {
+        if (authViewModel != null && currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        if (feedViewModel != null && feedStateListener != null) {
+            feedViewModel.uiStateProperty().removeListener(feedStateListener);
+        }
+        if (feedTimelineContainer != null) {
+            feedTimelineContainer.getChildren().clear();
+        }
+        if (searchResultsContainer != null) {
+            searchResultsContainer.getChildren().clear();
+        }
+        bindingsInitialized = false;
     }
 
     // used for posting character limit
@@ -532,19 +558,14 @@ public class HomeController extends BaseController {
             followBtn.getStyleClass().add("post-action-btn");
             followBtn.setStyle("-fx-border-color: -fx-border-color-muted; -fx-border-radius: 12px; -fx-padding: 2px 8px; -fx-font-size: 12px;");
 
-            followViewModel.lastFollowedUserIdProperty().addListener((obs, oldVal, changedUserId) -> {
-                if (changedUserId != null && post.authorId().equals(changedUserId)) {
-                    boolean nowFollowing = followViewModel.isFollowingUser(currentUser.id(), post.authorId());
-                    followBtn.setText(nowFollowing ? "Following" : "Follow");
-                }
-            });
-
             followBtn.setOnAction(e -> {
                 e.consume();
                 if (followViewModel.isFollowingUser(currentUser.id(), post.authorId())) {
                     followViewModel.unfollowUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Follow");
                 } else {
                     followViewModel.followUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Following");
                 }
             });
             header.getChildren().add(followBtn);
