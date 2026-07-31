@@ -1,18 +1,18 @@
 package arkheim.server.domain.repository;
 
-import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.PostEntity;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface PostRepository {
-    Post findById(UUID id);
-    List<Post> findByAuthorUsername(String username);
-    List<Post> findByWord(String word);
-    List<Post> findReplies(UUID postId);
-    List<Post> findReposts(UUID postId);
-    List<Post> findFollowingsPosts(UUID userId);
-    List<Post> getAllPosts();
-    void save(Post post);
+    PostEntity findById(UUID id);
+    List<PostEntity> findByAuthorUsername(String username);
+    List<PostEntity> findByWord(String word);
+    List<PostEntity> findReplies(UUID postId);
+    List<PostEntity> findReposts(UUID postId);
+    List<PostEntity> findFollowingsPosts(UUID userId);
+    List<PostEntity> getAllPosts();
+    void save(PostEntity postEntity);
     void delete(UUID id);
 }
