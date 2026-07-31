@@ -22,7 +22,14 @@ module arkheim.client {
 
     // Domain ports — consumed by infrastructure adapters and presentation ViewModels
     exports arkheim.client.domain.ports;
-    exports arkheim.client.domain.ports.dtos;
+    exports arkheim.client.domain.dtos;
+    exports arkheim.client.domain.dtos.Hashtag.response;
+    exports arkheim.client.domain.dtos.Media.response;
+    exports arkheim.client.domain.dtos.Media.request;
+    exports arkheim.client.domain.dtos.Post.response;
+    exports arkheim.client.domain.dtos.Post.request;
+    exports arkheim.client.domain.dtos.User.response;
+    exports arkheim.client.domain.dtos.User.request;
 
     // Infrastructure adapters — HTTP and TCP implementations of domain ports
     exports arkheim.client.infrastructure.adapter;
