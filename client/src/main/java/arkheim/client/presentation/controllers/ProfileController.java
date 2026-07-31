@@ -1,8 +1,8 @@
 package arkheim.client.presentation.controllers;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
 import arkheim.client.presentation.utils.IconUtils;
@@ -31,7 +31,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -191,7 +190,7 @@ public class ProfileController extends BaseController {
         });
 
         // Bind Timeline changes
-        postViewModel.userPostsProperty().addListener((ListChangeListener<PostDto>) change -> {
+        postViewModel.userPostsProperty().addListener((ListChangeListener<PostDetailDto>) change -> {
             renderTimeline();
         });
 
@@ -294,7 +293,7 @@ public class ProfileController extends BaseController {
 
             new Thread(() -> {
                 try {
-                    arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    arkheim.client.domain.dtos.Media.response.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
                     if (uploadedMedia != null) {
                         Platform.runLater(() -> {
                             userViewModel.loadFormFromCurrentProfile();
@@ -364,7 +363,7 @@ public class ProfileController extends BaseController {
                     : null;
 
             // Sort pinned post to top
-            java.util.List<PostDto> sorted = new java.util.ArrayList<>(postViewModel.userPostsProperty());
+            java.util.List<PostDetailDto> sorted = new java.util.ArrayList<>(postViewModel.userPostsProperty());
             if (pinnedId != null) {
                 sorted.sort((a, b) -> {
                     if (a.id().equals(pinnedId)) return -1;
@@ -373,18 +372,18 @@ public class ProfileController extends BaseController {
                 });
             }
 
-            for (PostDto post : sorted) {
+            for (PostDetailDto post : sorted) {
                 boolean isPinned = pinnedId != null && pinnedId.equals(post.id());
                 profileTimelineContainer.getChildren().add(createPostCard(post, isPinned));
             }
         }
     }
 
-    private Node createPostCard(PostDto post) {
+    private Node createPostCard(PostDetailDto post) {
         return createPostCard(post, false);
     }
 
-    private Node createPostCard(PostDto post, boolean isPinned) {
+    private Node createPostCard(PostDetailDto post, boolean isPinned) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
 
@@ -570,7 +569,7 @@ public class ProfileController extends BaseController {
         Button repostBtn = new Button(" " + post.repostCount());
         IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 14);
         repostBtn.getStyleClass().add("post-action-btn");
-        if (post.repostedByMe()) {
+        if (post.isRepostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         repostBtn.setOnAction(e -> {
@@ -580,11 +579,11 @@ public class ProfileController extends BaseController {
             }
         });
 
-        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        String likeIconName = post.isLikedByMe() ? "heart_full" : "heart";
         Button likeBtn = new Button(" " + post.likeCount());
         IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 14);
         likeBtn.getStyleClass().add("post-action-btn");
-        if (post.likedByMe()) {
+        if (post.isLikedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         likeBtn.setOnAction(e -> {
@@ -856,7 +855,7 @@ public class ProfileController extends BaseController {
             desc.getStyleClass().add("empty-desc");
             postsPane.getChildren().add(desc);
         } else {
-            for (PostDto post : postViewModel.searchResultsProperty()) {
+            for (PostDetailDto post : postViewModel.searchResultsProperty()) {
                 postsPane.getChildren().add(createPostCard(post));
             }
         }
