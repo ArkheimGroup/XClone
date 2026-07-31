@@ -67,8 +67,11 @@
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;" onMouseClicked="#onNavProfileClicked">
                 <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
                 <VBox alignment="CENTER_LEFT">
-                    <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-                    <Label fx:id="userHandleName" text="\@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+                    <HBox alignment="CENTER_LEFT" spacing="4.0">
+                        <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                        <ImageView fx:id="userVerificationBadgeIcon" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" visible="false" managed="false"/>
+                    </HBox>
+                    <Label fx:id="userHandleName" text="@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -80,33 +83,50 @@
         <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="sticky-header" style="-fx-padding: 12px 16px;">
             <Button fx:id="backButton" text="←" styleClass="post-action-btn" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 4px 8px;" onAction="#onBackClicked"/>
             <VBox>
-                <Label fx:id="headerProfileName" text="Name" style="-fx-font-size: 18px; -fx-font-weight: 800;"/>
+                <HBox alignment="CENTER_LEFT" spacing="6.0">
+                    <Label fx:id="headerProfileName" text="Name" style="-fx-font-size: 18px; -fx-font-weight: 800;"/>
+                    <ImageView fx:id="headerVerificationBadgeIcon" fitHeight="18.0" fitWidth="18.0" preserveRatio="true" visible="false" managed="false"/>
+                </HBox>
                 <Label fx:id="headerPostCount" text="0 posts" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
             </VBox>
         </HBox>
 
         <!-- Profile Scroll Area -->
-        <ScrollPane fx:id="profileScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+        <ScrollPane fx:id="profileScrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
             <content>
-                <VBox spacing="0.0">
-                    <!-- Avatar & Action button row -->
-                    <HBox alignment="BOTTOM_RIGHT" style="-fx-padding: 16px 16px 16px 16px;">
-                        <HBox alignment="BOTTOM_LEFT" HBox.hgrow="ALWAYS">
-                            <Circle fx:id="profileAvatarCircle" radius="55.0" fill="#E7E7E8" stroke="white" strokeWidth="4.0"/>
-                        </HBox>
+                <VBox spacing="0.0" minWidth="0.0">
+                    <!-- Profile Header Stack Pane (Banner + Avatar overlay) -->
+                    <StackPane alignment="TOP_LEFT" minWidth="0.0">
+                        <!-- Banner Image Header -->
+                        <VBox prefHeight="160.0" maxHeight="160.0" minHeight="160.0" minWidth="0.0" style="-fx-background-color: #202327;">
+                            <ImageView fx:id="profileBannerImageView" fitHeight="160.0" preserveRatio="false" pickOnBounds="true"/>
+                        </VBox>
 
-                        <!-- Primary actions (Follow / Unfollow / Edit profile) -->
-                        <StackPane>
-                            <Button fx:id="editProfileButton" text="Edit profile" styleClass="button-secondary" visible="false" managed="false" onAction="#onEditProfileClicked"/>
-                            <Button fx:id="followButton" text="Follow" styleClass="button-primary" style="-fx-padding: 8px 16px; -fx-font-size: 14px;" visible="false" managed="false" onAction="#onFollowClicked"/>
-                            <Button fx:id="unfollowButton" text="Following" styleClass="button-secondary" visible="false" managed="false" onAction="#onUnfollowClicked"/>
-                        </StackPane>
-                    </HBox>
+                        <!-- Avatar & Action button row overlapping banner -->
+                        <VBox alignment="BOTTOM_LEFT" spacing="0.0">
+                            <Region prefHeight="105.0"/>
+                            <HBox alignment="BOTTOM_RIGHT" style="-fx-padding: 0px 16px 12px 16px;">
+                                <HBox alignment="BOTTOM_LEFT" HBox.hgrow="ALWAYS">
+                                    <Circle fx:id="profileAvatarCircle" radius="55.0" fill="#E7E7E8" stroke="white" strokeWidth="4.0"/>
+                                </HBox>
+
+                                <!-- Primary actions (Follow / Unfollow / Edit profile) -->
+                                <StackPane alignment="BOTTOM_RIGHT">
+                                    <Button fx:id="editProfileButton" text="Edit profile" styleClass="button-secondary" visible="false" managed="false" onAction="#onEditProfileClicked"/>
+                                    <Button fx:id="followButton" text="Follow" styleClass="button-primary" style="-fx-padding: 8px 16px; -fx-font-size: 14px;" visible="false" managed="false" onAction="#onFollowClicked"/>
+                                    <Button fx:id="unfollowButton" text="Following" styleClass="button-secondary" visible="false" managed="false" onAction="#onUnfollowClicked"/>
+                                </StackPane>
+                            </HBox>
+                        </VBox>
+                    </StackPane>
 
                     <!-- Profile Information Panel -->
                     <VBox fx:id="profileInfoBox" style="-fx-padding: 0px 16px 16px 16px;" spacing="10.0">
                         <VBox spacing="2.0">
-                            <Label fx:id="profileNameLabel" text="Full Name" style="-fx-font-size: 22px; -fx-font-weight: 800;"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                <Label fx:id="profileNameLabel" text="Full Name" style="-fx-font-size: 22px; -fx-font-weight: 800;"/>
+                                <ImageView fx:id="profileVerificationBadgeIcon" fitHeight="20.0" fitWidth="20.0" preserveRatio="true" visible="false" managed="false"/>
+                            </HBox>
                             <Label fx:id="profileHandleLabel" text="\@handle" style="-fx-font-size: 15px;" styleClass="post-author-handle"/>
                         </VBox>
 
@@ -151,6 +171,22 @@
                             <Label text="Profile Photo" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
                             <HBox spacing="8.0" alignment="CENTER_LEFT">
                                 <Button fx:id="uploadAvatarBtn" text=" Upload Avatar" styleClass="button-secondary" onAction="#onUploadAvatarClicked"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox spacing="4.0">
+                            <Label text="Header Banner" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                                <Button fx:id="uploadBannerBtn" text=" Upload Banner" styleClass="button-secondary" onAction="#onUploadBannerClicked"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox spacing="4.0">
+                            <Label text="Verification" style="-fx-font-size: 12px;" styleClass="post-author-handle"/>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <Button fx:id="verifyUserBtn" text="Get Verified" styleClass="button-primary" style="-fx-padding: 6px 14px;" onAction="#onToggleVerificationClicked"/>
+                                <ImageView fx:id="editVerificationBadgeIcon" fitHeight="20.0" fitWidth="20.0" preserveRatio="true" visible="false" managed="false"/>
+                                <Label fx:id="verificationStatusLabel" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
                             </HBox>
                         </VBox>
 

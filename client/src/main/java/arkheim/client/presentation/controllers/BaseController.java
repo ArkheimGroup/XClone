@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BaseController {
+public abstract class BaseController {
     protected Navigator navigator;
     protected ThemeMode themeMode = ThemeMode.LIGHT;
 
@@ -28,9 +28,9 @@ public class BaseController {
         return themeMode;
     }
 
-    public void updateIcons() {
-        // Subclasses override to update theme-dependent icons
-    }
+    public abstract void cleanup();
+
+    public abstract void updateIcons();
 
     protected Node createFormattedPostBody(String content, ThemeMode themeMode, Consumer<String> onHashtagClick) {
         if (content == null || content.isEmpty()) {

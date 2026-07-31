@@ -8,10 +8,10 @@ This document details the infrastructure layer of both the client and server mod
 ---
 
 ## Client Infrastructure
-Client infrastructure intreacts with server's iinfrastructure.
+Client infrastructure interacts with server's infrastructure.
 
 ### Adapters
-Adapters adapt `Ports` inside Client's domain layer, they send HTTP Requests to server and recive the server's response.
+Adapters adapt `Ports` inside Client's domain layer, they send HTTP Requests to server and receive the server's response.
 
 There are two main types of adapters:
 
@@ -25,8 +25,14 @@ There are two main types of adapters:
 
 2.  **TCP Adapter**: The `TcpFeedAdapter` is a special adapter that communicates with the server over a raw TCP socket. This is used for fetching the user's feed in real-time. It sends the user's UUID to the server and receives a JSON array of posts.
 
+### config
+Containing configuration for server connection.
+
+### exception
+Including a copy of server's `ResultCode` so controllers and view models can have more detail information about the process, specially if the response represents an error (the code can specify what went wrong) . It also includes a custom Exception, `ApiException` which is thrown when server reports an error. Client does not need the variety exceptions server has since client can find the origin of exception according to `ResultCode` not exception's type.
+
 ### ApiClient
-The `ApiClient` is an abstract helper class that simplifies making HTTP requests. It has some helper methods, plus some variables shared across adapters.
+The `ApiClient` is an abstract helper class that simplifies making HTTP requests. This class has the duty of centralizing sending HTTP requests and process their responses. This class sends an HTTP request it receives and checks the response. If the response represents an error, `ApiClient` parses the `ApiResponse` inside and throws an `ApiException` . If the response represents a successful process, it checks the expected response type. If the expected type is `ApiResponse`, body is simply parsed and returned, but if the response is a `GenericApiResposne`, `ApiClient` parses the body and returns only the data inside the `GenericApiResponse` inside the body.
 
 ### LocalDateTimeAdapter
 This class is a Gson compatibility adapter for `LocalDateTime`. It exists to deserialize several possible backend timestamp formats into one Java type. 
@@ -36,16 +42,21 @@ This class will be removed in future version when the API contracts are enhanced
 
 ```Tree
 infrastructure
-├── adapter
-│   ├── HttpAuthAdapter.java
-│   ├── HttpFollowAdapter.java
-│   ├── HttpHashtagAdapter.java
-│   ├── HttpMediaAdapter.java
-│   ├── HttpPostAdapter.java
-│   ├── HttpUserAdapter.java
-│   └── TcpFeedAdapter.java
-├── ApiClient.java
-└── LocalDateTimeAdapter.java
+├───adapter
+│   ├─── HttpAuthAdapter.java
+│   ├─── HttpFollowAdapter.java
+│   ├─── HttpHashtagAdapter.java
+│   ├─── HttpMediaAdapter.java
+│   ├─── HttpPostAdapter.java
+│   ├─── HttpUserAdapter.java
+│   └─── TcpFeedAdapter.java
+├───config
+│   └─── ClientConfig.java
+├───exception
+│   ├─── ApiException.java
+│   └─── ResultCode.java
+├─── ApiClient.java
+└─── LocalDateTimeAdapter.java
 ```
 
 ---
@@ -85,7 +96,9 @@ infrastructure
 │   │   └── UserController.java
 │   └── GlobalExceptionHandler.java
 ├── config
-│   └── AppConfig.java
+│   ├── AppConfig.java
+│   ├── DataBaseInitializer.java
+│   └── WebConfig.java
 ├── repository
 │   ├── JdbcFollowRepository.java
 │   ├── JdbcHashtagRepository.java

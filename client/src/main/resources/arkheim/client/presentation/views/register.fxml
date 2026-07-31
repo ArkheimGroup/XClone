@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.RegisterController">
+<HBox prefHeight="800.0" prefWidth="1280.0" style="-fx-background-color: -fx-primary-bg;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="arkheim.client.presentation.controllers.RegisterController">
     <!-- Left panel: Giant monochrome X logo -->
     <StackPane minWidth="400.0" styleClass="landing-left-panel" HBox.hgrow="ALWAYS">
         <Region styleClass="x-logo-giant" StackPane.alignment="CENTER" />
@@ -21,9 +21,9 @@
                 
                 <TextField fx:id="usernameField" prefHeight="40.0" promptText="Username" />
                 <TextField fx:id="nameField" prefHeight="40.0" promptText="Full name" />
-                <TextField fx:id="emailField" prefHeight="40.0" promptText="Email" />
-                <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Password" />
-                <PasswordField fx:id="passwordRepetitionField" prefHeight="40.0" promptText="Confirm password" />
+                <TextField fx:id="emailField" prefHeight="40.0" promptText="Email" styleClass="email-field" />
+                <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Password" styleClass="password-field" />
+                <PasswordField fx:id="passwordRepetitionField" prefHeight="40.0" promptText="Confirm password" styleClass="password-field" />
                 
                 <DatePicker fx:id="datePicker" prefHeight="40.0" prefWidth="380.0" promptText="Date of birth" />
                 

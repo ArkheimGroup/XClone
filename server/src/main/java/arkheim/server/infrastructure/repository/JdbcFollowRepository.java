@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.FollowRepository;
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.uuidToBytes;
 
@@ -40,7 +40,7 @@ public class JdbcFollowRepository implements FollowRepository {
     }
 
     @Override
-    public List<User> findFollowers(UUID userId) {
+    public List<UserEntity> findFollowers(UUID userId) {
         String sql = "SELECT u.* FROM users u " +
                      "JOIN follows f ON u.id = f.follower_id " +
                      "WHERE f.following_id = ?";
@@ -48,7 +48,7 @@ public class JdbcFollowRepository implements FollowRepository {
     }
 
     @Override
-    public List<User> findFollowing(UUID userId) {
+    public List<UserEntity> findFollowing(UUID userId) {
         String sql = "SELECT u.* FROM users u " +
                      "JOIN follows f ON u.id = f.following_id " +
                      "WHERE f.follower_id = ?";

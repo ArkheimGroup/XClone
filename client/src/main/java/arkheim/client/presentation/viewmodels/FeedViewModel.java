@@ -1,12 +1,13 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.ports.FeedPort;
 import arkheim.client.domain.ports.HashtagPort;
 import arkheim.client.domain.ports.PostPort;
-import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.infrastructure.adapter.HttpHashtagAdapter;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -62,7 +63,7 @@ public class FeedViewModel {
                 if (currentUserId == null || uiState.get().isSearching() || uiState.get().isPosting()) {
                     return;
                 }
-                List<PostDto> latest;
+                List<PostDetailDto> latest;
                 if (uiState.get().activeTab() == FeedUiState.TabType.FOLLOWING) {
                     latest = feedPort.getHomeFeed(currentUserId);
                 } else {
@@ -120,7 +121,7 @@ public class FeedViewModel {
         startAutoRefresh(userId);
         uiState.set(uiState.get().withLoading(true).withError(null));
         try {
-            List<PostDto> loaded;
+            List<PostDetailDto> loaded;
             if (uiState.get().activeTab() == FeedUiState.TabType.FOLLOWING) {
                 // Following tab: load posts from followed users
                 loaded = feedPort.getHomeFeed(userId);
@@ -130,7 +131,8 @@ public class FeedViewModel {
             }
             uiState.set(uiState.get().withPosts(loaded).withSearch("", List.of()).withLoading(false));
         } catch (Exception e) {
-            uiState.set(uiState.get().withError("Failed to load timeline: " + e.getMessage()).withLoading(false));
+            String message = ExceptionMessageRetriever.getMessage(e);
+            uiState.set(uiState.get().withError("Failed to load timeline: " + message).withLoading(false));
         }
     }
 
@@ -148,7 +150,7 @@ public class FeedViewModel {
 
     private void handleSubmitPost(UUID authorId, String mediaUrl) {
         String content = uiState.get().composerText();
-        boolean hasContent = content != null && !content.strip().isEmpty();
+        boolean hasContent = content != null && !content.isBlank();
         boolean hasMedia = mediaUrl != null && !mediaUrl.isBlank();
         if (!hasContent && !hasMedia) {
             return;
@@ -157,10 +159,10 @@ public class FeedViewModel {
         uiState.set(uiState.get().withPosting(true).withError(null));
         try {
             // Call postPort to create a top-level post with optional mediaUrl
-            PostDto created = postPort.createPost(authorId, hasContent ? content : "", mediaUrl, null);
+            PostDetailDto created = postPort.createPost(authorId, hasContent ? content : "", mediaUrl, null);
 
             // Prepend the new post directly to timeline for instant feedback
-            List<PostDto> updatedPosts = new ArrayList<>();
+            List<PostDetailDto> updatedPosts = new ArrayList<>();
             updatedPosts.add(created);
             updatedPosts.addAll(uiState.get().posts());
 
@@ -169,7 +171,8 @@ public class FeedViewModel {
                     .withComposerText("")
                     .withPosting(false));
         } catch (Exception e) {
-            uiState.set(uiState.get().withError("Could not share post: " + e.getMessage()).withPosting(false));
+            String message = ExceptionMessageRetriever.getMessage(e);
+            uiState.set(uiState.get().withError("Could not share post: " + message).withPosting(false));
         }
     }
 
@@ -178,17 +181,18 @@ public class FeedViewModel {
             postPort.toggleLike(postId, userId);
 
             // Reactively map current posts list to update the liked state locally
-            List<PostDto> updatedPosts = uiState.get().posts().stream()
+            List<PostDetailDto> updatedPosts = uiState.get().posts().stream()
                     .map(p -> {
                         if (p.id().equals(postId)) {
-                            boolean nowLiked = !p.likedByMe();
+                            boolean nowLiked = !p.isLikedByMe();
                             int newLikeCount = nowLiked ? p.likeCount() + 1 : p.likeCount() - 1;
-                            return new PostDto(
+                            return new PostDetailDto(
                                     p.id(),
                                     p.authorId(),
                                     p.authorUsername(),
                                     p.authorName(),
                                     p.authorPfpUrl(),
+                                    p.authorVerified(),
                                     p.content(),
                                     p.mediaUrls(),
                                     p.createdAt(),
@@ -200,7 +204,7 @@ public class FeedViewModel {
                                     p.isRepost(),
                                     p.repostedFromUsername(),
                                     nowLiked,
-                                    p.repostedByMe()
+                                    p.isRepostedByMe()
                             );
                         }
                         return p;
@@ -208,24 +212,25 @@ public class FeedViewModel {
 
             uiState.set(uiState.get().withPosts(updatedPosts));
         } catch (Exception e) {
-            uiState.set(uiState.get().withError("Could not update like state: " + e.getMessage()));
+            String message = ExceptionMessageRetriever.getMessage(e);
+            uiState.set(uiState.get().withError("Could not update like state: " + message));
         }
     }
 
     private void handleToggleRepost(UUID postId, UUID userId) {
         try {
-            PostDto target = uiState.get().posts().stream()
+            PostDetailDto target = uiState.get().posts().stream()
                     .filter(p -> p.id().equals(postId))
                     .findFirst()
                     .orElse(null);
 
-            boolean isAlreadyReposted = target != null && target.repostedByMe();
+            boolean isAlreadyReposted = target != null && target.isRepostedByMe();
 
             if (isAlreadyReposted) {
-                List<PostDto> userTimeline = postPort.getUserTimeline(userId);
-                PostDto repostToDelete = null;
+                List<PostDetailDto> userTimeline = postPort.getUserTimeline(userId);
+                PostDetailDto repostToDelete = null;
                 if (userTimeline != null) {
-                    for (PostDto p : userTimeline) {
+                    for (PostDetailDto p : userTimeline) {
                         if (p.isRepost() && postId.equals(p.parentPostId())) {
                             repostToDelete = p;
                             break;
@@ -239,17 +244,18 @@ public class FeedViewModel {
                 postPort.createPost(userId, "", null, postId);
             }
 
-            List<PostDto> updatedPosts = uiState.get().posts().stream()
+            List<PostDetailDto> updatedPosts = uiState.get().posts().stream()
                     .map(p -> {
                         if (p.id().equals(postId)) {
-                            boolean nowReposted = !p.repostedByMe();
+                            boolean nowReposted = !p.isRepostedByMe();
                             int newRepostCount = nowReposted ? p.repostCount() + 1 : Math.max(0, p.repostCount() - 1);
-                            return new PostDto(
+                            return new PostDetailDto(
                                     p.id(),
                                     p.authorId(),
                                     p.authorUsername(),
                                     p.authorName(),
                                     p.authorPfpUrl(),
+                                    p.authorVerified(),
                                     p.content(),
                                     p.mediaUrls(),
                                     p.createdAt(),
@@ -260,7 +266,7 @@ public class FeedViewModel {
                                     p.repliedUsername(),
                                     p.isRepost(),
                                     p.repostedFromUsername(),
-                                    p.likedByMe(),
+                                    p.isLikedByMe(),
                                     nowReposted
                             );
                         }
@@ -278,18 +284,19 @@ public class FeedViewModel {
             postPort.deletePost(postId, userId);
 
             // Reactively remove deleted post from list
-            List<PostDto> updatedPosts = uiState.get().posts().stream()
+            List<PostDetailDto> updatedPosts = uiState.get().posts().stream()
                     .filter(p -> !p.id().equals(postId))
                     .toList();
 
             uiState.set(uiState.get().withPosts(updatedPosts));
         } catch (Exception e) {
-            uiState.set(uiState.get().withError("Could not delete post: " + e.getMessage()));
+            String message = ExceptionMessageRetriever.getMessage(e);
+            uiState.set(uiState.get().withError("Could not delete post: " + message));
         }
     }
 
     private void handleSearch(String query, UUID userId) {
-        if (query == null || query.strip().isEmpty()) {
+        if (query == null || query.isBlank()) {
             uiState.set(uiState.get().withSearch("", List.of()));
             return;
         }
@@ -297,7 +304,7 @@ public class FeedViewModel {
         uiState.set(uiState.get().withLoading(true).withError(null));
         try {
             String cleanQuery = query.trim();
-            List<PostDto> results;
+            List<PostDetailDto> results;
             if (cleanQuery.startsWith("#")) {
                 String hashtagTag = cleanQuery.substring(1).trim();
                 if (hashtagTag.isBlank()) {
@@ -311,10 +318,10 @@ public class FeedViewModel {
                 results = new java.util.ArrayList<>(postPort.findPostsByWord(cleanQuery, userId));
                 if (hashtagPort != null && !cleanQuery.isBlank()) {
                     try {
-                        List<PostDto> hashtagResults = hashtagPort.getPostsByHashtag(cleanQuery, userId);
+                        List<PostDetailDto> hashtagResults = hashtagPort.getPostsByHashtag(cleanQuery, userId);
                         if (hashtagResults != null && !hashtagResults.isEmpty()) {
-                            java.util.Set<UUID> existingIds = results.stream().map(PostDto::id).collect(java.util.stream.Collectors.toSet());
-                            for (PostDto hp : hashtagResults) {
+                            java.util.Set<UUID> existingIds = results.stream().map(PostDetailDto::id).collect(java.util.stream.Collectors.toSet());
+                            for (PostDetailDto hp : hashtagResults) {
                                 if (!existingIds.contains(hp.id())) {
                                     results.add(hp);
                                 }
@@ -326,7 +333,8 @@ public class FeedViewModel {
 
             uiState.set(uiState.get().withSearch(query, results).withLoading(false));
         } catch (Exception e) {
-            uiState.set(uiState.get().withError("Search failed: " + e.getMessage()).withLoading(false));
+            String message = ExceptionMessageRetriever.getMessage(e);
+            uiState.set(uiState.get().withError("Search failed: " + message).withLoading(false));
         }
     }
 

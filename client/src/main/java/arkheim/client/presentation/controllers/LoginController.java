@@ -58,14 +58,34 @@ public class LoginController extends BaseController {
 
         loginButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> authViewModel.emailProperty().get().isBlank()
-                                || authViewModel.passwordProperty().get().isBlank(),
+                        () -> isBlank(authViewModel.emailProperty().get())
+                                || isBlank(authViewModel.passwordProperty().get()),
                         authViewModel.emailProperty(),
                         authViewModel.passwordProperty()
                 )
         );
-
         bindingsInitialized = true;
+    }
+
+    @Override
+    public void cleanup() {
+        if (authViewModel != null) {
+            if (emailField != null) emailField.textProperty().unbindBidirectional(authViewModel.emailProperty());
+            if (passwordField != null) passwordField.textProperty().unbindBidirectional(authViewModel.passwordProperty());
+        }
+        if (errorLabel != null) {
+            errorLabel.textProperty().unbind();
+            errorLabel.visibleProperty().unbind();
+            errorLabel.managedProperty().unbind();
+        }
+        if (loginButton != null) {
+            loginButton.disableProperty().unbind();
+        }
+        bindingsInitialized = false;
+    }
+
+    private static boolean isBlank(String str) {
+        return str == null || str.isBlank();
     }
 
     @Override

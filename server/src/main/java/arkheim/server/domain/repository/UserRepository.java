@@ -1,15 +1,15 @@
 package arkheim.server.domain.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 
 import java.util.UUID;
 
 public interface UserRepository {
-    User findById(UUID id);
-    User findByUsername(String username);
-    User findByEmail(String email);
-    void save(User user);
-    void updateProfile(User user);
+    UserEntity findById(UUID id);
+    UserEntity findByUsername(String username);
+    UserEntity findByEmail(String email);
+    void save(UserEntity userEntity);
+    void updateProfile(UserEntity userEntity);
     void delete(UUID id);
 
     /**

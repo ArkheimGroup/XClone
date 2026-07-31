@@ -1,9 +1,9 @@
 package arkheim.client.presentation.controllers;
 
-import arkheim.client.domain.ports.dtos.MediaDto;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.presentation.state.FeedUiEvent;
 import arkheim.client.presentation.state.FeedUiState;
 import arkheim.client.presentation.theme.ThemeMode;
@@ -17,8 +17,11 @@ import arkheim.client.presentation.viewmodels.MediaViewModel;
 import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -32,14 +35,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class HomeController extends BaseController {
 
@@ -67,6 +76,8 @@ public class HomeController extends BaseController {
     @FXML
     private Label userHandleName;
     @FXML
+    private ImageView userVerificationBadgeIcon;
+    @FXML
     private Button themeToggleBtn;
 
     @FXML
@@ -92,6 +103,8 @@ public class HomeController extends BaseController {
     private Button composerPostButton;
     @FXML
     private Label feedErrorLabel;
+    @FXML
+    private HBox composerMediaPreviewContainer;
 
     @FXML
     private VBox feedTimelineContainer;
@@ -105,8 +118,8 @@ public class HomeController extends BaseController {
     @FXML
     private VBox whoToFollowContainer;
 
-    private String pendingMediaUrl = null;
-    private String pendingMediaFileName = null;
+    private static record PendingMedia(String url, String fileName) {}
+    private final List<PendingMedia> pendingMediaList = new ArrayList<>();
 
     private boolean bindingsInitialized = false;
     private UserDto currentUser;
@@ -141,27 +154,46 @@ public class HomeController extends BaseController {
             if (followViewModel != null) {
                 new Thread(() -> followViewModel.loadFollowing(currentUser.id())).start();
             }
+            userViewModel.loadProfileById(currentUser.id());
+            updateIcons();
         }
 
-        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+        if (currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        currentUserListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 this.currentUser = newVal;
                 if (userDisplayName != null) userDisplayName.setText(newVal.name());
                 if (userHandleName != null) userHandleName.setText("@" + newVal.username());
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
                 if (composerAvatarCircle != null) MediaUiUtils.loadAvatar(composerAvatarCircle, newVal.pfpUrl(), themeMode);
+                if (userViewModel != null) userViewModel.loadProfileById(newVal.id());
+                updateIcons();
             }
-        });
+        };
+        authViewModel.currentUserProperty().addListener(currentUserListener);
 
         initializeStateBindings();
     }
 
+    private ChangeListener<UserDto> currentUserListener;
+    private ChangeListener<FeedUiState> feedStateListener;
+    private ChangeListener<UserProfileDto> userProfileListener;
+
     private void initializeStateBindings() {
         if (bindingsInitialized) return;
 
-        // Reactive binding: Whenever the FeedUiState changes, re-render the view
-        feedViewModel.uiStateProperty().addListener((obs, oldState, newState) -> renderState(newState));
+        // whenever feeduistate changes reload the ui
+        feedStateListener = (obs, oldState, newState) -> renderState(newState);
+        feedViewModel.uiStateProperty().addListener(feedStateListener);
 
+        userProfileListener = (obs, oldVal, newVal) -> {
+            if (feedViewModel != null) {
+                renderState(feedViewModel.getState());
+            }
+        };
+        userViewModel.currentProfileProperty().addListener(userProfileListener);
         // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && newVal.length() > MAX_POST_LENGTH) {
@@ -182,6 +214,27 @@ public class HomeController extends BaseController {
         bindingsInitialized = true;
     }
 
+    @Override
+    public void cleanup() {
+        if (authViewModel != null && currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        if (feedViewModel != null && feedStateListener != null) {
+            feedViewModel.uiStateProperty().removeListener(feedStateListener);
+        }
+        if (userViewModel != null && userProfileListener != null) {
+            userViewModel.currentProfileProperty().removeListener(userProfileListener);
+        }
+        if (feedTimelineContainer != null) {
+            feedTimelineContainer.getChildren().clear();
+        }
+        if (searchResultsContainer != null) {
+            searchResultsContainer.getChildren().clear();
+        }
+        bindingsInitialized = false;
+    }
+
+    // used for posting character limit
     private void updateCharCounter(int currentLength) {
         if (composerCharCountLabel != null) {
             int remaining = MAX_POST_LENGTH - currentLength;
@@ -196,13 +249,14 @@ public class HomeController extends BaseController {
         }
     }
 
+    // used to determine post button state
     private void updateComposerPostButtonState() {
         if (composerPostButton == null || composerTextArea == null) return;
         String text = composerTextArea.getText();
         int len = text == null ? 0 : text.strip().length();
         boolean isTextEmpty = len == 0;
         boolean isOverLimit = text != null && text.length() > MAX_POST_LENGTH;
-        boolean isMediaEmpty = pendingMediaUrl == null;
+        boolean isMediaEmpty = pendingMediaList.isEmpty();
         boolean isPosting = feedViewModel != null && feedViewModel.getState().isPosting();
         composerPostButton.setDisable(isPosting || isOverLimit || (isTextEmpty && isMediaEmpty));
     }
@@ -228,9 +282,9 @@ public class HomeController extends BaseController {
             feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
             feedErrorLabel.setVisible(true);
             feedErrorLabel.setManaged(true);
-        } else if (pendingMediaUrl != null) {
-            String name = pendingMediaFileName != null ? pendingMediaFileName : "attachment";
-            feedErrorLabel.setText("✓ Media attached (" + name + ")");
+        } else if (!pendingMediaList.isEmpty()) {
+            int count = pendingMediaList.size();
+            feedErrorLabel.setText("✓ " + count + (count == 1 ? " image attached" : " images attached"));
             feedErrorLabel.setStyle("-fx-text-fill: #1D9BF0; -fx-font-weight: bold;");
             feedErrorLabel.setVisible(true);
             feedErrorLabel.setManaged(true);
@@ -238,6 +292,8 @@ public class HomeController extends BaseController {
             feedErrorLabel.setVisible(false);
             feedErrorLabel.setManaged(false);
         }
+
+        renderComposerMediaPreviews();
 
 
         // Render main feed timeline elements in center column
@@ -248,8 +304,14 @@ public class HomeController extends BaseController {
         } else if (state.posts().isEmpty()) {
             renderEmptyState();
         } else {
-            for (PostDto post : state.posts()) {
-                feedTimelineContainer.getChildren().add(createPostCard(post));
+            UUID currentUserPinnedId = (currentUser != null && userViewModel != null && userViewModel.currentProfileProperty().get() != null)
+                    ? userViewModel.currentProfileProperty().get().pinnedPostId()
+                    : null;
+            for (PostDetailDto post : state.posts()) {
+                boolean isPinned = (state.activeTab() == FeedUiState.TabType.FOLLOWING)
+                        && currentUserPinnedId != null
+                        && currentUserPinnedId.equals(post.id());
+                feedTimelineContainer.getChildren().add(createPostCard(post, isPinned));
             }
         }
 
@@ -306,10 +368,10 @@ public class HomeController extends BaseController {
                 if (state.searchResults().isEmpty()) {
                     Label noResultsLabel = new Label("No matching posts found.");
                     noResultsLabel.getStyleClass().add("empty-desc");
-                    postsPane.getChildren().add(noResultsLabel);
+                    searchResultsContainer.getChildren().add(noResultsLabel);
                 } else {
-                    for (PostDto post : state.searchResults()) {
-                        postsPane.getChildren().add(createPostCard(post));
+                    for (PostDetailDto post : state.searchResults()) {
+                        searchResultsContainer.getChildren().add(createPostCard(post));
                     }
                 }
 
@@ -331,15 +393,23 @@ public class HomeController extends BaseController {
         VBox info = new VBox(2.0);
         HBox.setHgrow(info, Priority.ALWAYS);
 
+        HBox nameRow = new HBox(4.0);
+        nameRow.setAlignment(Pos.CENTER_LEFT);
         Label nameLabel = new Label(user.name() != null ? user.name() : user.username());
         nameLabel.getStyleClass().add("post-author-name");
         nameLabel.setStyle("-fx-font-size: 14px;");
+        nameRow.getChildren().add(nameLabel);
+
+        if (user.isVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            nameRow.getChildren().add(badge);
+        }
 
         Label handleLabel = new Label("@" + user.username());
         handleLabel.getStyleClass().add("post-author-handle");
         handleLabel.setStyle("-fx-font-size: 13px;");
 
-        info.getChildren().addAll(nameLabel, handleLabel);
+        info.getChildren().addAll(nameRow, handleLabel);
 
         Button viewBtn = new Button("View");
         viewBtn.getStyleClass().add("button-secondary");
@@ -425,10 +495,14 @@ public class HomeController extends BaseController {
     }
 
     /**
-     * Reusable, modular UI component mapping directly to domain PostDto entities.
+     * Reusable, modular UI component mapping directly to domain PostDetailDto models.
      * Integrates hover states, user actions, and deletes posts directly using events.
      */
-    private Node createPostCard(PostDto post) {
+    private Node createPostCard(PostDetailDto post) {
+        return createPostCard(post, false);
+    }
+
+    private Node createPostCard(PostDetailDto post, boolean isPinned) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
         card.setOnMouseClicked(e -> {
@@ -437,13 +511,26 @@ public class HomeController extends BaseController {
             }
         });
 
+        // Pinned badge at top of card
+        if (isPinned) {
+            HBox pinnedBadge = new HBox(6.0);
+            pinnedBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView pinIcon = IconUtils.createIconView("pin", themeMode, 14);
+            Label pinnedLabel = new Label("Pinned");
+            pinnedLabel.getStyleClass().add("post-author-handle");
+            pinnedLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            pinnedBadge.getChildren().addAll(pinIcon, pinnedLabel);
+            pinnedBadge.setStyle("-fx-padding: 0 0 4px 0;");
+            card.getChildren().add(pinnedBadge);
+        }
+
         HBox header = new HBox(12.0);
 
         // Avatar
         Circle avatar = new Circle(20.0);
         MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
-        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setCursor(Cursor.HAND);
 
         avatar.setOnMouseClicked(e -> {
             e.consume();
@@ -459,7 +546,7 @@ public class HomeController extends BaseController {
 
         Label nameLabel = new Label(post.authorName());
         nameLabel.getStyleClass().add("post-author-name");
-        nameLabel.setCursor(javafx.scene.Cursor.HAND);
+        nameLabel.setCursor(Cursor.HAND);
         nameLabel.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -469,7 +556,7 @@ public class HomeController extends BaseController {
 
         Label handleLabel = new Label("@" + post.authorUsername());
         handleLabel.getStyleClass().add("post-author-handle");
-        handleLabel.setCursor(javafx.scene.Cursor.HAND);
+        handleLabel.setCursor(Cursor.HAND);
         handleLabel.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -486,7 +573,12 @@ public class HomeController extends BaseController {
         Label timeLabel = new Label(timeText);
         timeLabel.getStyleClass().add("post-timestamp");
 
-        metaRow.getChildren().addAll(nameLabel, handleLabel, dot, timeLabel);
+        if (post.authorVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            metaRow.getChildren().addAll(nameLabel, badge, handleLabel, dot, timeLabel);
+        } else {
+            metaRow.getChildren().addAll(nameLabel, handleLabel, dot, timeLabel);
+        }
         authorDetails.getChildren().add(metaRow);
 
         // Spacer to push delete button to the right
@@ -502,22 +594,37 @@ public class HomeController extends BaseController {
             followBtn.getStyleClass().add("post-action-btn");
             followBtn.setStyle("-fx-border-color: -fx-border-color-muted; -fx-border-radius: 12px; -fx-padding: 2px 8px; -fx-font-size: 12px;");
 
-            followViewModel.lastFollowedUserIdProperty().addListener((obs, oldVal, changedUserId) -> {
-                if (changedUserId != null && post.authorId().equals(changedUserId)) {
-                    boolean nowFollowing = followViewModel.isFollowingUser(currentUser.id(), post.authorId());
-                    followBtn.setText(nowFollowing ? "Following" : "Follow");
-                }
-            });
-
             followBtn.setOnAction(e -> {
                 e.consume();
                 if (followViewModel.isFollowingUser(currentUser.id(), post.authorId())) {
                     followViewModel.unfollowUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Follow");
                 } else {
                     followViewModel.followUser(currentUser.id(), post.authorId());
+                    followBtn.setText("Following");
                 }
             });
             header.getChildren().add(followBtn);
+        }
+
+        // Pin / Unpin button (only for own posts)
+        if (currentUser != null && currentUser.id().equals(post.authorId()) && userViewModel != null) {
+            Button pinBtn = new Button();
+            String iconName = isPinned ? "unpin" : "pin";
+            IconUtils.setButtonIcon(pinBtn, iconName, themeMode, 16);
+            pinBtn.getStyleClass().add("post-action-btn");
+            pinBtn.setStyle("-fx-padding: 4px;");
+            pinBtn.setOnAction(e -> {
+                e.consume();
+                if (isPinned) {
+                    userViewModel.unpinPost(currentUser.id());
+                } else {
+                    userViewModel.pinPost(currentUser.id(), post.id());
+                }
+                userViewModel.loadProfileById(currentUser.id());
+                feedViewModel.processEvent(new FeedUiEvent.LoadFeed(currentUser.id()));
+            });
+            header.getChildren().add(pinBtn);
         }
 
         // Delete post support if current user matches post author
@@ -588,7 +695,7 @@ public class HomeController extends BaseController {
         Button repostBtn = new Button(" " + post.repostCount());
         IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 16);
         repostBtn.getStyleClass().add("post-action-btn");
-        if (post.repostedByMe()) {
+        if (post.isRepostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         repostBtn.setOnAction(e -> {
@@ -598,11 +705,11 @@ public class HomeController extends BaseController {
             }
         });
 
-        String likeIconName = post.likedByMe() ? "heart_full" : "heart";
+        String likeIconName = post.isLikedByMe() ? "heart_full" : "heart";
         Button likeBtn = new Button(" " + post.likeCount());
         IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 16);
         likeBtn.getStyleClass().add("post-action-btn");
-        if (post.likedByMe()) {
+        if (post.isLikedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         }
         likeBtn.setOnAction(e -> {
@@ -654,13 +761,23 @@ public class HomeController extends BaseController {
         if (navLogoutIcon != null) navLogoutIcon.setImage(IconUtils.getIconImage("door", themeMode));
         if (composerMediaButton != null) IconUtils.setButtonIcon(composerMediaButton, "image", themeMode, 18);
         if (themeToggleBtn != null) {
-            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "☾ Dark Mode" : "☼ Light Mode");
+            themeToggleBtn.setText(themeMode == ThemeMode.LIGHT ? "Dark Mode" : "Light Mode");
         }
         if (userAvatarCircle != null && currentUser != null) {
             MediaUiUtils.loadAvatar(userAvatarCircle, currentUser.pfpUrl(), themeMode);
         }
         if (composerAvatarCircle != null && currentUser != null) {
             MediaUiUtils.loadAvatar(composerAvatarCircle, currentUser.pfpUrl(), themeMode);
+        }
+        if (userVerificationBadgeIcon != null) {
+            if (currentUser != null && currentUser.isVerified()) {
+                userVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                userVerificationBadgeIcon.setVisible(true);
+                userVerificationBadgeIcon.setManaged(true);
+            } else {
+                userVerificationBadgeIcon.setVisible(false);
+                userVerificationBadgeIcon.setManaged(false);
+            }
         }
     }
 
@@ -679,18 +796,70 @@ public class HomeController extends BaseController {
         }
     }
 
+    private void renderComposerMediaPreviews() {
+        if (composerMediaPreviewContainer == null) return;
+        composerMediaPreviewContainer.getChildren().clear();
+
+        if (pendingMediaList.isEmpty()) {
+            composerMediaPreviewContainer.setVisible(false);
+            composerMediaPreviewContainer.setManaged(false);
+            return;
+        }
+
+        composerMediaPreviewContainer.setVisible(true);
+        composerMediaPreviewContainer.setManaged(true);
+
+        for (PendingMedia media : new ArrayList<>(pendingMediaList)) {
+            StackPane previewBox = new StackPane();
+            previewBox.setPrefSize(80, 80);
+            previewBox.setMaxSize(80, 80);
+            previewBox.setStyle("-fx-background-color: #202327; -fx-background-radius: 8px; -fx-border-radius: 8px; -fx-border-color: -fx-border-color-muted; -fx-border-width: 1px;");
+
+            ImageView imgView = new ImageView();
+            imgView.setFitWidth(80);
+            imgView.setFitHeight(80);
+            imgView.setPreserveRatio(false);
+            imgView.setSmooth(true);
+
+            String fullUrl = MediaUiUtils.resolveFullUrl(media.url());
+            if (fullUrl != null) {
+                imgView.setImage(new Image(fullUrl, true));
+            }
+
+            Rectangle clip = new Rectangle(80, 80);
+            clip.setArcWidth(16);
+            clip.setArcHeight(16);
+            imgView.setClip(clip);
+
+            Button removeBtn = new Button("✕");
+            removeBtn.setStyle("-fx-background-color: rgba(15, 20, 25, 0.75); -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-background-radius: 12px; -fx-padding: 2px 6px; -fx-cursor: hand;");
+            StackPane.setAlignment(removeBtn, Pos.TOP_RIGHT);
+            StackPane.setMargin(removeBtn, new Insets(4, 4, 0, 0));
+
+            removeBtn.setOnAction(e -> {
+                pendingMediaList.remove(media);
+                renderState(feedViewModel.getState());
+            });
+
+            previewBox.getChildren().addAll(imgView, removeBtn);
+            composerMediaPreviewContainer.getChildren().add(previewBox);
+        }
+    }
+
     @FXML
     private void onComposerPostClicked() {
         if (currentUser != null) {
             String text = composerTextArea != null ? composerTextArea.getText() : "";
+            String joinedMediaUrls = pendingMediaList.isEmpty()
+                    ? null
+                    : pendingMediaList.stream().map(PendingMedia::url).collect(Collectors.joining(","));
             feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(text != null ? text : ""));
-            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), pendingMediaUrl));
+            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), joinedMediaUrls));
             if (composerTextArea != null) {
                 composerTextArea.setText("");
             }
-            pendingMediaUrl = null;
-            pendingMediaFileName = null;
-            updateComposerPostButtonState();
+            pendingMediaList.clear();
+            renderState(feedViewModel.getState());
         }
     }
 
@@ -704,7 +873,7 @@ public class HomeController extends BaseController {
 
     @FXML
     private void onSidebarPostClicked() {
-        if ((composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) || pendingMediaUrl != null) {
+        if ((composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) || !pendingMediaList.isEmpty()) {
             onComposerPostClicked();
         } else if (composerTextArea != null) {
             composerTextArea.requestFocus();
@@ -714,7 +883,7 @@ public class HomeController extends BaseController {
     @FXML
     private void onMediaAttachmentClicked() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Image File");
+        fileChooser.setTitle("Select Image File(s)");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
@@ -723,51 +892,45 @@ public class HomeController extends BaseController {
         Window window = composerTextArea != null && composerTextArea.getScene() != null
                 ? composerTextArea.getScene().getWindow()
                 : null;
-        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+        List<java.io.File> selectedFiles = fileChooser.showOpenMultipleDialog(window);
 
-        if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+        if (selectedFiles != null && !selectedFiles.isEmpty() && currentUser != null && mediaViewModel != null) {
             long maxSizeBytes = 15L * 1024 * 1024; // 15MB
-            if (selectedFile.length() > maxSizeBytes) {
-                if (feedErrorLabel != null) {
-                    feedErrorLabel.setText("Failed to attach media: File size exceeds maximum limit of 15MB");
-                    feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
-                    feedErrorLabel.setVisible(true);
-                    feedErrorLabel.setManaged(true);
-                }
-                return;
-            }
-
             new Thread(() -> {
-                try {
-                    MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
-                    if (uploadedMedia != null) {
+                for (java.io.File selectedFile : selectedFiles) {
+                    if (selectedFile.length() > maxSizeBytes) {
                         Platform.runLater(() -> {
-                            pendingMediaUrl = uploadedMedia.url();
-                            pendingMediaFileName = selectedFile.getName();
-                            renderState(feedViewModel.getState());
+                            if (feedErrorLabel != null) {
+                                feedErrorLabel.setText("Failed to attach " + selectedFile.getName() + ": File size exceeds maximum limit of 15MB");
+                                feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                                feedErrorLabel.setVisible(true);
+                                feedErrorLabel.setManaged(true);
+                            }
+                        });
+                        continue;
+                    }
+
+                    try {
+                        MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                        if (uploadedMedia != null) {
+                            Platform.runLater(() -> {
+                                pendingMediaList.add(new PendingMedia(uploadedMedia.url(), selectedFile.getName()));
+                                renderState(feedViewModel.getState());
+                            });
+                        }
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            if (feedErrorLabel != null) {
+                                feedErrorLabel.setText("Failed to upload media: " + e.getMessage());
+                                feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                                feedErrorLabel.setVisible(true);
+                                feedErrorLabel.setManaged(true);
+                            }
                         });
                     }
-                } catch (Exception e) {
-                    Platform.runLater(() -> {
-                        if (feedErrorLabel != null) {
-                            feedErrorLabel.setText("Failed to upload media: " + e.getMessage());
-                            feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
-                            feedErrorLabel.setVisible(true);
-                            feedErrorLabel.setManaged(true);
-                        }
-                    });
                 }
             }).start();
         }
-    }
-
-
-
-
-    @FXML
-    private void onEmojiClicked() {
-        String currentText = composerTextArea.getText() == null ? "" : composerTextArea.getText();
-        composerTextArea.setText(currentText + " ☺ ");
     }
 
     // Nav actions: show alert or mock transitions

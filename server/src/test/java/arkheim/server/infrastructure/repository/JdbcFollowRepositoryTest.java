@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +24,15 @@ public class JdbcFollowRepositoryTest {
     private JdbcUserRepository userRepository;
     private JdbcFollowRepository followRepository;
 
-    private User follower;
-    private User following;
+    private UserEntity follower;
+    private UserEntity following;
 
     @BeforeEach
     void setUp() {
         userRepository = new JdbcUserRepository(jdbcTemplate);
         followRepository = new JdbcFollowRepository(jdbcTemplate, userRepository);
 
-        follower = new User(
+        follower = new UserEntity(
                 UUID.randomUUID(),
                 "follower_u",
                 "pw",
@@ -46,7 +46,7 @@ public class JdbcFollowRepositoryTest {
                 null,
                 null
         );
-        following = new User(
+        following = new UserEntity(
                 UUID.randomUUID(),
                 "following_u",
                 "pw",
@@ -77,12 +77,12 @@ public class JdbcFollowRepositoryTest {
         assertTrue(followRepository.isFollowing(follower.getId(), following.getId()));
 
         // Check followers list of following user
-        List<User> followers = followRepository.findFollowers(following.getId());
+        List<UserEntity> followers = followRepository.findFollowers(following.getId());
         assertEquals(1, followers.size());
         assertEquals(follower.getId(), followers.get(0).getId());
 
         // Check following list of follower user
-        List<User> followings = followRepository.findFollowing(follower.getId());
+        List<UserEntity> followings = followRepository.findFollowing(follower.getId());
         assertEquals(1, followings.size());
         assertEquals(following.getId(), followings.get(0).getId());
 

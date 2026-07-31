@@ -1,7 +1,7 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,12 +72,12 @@ public class TcpFeedAdapterTest {
 
         // User B posts a message
         String content = "Hello followers! This is user B.";
-        PostDto post = postAdapter.createPost(userB.id(), content, null, null);
+        PostDetailDto post = postAdapter.createPost(userB.id(), content, null, null);
         assertNotNull(post);
         createdPostIds.add(post.id());
 
         // Get feed of User A (should contain User B's post)
-        List<PostDto> feed = feedAdapter.getHomeFeed(userA.id());
+        List<PostDetailDto> feed = feedAdapter.getHomeFeed(userA.id());
         assertNotNull(feed);
         assertTrue(feed.stream().anyMatch(p -> p.id().equals(post.id())));
     }

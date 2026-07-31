@@ -1,6 +1,6 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

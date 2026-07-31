@@ -1,8 +1,8 @@
 package arkheim.client.infrastructure.adapter;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,20 +83,24 @@ public class HttpUserAdapterTest {
         String newName = "Updated Display Name";
         String bio = "This is my new biography.";
         String pfp = "uploads/profile_pictures/new_pfp.png";
+        String banner = "uploads/banners/new_banner.png";
+        boolean isVerified = true;
         LocalDateTime dob = LocalDateTime.of(1990, 10, 10, 0, 0);
 
-        UserProfileDto updatedProfile = userAdapter.updateProfile(testUser.id(), newName, bio, pfp, dob);
+        UserProfileDto updatedProfile = userAdapter.updateProfile(testUser.id(), newName, bio, pfp, banner, isVerified, dob);
         assertNotNull(updatedProfile);
         assertEquals(newName, updatedProfile.name());
         assertEquals(bio, updatedProfile.biography());
         assertEquals(pfp, updatedProfile.pfpUrl());
+        assertEquals(banner, updatedProfile.bannerUrl());
+        assertTrue(updatedProfile.isVerified());
         assertEquals(dob, updatedProfile.dateOfBirth());
     }
 
     @Test
     public void testPinAndUnpinPost() {
         // Create a post first
-        PostDto post = postAdapter.createPost(testUser.id(), "Post to be pinned #test", null, null);
+        PostDetailDto post = postAdapter.createPost(testUser.id(), "Post to be pinned #test", null, null);
         assertNotNull(post);
         createdPostIds.add(post.id());
 

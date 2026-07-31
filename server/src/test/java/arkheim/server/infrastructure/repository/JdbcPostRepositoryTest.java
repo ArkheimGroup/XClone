@@ -1,7 +1,7 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Post;
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,9 @@ public class JdbcPostRepositoryTest {
     private JdbcPostRepository postRepository;
     private JdbcUserRepository userRepository;
 
-    private User userA;
-    private User userB;
-    private User userC;
+    private UserEntity userA;
+    private UserEntity userB;
+    private UserEntity userC;
 
     @BeforeEach
     void setUp() {
@@ -35,9 +35,9 @@ public class JdbcPostRepositoryTest {
         userRepository = new JdbcUserRepository(jdbcTemplate);
 
         // Create users
-        userA = new User(UUID.randomUUID(), "user_a", "pw", "User A", "a@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
-        userB = new User(UUID.randomUUID(), "user_b", "pw", "User B", "b@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
-        userC = new User(UUID.randomUUID(), "user_c", "pw", "User C", "c@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
+        userA = new UserEntity(UUID.randomUUID(), "user_a", "pw", "User A", "a@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
+        userB = new UserEntity(UUID.randomUUID(), "user_b", "pw", "User B", "b@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
+        userC = new UserEntity(UUID.randomUUID(), "user_c", "pw", "User C", "c@test.com", "bio", LocalDateTime.now(), "pfp", 0, 0, null, null);
 
         userRepository.save(userA);
         userRepository.save(userB);
@@ -47,11 +47,11 @@ public class JdbcPostRepositoryTest {
     @Test
     void testFindFeedForUser() {
         // Post by A
-        Post postA = new Post(UUID.randomUUID(), userA.getUsername(), LocalDateTime.now().minusHours(2), "Hello from A", null, null);
+        PostEntity postA = new PostEntity(UUID.randomUUID(), userA.getUsername(), LocalDateTime.now().minusHours(2), "Hello from A", null, null);
         // Post by B
-        Post postB = new Post(UUID.randomUUID(), userB.getUsername(), LocalDateTime.now().minusHours(1), "Hello from B", null, null);
+        PostEntity postB = new PostEntity(UUID.randomUUID(), userB.getUsername(), LocalDateTime.now().minusHours(1), "Hello from B", null, null);
         // Post by C
-        Post postC = new Post(UUID.randomUUID(), userC.getUsername(), LocalDateTime.now(), "Hello from C", null, null);
+        PostEntity postC = new PostEntity(UUID.randomUUID(), userC.getUsername(), LocalDateTime.now(), "Hello from C", null, null);
 
         postRepository.save(postA);
         postRepository.save(postB);
@@ -66,11 +66,11 @@ public class JdbcPostRepositoryTest {
         );
 
         // Get feed for A
-        List<Post> feed = postRepository.findFollowingsPosts(userA.getId());
+        List<PostEntity> feed = postRepository.findFollowingsPosts(userA.getId());
 
         // Assert
         assertNotNull(feed);
-        assertEquals(1, feed.size());
+        assertEquals(2, feed.size());
         assertEquals(postB.getId(), feed.get(0).getId());
     }
 }

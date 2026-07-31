@@ -1,7 +1,8 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.domain.ports.UserPort;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -24,6 +25,8 @@ public class UserViewModel {
     private final StringProperty editName = new SimpleStringProperty("");
     private final StringProperty editBiography = new SimpleStringProperty("");
     private final StringProperty editPfpUrl = new SimpleStringProperty("");
+    private final StringProperty editBannerUrl = new SimpleStringProperty("");
+    private final BooleanProperty editIsVerified = new SimpleBooleanProperty(false);
     private final ObjectProperty<LocalDate> editDateOfBirth = new SimpleObjectProperty<>();
 
     // --- shared UI state ---
@@ -42,7 +45,7 @@ public class UserViewModel {
         try{
             currentProfile.set(userPort.getUserProfileById(userId));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -55,7 +58,7 @@ public class UserViewModel {
         try {
             currentProfile.set(userPort.getUserProfileByUsername(username));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -84,6 +87,8 @@ public class UserViewModel {
         editName.set(profile.name());
         editBiography.set(profile.biography());
         editPfpUrl.set(profile.pfpUrl());
+        editBannerUrl.set(profile.bannerUrl());
+        editIsVerified.set(profile.isVerified());
         editDateOfBirth.set(profile.dateOfBirth() != null
                 ? profile.dateOfBirth().toLocalDate()
                 : null);
@@ -106,11 +111,13 @@ public class UserViewModel {
                     editName.get(),
                     editBiography.get(),
                     editPfpUrl.get(),
+                    editBannerUrl.get(),
+                    editIsVerified.get(),
                     dob
             );
             currentProfile.set(updated);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -124,7 +131,7 @@ public class UserViewModel {
             userPort.pinPost(userId, postId);
             replaceCurrentProfilePinnedPostId(postId);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -138,7 +145,7 @@ public class UserViewModel {
             userPort.unpinPost(userId);
             replaceCurrentProfilePinnedPostId(null);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -160,10 +167,12 @@ public class UserViewModel {
                 p.biography(),
                 p.dateOfBirth(),
                 p.pfpUrl(),
+                p.bannerUrl(),
                 p.followerCount(),
                 p.followingCount(),
                 p.createdAt(),
-                pinnedPostId
+                pinnedPostId,
+                p.isVerified()
         ));
     }
 
@@ -182,13 +191,15 @@ public class UserViewModel {
                     "",
                     null,
                     null,
+                    null,
                     0,
                     0,
                     null,
-                    null
+                    null,
+                    false
             ));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -201,6 +212,8 @@ public class UserViewModel {
     public StringProperty editNameProperty() { return editName; }
     public StringProperty editBiographyProperty() { return editBiography; }
     public StringProperty editPfpUrlProperty() { return editPfpUrl; }
+    public StringProperty editBannerUrlProperty() { return editBannerUrl; }
+    public BooleanProperty editIsVerifiedProperty() { return editIsVerified; }
     public ObjectProperty<LocalDate> editDateOfBirthProperty() { return editDateOfBirth; }
 
     // --- shared state getter ---

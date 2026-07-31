@@ -1,10 +1,10 @@
 package arkheim.server.application.services;
 
-import arkheim.server.application.dtos.UpdateProfileRequest;
-import arkheim.server.application.dtos.responses.UserProfileResponse;
-import arkheim.server.domain.entities.User;
-import arkheim.server.application.exception.ErrorCode;
-import arkheim.server.application.exception.NotFoundException;
+import arkheim.server.application.features.User.mapper.UserMapper;
+import arkheim.server.application.models.user.User;
+import arkheim.server.domain.entities.UserEntity;
+import arkheim.server.domain.exception.ResultCode;
+import arkheim.server.domain.exception.NotFoundException;
 import arkheim.server.domain.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -12,76 +12,82 @@ import java.util.UUID;
 
 public class UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        this.userMapper = new UserMapper();
     }
 
     /**
      * Retrieves the profile of a user by their UUID
      * @param userId user's UUID
-     * @return {@link UserProfileResponse} details
+     * @return {@link User} details
      */
-    public UserProfileResponse getUserProfileById(UUID userId) {
-        // Fetch user by id.
-        User user = userRepository.findById(userId);
-        if(user == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+    public User getUserProfileById(UUID userId) {
+        // Fetch userEntity by id.
+        UserEntity userEntity = userRepository.findById(userId);
+        if(userEntity == null){
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
-        return new UserProfileResponse(user);
+        return userMapper.map(userEntity);
     }
 
     /**
      * Retrieves the profile of a user by their unique username
      * @param username user's username
-     * @return {@link UserProfileResponse} details
+     * @return {@link User} details
      */
-    public UserProfileResponse getUserProfileByUsername(String username) {
-        // Fetch user by username.
-        User user = userRepository.findByUsername(username);
-        if(user == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+    public User getUserProfileByUsername(String username) {
+        // Fetch userEntity by username.
+        UserEntity userEntity = userRepository.findByUsername(username);
+        if(userEntity == null){
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
-        return new UserProfileResponse(user);
+        return userMapper.map(userEntity);
     }
 
     /**
      * Updates the user's profile details
-     * @param request {@link UpdateProfileRequest} object containing new profile details
-     * @return Updated {@link UserProfileResponse} details
+     * @param newUser {@link User} object containing new profile details
+     * @return Updated {@link User} details
      */
-    public UserProfileResponse updateProfile(UpdateProfileRequest request) {
-        // Fetch user by id
-        User user = userRepository.findById(request.userId());
-        if(user == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+    public User updateProfile(User newUser) {
+        // Fetch userEntity by id
+        UserEntity userEntity = userRepository.findById(newUser.id());
+        if(userEntity == null){
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
-        // Update user
-        String pfpUrl = (request.pfpUrl() != null && !request.pfpUrl().isBlank()) ? request.pfpUrl() : user.getPfpUrl(); // this approach would only update the actual updated fields
-        String name = (request.name() != null && !request.name().isBlank()) ? request.name() : user.getName();
-        String biography = request.biography() != null ? request.biography() : user.getBiography();
-        LocalDateTime datOfBirth = request.dateOfBirth() != null ? request.dateOfBirth() : user.getDateOfBirth();
+        // Update userEntity
+        String pfpUrl = (newUser.pfpUrl() != null && !newUser.pfpUrl().isBlank()) ? newUser.pfpUrl() : userEntity.getPfpUrl(); // this approach would only update the actual updated fields
+        String bannerUrl = (newUser.bannerUrl() != null && !newUser.bannerUrl().isBlank()) ? newUser.bannerUrl() : userEntity.getBannerUrl();
+        String name = (newUser.name() != null && !newUser.name().isBlank()) ? newUser.name() : userEntity.getName();
+        String biography = newUser.biography() != null ? newUser.biography() : userEntity.getBiography();
+        LocalDateTime dateOfBirth = newUser.dateOfBirth() != null ? newUser.dateOfBirth() : userEntity.getDateOfBirth();
+        boolean isVerified = newUser.isVerified();
 
-        User updatedUser = new User(
-                request.userId(),
-                user.getUsername(),
-                user.getPasswordHash(),
+        UserEntity updatedUserEntity = new UserEntity(
+                newUser.id(),
+                userEntity.getUsername(),
+                userEntity.getPasswordHash(),
                 name,
-                user.getEmail(),
+                userEntity.getEmail(),
                 biography,
-                user.getCreatedAt(),
+                userEntity.getCreatedAt(),
                 pfpUrl,
-                user.getFollowerCount(),
-                user.getFollowingCount(),
-                user.getPinnedPostId(),
-                datOfBirth
+                bannerUrl,
+                userEntity.getFollowerCount(),
+                userEntity.getFollowingCount(),
+                userEntity.getPinnedPostId(),
+                dateOfBirth,
+                isVerified
         );
-        userRepository.updateProfile(updatedUser);
+        userRepository.updateProfile(updatedUserEntity);
 
-        return new UserProfileResponse(updatedUser);
+        return userMapper.map(updatedUserEntity);
     }
 
     /**
@@ -91,7 +97,7 @@ public class UserService {
      */
     public void pinPost(UUID userId, UUID postId) {
         if(userRepository.findById(userId) == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.updatePinnedPost(userId, postId);
@@ -103,7 +109,7 @@ public class UserService {
      */
     public void unpinPost(UUID userId) {
         if(userRepository.findById(userId) == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.updatePinnedPost(userId, null);
@@ -115,7 +121,7 @@ public class UserService {
      */
     public void deleteUser(UUID userId) {
         if(userRepository.findById(userId) == null){
-            throw new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found");
+            throw new NotFoundException(ResultCode.USER_NOT_FOUND, "User not found");
         }
 
         userRepository.delete(userId);

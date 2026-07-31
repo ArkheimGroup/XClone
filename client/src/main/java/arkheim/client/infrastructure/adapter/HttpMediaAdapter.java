@@ -1,13 +1,17 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
 import arkheim.client.domain.ports.MediaPort;
-import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.infrastructure.ApiClient;
 import com.google.gson.JsonObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -33,33 +37,33 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
     }
 
     @Override
-    public void linkMediaToPost(UUID mediaId, UUID postId) {
+    public ApiResponse linkMediaToPost(UUID mediaId, UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId + "/link/" + postId))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
-    public void unlinkMediaFromPost(UUID mediaId, UUID postId) {
+    public ApiResponse unlinkMediaFromPost(UUID mediaId, UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId + "/link/" + postId))
                 .DELETE()
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
-    public void deleteMedia(UUID mediaId) {
+    public ApiResponse deleteMedia(UUID mediaId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId))
                 .DELETE()
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
@@ -75,10 +79,15 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
                     + "Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n"
                     + "Content-Type: " + mimeType + "\r\n\r\n";
 
-            String fieldsAndFooter = "\r\n--" + boundary + "\r\n"
-                    + "Content-Disposition: form-data; name=\"uploadedBy\"\r\n\r\n"
-                    + (uploadedBy != null ? uploadedBy : "")
-                    + "\r\n--" + boundary + "--\r\n";
+            String fieldsAndFooter;
+            if (uploadedBy != null) {
+                fieldsAndFooter = "\r\n--" + boundary + "\r\n"
+                        + "Content-Disposition: form-data; name=\"uploadedBy\"\r\n\r\n"
+                        + uploadedBy
+                        + "\r\n--" + boundary + "--\r\n";
+            } else {
+                fieldsAndFooter = "\r\n--" + boundary + "--\r\n";
+            }
 
             HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.concat(
                     HttpRequest.BodyPublishers.ofString(fileHeader),
@@ -105,6 +114,32 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
                 .GET()
                 .build();
 
-        return send(request, MEDIA_LIST_TYPE, "Media");
+        return sendList(request, MediaDto.class, "Media");
+    }
+
+    @Override
+    public void downloadMediaFile(String fileUrl, File destination) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(fileUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("HTTP " + response.statusCode());
+            }
+
+            try (InputStream in = response.body();
+                FileOutputStream out = new FileOutputStream(destination)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download media file: " + e.getMessage(), e);
+        }
     }
 }

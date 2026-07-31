@@ -58,12 +58,14 @@
         <!-- Bottom Settings & Account info -->
         <VBox spacing="10.0">
             <Button fx:id="themeToggleBtn" text="☼ Light Mode" prefWidth="220.0" styleClass="button-secondary" onAction="#onThemeToggleClicked"/>
-            
-            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;" onMouseClicked="#onNavProfileClicked">
+                       <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="nav-item" style="-fx-padding: 8px 12px;" onMouseClicked="#onNavProfileClicked">
                 <Circle fx:id="userAvatarCircle" radius="20.0" fill="#E7E7E8" stroke="transparent"/>
                 <VBox alignment="CENTER_LEFT">
-                    <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-                    <Label fx:id="userHandleName" text="\@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
+                    <HBox alignment="CENTER_LEFT" spacing="4.0">
+                        <Label fx:id="userDisplayName" text="Username" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                        <ImageView fx:id="userVerificationBadgeIcon" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" visible="false" managed="false"/>
+                    </HBox>
+                    <Label fx:id="userHandleName" text="@handle" style="-fx-font-size: 13px;" styleClass="post-author-handle"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -93,8 +95,11 @@
                         <HBox spacing="12.0" alignment="CENTER_LEFT">
                             <Circle fx:id="focalAvatarCircle" radius="24.0" fill="#E7E7E8" stroke="transparent"/>
                             <VBox>
-                                <Label fx:id="focalAuthorName" text="Author Name" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                                <Label fx:id="focalAuthorHandle" text="\@handle" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
+                                <HBox alignment="CENTER_LEFT" spacing="4.0">
+                                    <Label fx:id="focalAuthorName" text="Author Name" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                                    <ImageView fx:id="focalVerificationBadgeIcon" fitHeight="18.0" fitWidth="18.0" pickOnBounds="true" preserveRatio="true" visible="false" managed="false"/>
+                                </HBox>
+                                <Label fx:id="focalAuthorHandle" text="@handle" style="-fx-font-size: 14px;" styleClass="post-author-handle"/>
                             </VBox>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Button fx:id="deleteFocalBtn" styleClass="post-action-btn" style="-fx-text-fill: #E02424;" visible="false" managed="false" onAction="#onDeleteFocalClicked"/>

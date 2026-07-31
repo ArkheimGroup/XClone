@@ -2,6 +2,8 @@ package arkheim.client.presentation.navigation;
 
 import arkheim.client.domain.ports.*;
 import arkheim.client.infrastructure.adapter.*;
+import arkheim.client.infrastructure.config.ClientConfig;
+import arkheim.client.presentation.controllers.BaseController;
 import arkheim.client.presentation.controllers.LoginController;
 import arkheim.client.presentation.controllers.RegisterController;
 import arkheim.client.presentation.controllers.HomeController;
@@ -12,10 +14,12 @@ import arkheim.client.presentation.viewmodels.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.UUID;
 
 public class JavaFxNavigator implements Navigator {
 
@@ -24,6 +28,16 @@ public class JavaFxNavigator implements Navigator {
     private ThemeMode themeMode;
     private final String lightStyle;
     private final String darkStyle;
+    private BaseController activeController;
+
+    private void cleanupActiveController() {
+        if (activeController != null) {
+            try {
+                activeController.cleanup();
+            } catch (Exception ignored) {}
+            activeController = null;
+        }
+    }
 
     public JavaFxNavigator(Stage stage, AuthViewModel authViewModel, ThemeMode themeMode) {
         this.stage = stage;
@@ -44,6 +58,8 @@ public class JavaFxNavigator implements Navigator {
         }
 
         this.themeMode = themeMode;
+        stage.setMinWidth(1100.0);
+        stage.setMinHeight(720.0);
     }
 
     public void setThemeMode(ThemeMode themeMode) {
@@ -61,10 +77,10 @@ public class JavaFxNavigator implements Navigator {
         if (scene == null) return;
         scene.getStylesheets().clear();
         if (themeMode == ThemeMode.DARK) {
-            scene.setFill(javafx.scene.paint.Color.web("#000000"));
+            scene.setFill(Color.web("#000000"));
             scene.getStylesheets().add(darkStyle);
         } else {
-            scene.setFill(javafx.scene.paint.Color.web("#FFFFFF"));
+            scene.setFill(Color.web("#FFFFFF"));
             scene.getStylesheets().add(lightStyle);
         }
     }
@@ -74,6 +90,11 @@ public class JavaFxNavigator implements Navigator {
         if (scene != null) {
             scene.setRoot(root);
             applySceneTheme(scene);
+            if (stage.getWidth() < width || stage.getHeight() < height) {
+                stage.setWidth(width);
+                stage.setHeight(height);
+                stage.centerOnScreen();
+            }
         } else {
             scene = new Scene(root, width, height);
             applySceneTheme(scene);
@@ -83,6 +104,7 @@ public class JavaFxNavigator implements Navigator {
 
     @Override
     public void showLoginScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/login.fxml")
         );
@@ -95,17 +117,19 @@ public class JavaFxNavigator implements Navigator {
         }
 
         LoginController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1000, 600);
+        setRootOrNewScene(root, 1280, 800);
         stage.centerOnScreen();
         stage.show();
     }
 
     @Override
     public void showRegisterScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/register.fxml")
         );
@@ -118,16 +142,19 @@ public class JavaFxNavigator implements Navigator {
         }
 
         RegisterController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
         controller.setAuthViewModel(authViewModel);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1000, 600);
+        setRootOrNewScene(root, 1280, 800);
+        stage.centerOnScreen();
         stage.show();
     }
 
     @Override
     public void showHomeScreen() {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/home.fxml")
         );
@@ -140,10 +167,11 @@ public class JavaFxNavigator implements Navigator {
         }
 
         HomeController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         // Inject Infrastructure Adapters conforming to Domain Ports
-        FeedPort feedPort = new TcpFeedAdapter("localhost", 8082);
+        FeedPort feedPort = new TcpFeedAdapter(ClientConfig.getSocketHost(), ClientConfig.getSocketPort());
         PostPort postPort = new HttpPostAdapter();
         FollowPort followPort = new HttpFollowAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
@@ -161,13 +189,14 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel, userViewModel, postViewModel);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1280, 800);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }
 
     @Override
-    public void showProfileScreen(java.util.UUID userId) {
+    public void showProfileScreen(UUID userId) {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/profile.fxml")
         );
@@ -180,6 +209,7 @@ public class JavaFxNavigator implements Navigator {
         }
 
         ProfileController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         UserPort userPort = new HttpUserAdapter();
@@ -196,13 +226,14 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, mediaViewModel, userId);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1280, 800);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }
 
     @Override
-    public void showPostDetailsScreen(java.util.UUID postId) {
+    public void showPostDetailsScreen(UUID postId) {
+        cleanupActiveController();
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/post_details.fxml")
         );
@@ -215,19 +246,22 @@ public class JavaFxNavigator implements Navigator {
         }
 
         PostDetailsController controller = loader.getController();
+        activeController = controller;
         controller.setThemeMode(themeMode);
 
         PostPort postPort = new HttpPostAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
         UserPort userPort = new HttpUserAdapter();
+        MediaPort mediaPort = new HttpMediaAdapter();
 
         PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
         UserViewModel userViewModel = new UserViewModel(userPort);
+        MediaViewModel mediaViewModel = new MediaViewModel(mediaPort);
 
         controller.setViewModels(authViewModel, postViewModel, userViewModel, postId);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1280, 800);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }

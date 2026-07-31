@@ -1,8 +1,13 @@
 package arkheim.server.infrastructure.api.controllers;
 
-import arkheim.server.application.dtos.UpdateProfileRequest;
-import arkheim.server.application.dtos.responses.UserProfileResponse;
+import arkheim.server.application.dtos.ApiResponse;
+import arkheim.server.application.dtos.GenericApiResponse;
+import arkheim.server.application.features.User.commands.UpdateUserProfileCommand;
+import arkheim.server.application.features.User.dtos.GetUserProfileDto;
+import arkheim.server.application.features.User.mapper.UserMapper;
+import arkheim.server.application.models.user.User;
 import arkheim.server.application.services.UserService;
+import arkheim.server.domain.exception.ResultCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +21,11 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final UserMapper userMapper;
 
     public UserController(UserService userService) {
         this.userService = userService;
+        this.userMapper = new UserMapper();
     }
 
     /**
@@ -26,11 +33,14 @@ public class UserController {
      * HTTP Method: GET
      * Endpoint: /api/users/{userId}
      * @param userId the UUID of the user to retrieve
-     * @return {@link ResponseEntity} containing {@link UserProfileResponse} details
+     * @return {@link ResponseEntity} containing {@link GenericApiResponse<GetUserProfileDto>} details
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<UserProfileResponse> getUserProfileById(@PathVariable UUID userId) {
-        UserProfileResponse response = userService.getUserProfileById(userId);
+    public ResponseEntity<GenericApiResponse<GetUserProfileDto>> getUserProfileById(@PathVariable UUID userId) {
+        User user = userService.getUserProfileById(userId);
+
+        GenericApiResponse<GetUserProfileDto> response = GenericApiResponse.success(ResultCode.USER_PROFILE_RETRIEVED, new UserMapper().map(user));
+
         return ResponseEntity.ok(response);
     }
 
@@ -39,11 +49,14 @@ public class UserController {
      * HTTP Method: GET
      * Endpoint: /api/users/username/{username}
      * @param username the username of the user to retrieve
-     * @return {@link ResponseEntity} containing {@link UserProfileResponse} details
+     * @return {@link ResponseEntity} containing {@link GenericApiResponse<GetUserProfileDto>} details
      */
     @GetMapping("/username/{username}")
-    public ResponseEntity<UserProfileResponse> getUserProfileByUsername(@PathVariable String username) {
-        UserProfileResponse response = userService.getUserProfileByUsername(username);
+    public ResponseEntity<GenericApiResponse<GetUserProfileDto>> getUserProfileByUsername(@PathVariable String username) {
+        User user = userService.getUserProfileByUsername(username);
+
+        GenericApiResponse<GetUserProfileDto> response = GenericApiResponse.success(ResultCode.USER_PROFILE_RETRIEVED, new UserMapper().map(user));
+
         return ResponseEntity.ok(response);
     }
 
@@ -51,12 +64,15 @@ public class UserController {
      * Updates the user's profile details.
      * HTTP Method: PUT
      * Endpoint: /api/users
-     * @param updateProfileRequest the update request payload containing profile fields
-     * @return {@link ResponseEntity} containing the updated {@link UserProfileResponse} details
+     * @param request {@link UpdateUserProfileCommand} the update request payload containing profile fields
+     * @return {@link ResponseEntity} containing the updated {@link GenericApiResponse<GetUserProfileDto>} details
      */
     @PutMapping
-    public ResponseEntity<UserProfileResponse> updateProfile(@RequestBody UpdateProfileRequest updateProfileRequest) {
-        UserProfileResponse response = userService.updateProfile(updateProfileRequest);
+    public ResponseEntity<GenericApiResponse<GetUserProfileDto>> updateProfile(@RequestBody UpdateUserProfileCommand request) {
+        User user = userService.updateProfile(userMapper.map(request));
+
+        GenericApiResponse<GetUserProfileDto> response = GenericApiResponse.success(ResultCode.USER_PROFILE_RETRIEVED, new UserMapper().map(user));
+
         return ResponseEntity.ok(response);
     }
 
@@ -66,12 +82,13 @@ public class UserController {
      * Endpoint: /api/users/{userId}/pin/{postId}
      * @param userId the UUID of the user
      * @param postId the UUID of the post to pin
-     * @return {@link ResponseEntity} with HTTP 200 status
+     * @return {@link ResponseEntity} containing {@link ApiResponse} with HTTP 200 status
      */
     @PutMapping("/{userId}/pin/{postId}")
-    public ResponseEntity<Void> pinPost(@PathVariable UUID userId, @PathVariable UUID postId) {
+    public ResponseEntity<ApiResponse> pinPost(@PathVariable UUID userId, @PathVariable UUID postId) {
         userService.pinPost(userId, postId);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok(ApiResponse.success(ResultCode.POST_PINNED));
     }
 
     /**
@@ -82,9 +99,9 @@ public class UserController {
      * @return {@link ResponseEntity} with HTTP 200 status
      */
     @DeleteMapping("/{userId}/pin")
-    public ResponseEntity<Void> unpinPost(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse> unpinPost(@PathVariable UUID userId) {
         userService.unpinPost(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(ResultCode.POST_UNPINNED));
     }
 
     /**
@@ -92,11 +109,11 @@ public class UserController {
      * HTTP Method: DELETE
      * Endpoint: /api/users/{userId}
      * @param userId the UUID of the user to delete
-     * @return {@link ResponseEntity} with no content (HTTP 204)
+     * @return {@link ResponseEntity} containing {@link ApiResponse} with HTTP 200 status
      */
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable UUID userId) {
         userService.deleteUser(userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success(ResultCode.USER_DELETED));
     }
 }

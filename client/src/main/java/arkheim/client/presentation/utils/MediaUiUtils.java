@@ -1,6 +1,9 @@
 package arkheim.client.presentation.utils;
 
+import arkheim.client.infrastructure.adapter.HttpMediaAdapter;
+import arkheim.client.infrastructure.config.ClientConfig;
 import arkheim.client.presentation.theme.ThemeMode;
+import arkheim.client.presentation.viewmodels.MediaViewModel;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,17 +28,40 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MediaUiUtils {
 
-    public static final String BASE_URL = "http://127.0.0.1:8080";
+    private final MediaViewModel mediaViewModel;
+
+    public MediaUiUtils(MediaViewModel mediaViewModel) {
+        this.mediaViewModel = mediaViewModel;
+    }
+
+    public MediaUiUtils() {
+        this(null);
+    }
+
+    private static final Map<String, Image> IMAGE_CACHE = new ConcurrentHashMap<>();
+
+    public static Image getCachedImage(String url) {
+        if (url == null || url.isBlank()) return null;
+        Image cached = IMAGE_CACHE.get(url);
+        if (cached != null && !cached.isError()) {
+            return cached;
+        }
+        Image newImg = new Image(url, true);
+        IMAGE_CACHE.put(url, newImg);
+        return newImg;
+    }
+
     public static final String DEFAULT_PFP_URL = "uploads/profile_pictures/default_pfp.png";
+    public static final String DEFAULT_BANNER_URL = "uploads/banners/default_banner.png";
+
+    public static String getBaseUrl() {
+        return ClientConfig.getBaseUrl();
+    }
 
     /**
      * Resolves a media URL string to an absolute HTTP URL usable by JavaFX Image loader.
@@ -48,10 +74,69 @@ public class MediaUiUtils {
         if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             return trimmed;
         }
+        String baseUrl = getBaseUrl();
         if (trimmed.startsWith("/")) {
-            return BASE_URL + trimmed;
+            return baseUrl + trimmed;
         }
-        return BASE_URL + "/" + trimmed;
+        return baseUrl + "/" + trimmed;
+    }
+
+    /**
+     * Loads a banner image into a JavaFX ImageView.
+     * If bannerUrl is null or blank, falls back to default_banner.png.
+     * Clicking the banner opens it in full resolution modal with download capability.
+     */
+    public static void loadBanner(ImageView imageView, String bannerUrl, ThemeMode themeMode) {
+        loadBanner(imageView, bannerUrl, themeMode, null);
+    }
+
+    public static void loadBanner(ImageView imageView, String bannerUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
+        if (imageView == null) return;
+
+        String targetUrl = (bannerUrl == null || bannerUrl.isBlank()) ? DEFAULT_BANNER_URL : bannerUrl;
+        String fullUrl = resolveFullUrl(targetUrl);
+
+        if (fullUrl != null) {
+            Image img = getCachedImage(fullUrl);
+            Runnable applyImage = () -> {
+                if (!img.isError() && img.getWidth() > 0) {
+                    imageView.setImage(img);
+                } else if (!DEFAULT_BANNER_URL.equals(targetUrl)) {
+                    String defaultFullUrl = resolveFullUrl(DEFAULT_BANNER_URL);
+                    Image defaultImg = getCachedImage(defaultFullUrl);
+                    if (defaultImg.getProgress() >= 1.0 && !defaultImg.isError()) {
+                        imageView.setImage(defaultImg);
+                    } else {
+                        defaultImg.progressProperty().addListener((o, ov, nv) -> {
+                            if (nv.doubleValue() >= 1.0 && !defaultImg.isError()) {
+                                Platform.runLater(() -> imageView.setImage(defaultImg));
+                            }
+                        });
+                    }
+                }
+            };
+
+            if (img.getProgress() >= 1.0) {
+                applyImage.run();
+            } else {
+                img.progressProperty().addListener((obs, oldVal, newVal) -> {
+                    if (newVal.doubleValue() >= 1.0) {
+                        Platform.runLater(applyImage);
+                    }
+                });
+                img.errorProperty().addListener((obs, oldVal, isError) -> {
+                    if (isError) {
+                        Platform.runLater(applyImage);
+                    }
+                });
+            }
+
+            imageView.setCursor(Cursor.HAND);
+            imageView.setOnMouseClicked(e -> {
+                e.consume();
+                showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
+            });
+        }
     }
 
     /**
@@ -60,20 +145,24 @@ public class MediaUiUtils {
      * Clicking the avatar opens it in full resolution modal with download capability (like post media).
      */
     public static void loadAvatar(Circle circle, String pfpUrl, ThemeMode themeMode) {
+        loadAvatar(circle, pfpUrl, themeMode, null);
+    }
+
+    public static void loadAvatar(Circle circle, String pfpUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         if (circle == null) return;
 
         String targetUrl = (pfpUrl == null || pfpUrl.isBlank()) ? DEFAULT_PFP_URL : pfpUrl;
         String fullUrl = resolveFullUrl(targetUrl);
 
         if (fullUrl != null) {
-            Image img = new Image(fullUrl, true);
+            Image img = getCachedImage(fullUrl);
 
             Runnable applyImage = () -> {
                 if (!img.isError() && img.getWidth() > 0) {
                     circle.setFill(new ImagePattern(img));
                 } else if (!DEFAULT_PFP_URL.equals(targetUrl)) {
                     String defaultFullUrl = resolveFullUrl(DEFAULT_PFP_URL);
-                    Image defaultImg = new Image(defaultFullUrl, true);
+                    Image defaultImg = getCachedImage(defaultFullUrl);
                     if (defaultImg.getProgress() >= 1.0 && !defaultImg.isError()) {
                         circle.setFill(new ImagePattern(defaultImg));
                     } else {
@@ -113,12 +202,10 @@ public class MediaUiUtils {
             circle.setCursor(Cursor.HAND);
             circle.setOnMouseClicked(e -> {
                 e.consume();
-                showFullResolutionDialog(fullUrl, themeMode);
+                showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
             });
         }
     }
-
-
 
     /**
      * Creates a shrunken preview component for a post card.
@@ -126,6 +213,10 @@ public class MediaUiUtils {
      * Clicking the preview opens the media in full resolution modal with a download button.
      */
     public static Node createMediaPreviewNode(String mediaUrl, ThemeMode themeMode) {
+        return createMediaPreviewNode(mediaUrl, themeMode, null);
+    }
+
+    public static Node createMediaPreviewNode(String mediaUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         String fullUrl = resolveFullUrl(mediaUrl);
         if (fullUrl == null) {
             return new Region();
@@ -155,7 +246,7 @@ public class MediaUiUtils {
         imageView.setFitHeight(260);
         imageView.setFitWidth(520);
 
-        Image image = new Image(fullUrl, true); // background loading
+        Image image = getCachedImage(fullUrl); // cached background loading
         image.progressProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() >= 1.0) {
                 container.getChildren().remove(spinner);
@@ -175,7 +266,7 @@ public class MediaUiUtils {
 
         container.setOnMouseClicked(e -> {
             e.consume();
-            showFullResolutionDialog(fullUrl, themeMode);
+            showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
         });
 
         // Hover feedback
@@ -203,6 +294,10 @@ public class MediaUiUtils {
      * Opens a full-resolution modal stage containing the media and a Download button.
      */
     public static void showFullResolutionDialog(String fullUrl, ThemeMode themeMode) {
+        showFullResolutionDialog(fullUrl, themeMode, null);
+    }
+
+    public static void showFullResolutionDialog(String fullUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         Stage modalStage = new Stage();
         modalStage.initModality(Modality.APPLICATION_MODAL);
         modalStage.setTitle("Media View - Full Resolution");
@@ -270,7 +365,12 @@ public class MediaUiUtils {
                     String fileName = getFileNameFromUrl(fullUrl);
                     File targetFile = getUniqueTargetFile(downloadsFolder, fileName);
 
-                    downloadFileFromUrl(fullUrl, targetFile);
+                    MediaViewModel vm = mediaViewModel;
+                    if (vm == null) {
+                        vm = new MediaViewModel(new HttpMediaAdapter());
+                    }
+
+                    vm.downloadMediaFile(fullUrl, targetFile);
 
                     Platform.runLater(() -> {
                         downloadBtn.setDisable(false);
@@ -344,27 +444,5 @@ public class MediaUiUtils {
             count++;
         }
         return target;
-    }
-
-    private static void downloadFileFromUrl(String fileUrl, File destination) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(fileUrl))
-                .GET()
-                .build();
-
-        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new RuntimeException("HTTP " + response.statusCode());
-        }
-
-        try (InputStream in = response.body();
-             FileOutputStream out = new FileOutputStream(destination)) {
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
-        }
     }
 }

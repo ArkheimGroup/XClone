@@ -1,8 +1,8 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Hashtag;
-import arkheim.server.domain.entities.Post;
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.HashtagEntity;
+import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +27,8 @@ public class JdbcHashtagRepositoryTest {
     private JdbcPostRepository postRepository;
     private JdbcHashtagRepository hashtagRepository;
 
-    private User user;
-    private Post post;
+    private UserEntity user;
+    private PostEntity post;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +36,7 @@ public class JdbcHashtagRepositoryTest {
         postRepository = new JdbcPostRepository(jdbcTemplate);
         hashtagRepository = new JdbcHashtagRepository(jdbcTemplate, postRepository);
 
-        user = new User(
+        user = new UserEntity(
                 UUID.randomUUID(),
                 "hash_user",
                 "pw",
@@ -52,7 +52,7 @@ public class JdbcHashtagRepositoryTest {
         );
         userRepository.save(user);
 
-        post = new Post(
+        post = new PostEntity(
                 UUID.randomUUID(),
                 user.getUsername(),
                 LocalDateTime.now(),
@@ -66,21 +66,21 @@ public class JdbcHashtagRepositoryTest {
     @Test
     void testFindOrCreateAndLink() {
         // 1. Create or find
-        Hashtag hashtag = hashtagRepository.findOrCreate("Java");
+        HashtagEntity hashtag = hashtagRepository.findOrCreate("Java");
         assertNotNull(hashtag);
         assertEquals("Java", hashtag.getName());
 
         // Call again to ensure it returns the same instance/doesn't throw UNIQUE constraint violation
-        Hashtag existing = hashtagRepository.findOrCreate("Java");
+        HashtagEntity existing = hashtagRepository.findOrCreate("Java");
         assertEquals(hashtag.getId(), existing.getId());
 
         // 2. Find by ID
-        Hashtag foundById = hashtagRepository.findById(hashtag.getId());
+        HashtagEntity foundById = hashtagRepository.findById(hashtag.getId());
         assertNotNull(foundById);
         assertEquals("Java", foundById.getName());
 
         // 3. Find by Name
-        Hashtag foundByName = hashtagRepository.findByName("Java");
+        HashtagEntity foundByName = hashtagRepository.findByName("Java");
         assertNotNull(foundByName);
         assertEquals(hashtag.getId(), foundByName.getId());
 
@@ -88,12 +88,12 @@ public class JdbcHashtagRepositoryTest {
         hashtagRepository.linkToPost(post.getId(), hashtag.getId());
 
         // 5. Find by Post ID
-        List<Hashtag> hashtags = hashtagRepository.findByPostId(post.getId());
+        List<HashtagEntity> hashtags = hashtagRepository.findByPostId(post.getId());
         assertEquals(1, hashtags.size());
         assertEquals(hashtag.getId(), hashtags.get(0).getId());
 
         // 6. Find Posts by Hashtag Name
-        List<Post> posts = hashtagRepository.findPostsByHashtag("Java");
+        List<PostEntity> posts = hashtagRepository.findPostsByHashtag("Java");
         assertEquals(1, posts.size());
         assertEquals(post.getId(), posts.get(0).getId());
     }

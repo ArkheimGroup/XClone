@@ -1,16 +1,12 @@
 package arkheim.client.infrastructure.adapter;
 
 import arkheim.client.domain.ports.AuthPort;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
 import arkheim.client.infrastructure.ApiClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 
 public class HttpAuthAdapter extends ApiClient implements AuthPort {
@@ -37,7 +33,9 @@ public class HttpAuthAdapter extends ApiClient implements AuthPort {
         body.addProperty("name", name);
         body.addProperty("rawPassword", rawPassword);
         body.addProperty("email", email);
-        body.addProperty("dateOfBirth", dateOfBirth.toString());
+        if (dateOfBirth != null) {
+            body.addProperty("dateOfBirth", dateOfBirth.toString());
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/auth/register"))

@@ -1,8 +1,8 @@
 package arkheim.client.presentation.controllers;
 
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
+import arkheim.client.domain.dtos.User.response.UserDto;
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.presentation.theme.ThemeMode;
 import arkheim.client.presentation.navigation.JavaFxNavigator;
 import arkheim.client.presentation.utils.IconUtils;
@@ -12,6 +12,7 @@ import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -57,6 +58,8 @@ public class PostDetailsController extends BaseController {
     @FXML
     private Label userHandleName;
     @FXML
+    private ImageView userVerificationBadgeIcon;
+    @FXML
     private Button themeToggleBtn;
 
     @FXML
@@ -68,6 +71,8 @@ public class PostDetailsController extends BaseController {
     private Circle focalAvatarCircle;
     @FXML
     private Label focalAuthorName;
+    @FXML
+    private ImageView focalVerificationBadgeIcon;
     @FXML
     private Label focalAuthorHandle;
     @FXML
@@ -139,7 +144,10 @@ public class PostDetailsController extends BaseController {
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
 
-        authViewModel.currentUserProperty().addListener((obs, oldVal, newVal) -> {
+        if (currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        currentUserListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 this.currentUser = newVal;
                 if (userDisplayName != null) userDisplayName.setText(newVal.name());
@@ -147,11 +155,16 @@ public class PostDetailsController extends BaseController {
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
                 if (replyComposerAvatar != null) MediaUiUtils.loadAvatar(replyComposerAvatar, newVal.pfpUrl(), themeMode);
             }
-        });
+        };
+        authViewModel.currentUserProperty().addListener(currentUserListener);
 
         initializeStateBindings();
         loadData();
     }
+
+    private ChangeListener<UserDto> currentUserListener;
+    private ChangeListener<PostDetailDto> currentPostListener;
+    private ListChangeListener<PostDetailDto> repliesListener;
 
     private void initializeStateBindings() {
         // Sync composer text
@@ -177,21 +190,45 @@ public class PostDetailsController extends BaseController {
         );
 
         // Bind focal post details changes
-        postViewModel.currentPostProperty().addListener((obs, oldVal, newVal) -> {
+        currentPostListener = (obs, oldVal, newVal) -> {
             if (newVal != null) {
                 renderFocalPost(newVal);
             }
-        });
+        };
+        postViewModel.currentPostProperty().addListener(currentPostListener);
 
         // Bind replies changes
-        postViewModel.repliesProperty().addListener((ListChangeListener<PostDto>) change -> {
+        repliesListener = change -> {
             renderReplies();
-        });
+        };
+        postViewModel.repliesProperty().addListener(repliesListener);
 
         // Bind error messages
         detailsErrorLabel.textProperty().bind(postViewModel.errorMessageProperty());
         detailsErrorLabel.visibleProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
         detailsErrorLabel.managedProperty().bind(postViewModel.errorMessageProperty().isNotEmpty());
+    }
+
+    @Override
+    public void cleanup() {
+        if (postViewModel != null) {
+            if (replyTextArea != null) replyTextArea.textProperty().unbindBidirectional(postViewModel.newPostContentProperty());
+            if (currentPostListener != null) postViewModel.currentPostProperty().removeListener(currentPostListener);
+            if (repliesListener != null) postViewModel.repliesProperty().removeListener(repliesListener);
+        }
+        if (authViewModel != null && currentUserListener != null) {
+            authViewModel.currentUserProperty().removeListener(currentUserListener);
+        }
+        if (replyPostBtn != null) {
+            replyPostBtn.disableProperty().unbind();
+        }
+        if (detailsErrorLabel != null) {
+            detailsErrorLabel.textProperty().unbind();
+            detailsErrorLabel.visibleProperty().unbind();
+            detailsErrorLabel.managedProperty().unbind();
+        }
+        if (focalMediaContainer != null) focalMediaContainer.getChildren().clear();
+        if (repliesListContainer != null) repliesListContainer.getChildren().clear();
     }
 
     private void updateReplyCharCounter(int currentLength) {
@@ -213,24 +250,35 @@ public class PostDetailsController extends BaseController {
         postViewModel.loadPostReplies(postId, currentUser != null ? currentUser.id() : null);
     }
 
-    private void renderFocalPost(PostDto post) {
+    private void renderFocalPost(PostDetailDto post) {
         focalAuthorName.setText(post.authorName());
         focalAuthorHandle.setText("@" + post.authorUsername());
         focalContentText.setText(post.content());
         MediaUiUtils.loadAvatar(focalAvatarCircle, post.authorPfpUrl(), themeMode);
 
+        if (focalVerificationBadgeIcon != null) {
+            if (post.authorVerified()) {
+                focalVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                focalVerificationBadgeIcon.setVisible(true);
+                focalVerificationBadgeIcon.setManaged(true);
+            } else {
+                focalVerificationBadgeIcon.setVisible(false);
+                focalVerificationBadgeIcon.setManaged(false);
+            }
+        }
+
         if (post.authorId() != null) {
-            focalAuthorName.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorName.setCursor(Cursor.HAND);
             focalAuthorName.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
             });
-            focalAuthorHandle.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorHandle.setCursor(Cursor.HAND);
             focalAuthorHandle.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
             });
-            focalAvatarCircle.setCursor(javafx.scene.Cursor.HAND);
+            focalAvatarCircle.setCursor(Cursor.HAND);
             focalAvatarCircle.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
@@ -246,13 +294,13 @@ public class PostDetailsController extends BaseController {
         metricsRepostsCount.setText(String.valueOf(post.repostCount()));
         metricsRepliesCount.setText(String.valueOf(post.replyCount()));
 
-        IconUtils.setButtonIcon(focalLikeBtn, post.likedByMe() ? "heart_full" : "heart", themeMode, 20);
+        IconUtils.setButtonIcon(focalLikeBtn, post.isLikedByMe() ? "heart_full" : "heart", themeMode, 20);
         focalLikeBtn.setText("");
         if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
         if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);
         if (deleteFocalBtn != null) IconUtils.setButtonIcon(deleteFocalBtn, "trash", themeMode, 16);
 
-        if (post.likedByMe()) {
+        if (post.isLikedByMe()) {
             focalLikeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold;");
         } else {
             focalLikeBtn.setStyle("");
@@ -290,7 +338,7 @@ public class PostDetailsController extends BaseController {
             UUID parentId = post.parentPostId();
             UUID requesterId = currentUser != null ? currentUser.id() : null;
             new Thread(() -> {
-                java.util.List<PostDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
+                java.util.List<PostDetailDto> chain = postViewModel.fetchParentChain(parentId, requesterId);
                 Platform.runLater(() -> {
                     if (chain != null && !chain.isEmpty()) {
                         renderParentChain(chain);
@@ -302,16 +350,16 @@ public class PostDetailsController extends BaseController {
         }
     }
 
-    private void renderParentChain(java.util.List<PostDto> chain) {
+    private void renderParentChain(java.util.List<PostDetailDto> chain) {
         parentPostContainer.getChildren().clear();
         for (int i = 0; i < chain.size(); i++) {
-            PostDto parentPost = chain.get(i);
+            PostDetailDto parentPost = chain.get(i);
             boolean isLast = (i == chain.size() - 1);
             parentPostContainer.getChildren().add(createParentChainCard(parentPost, isLast));
         }
     }
 
-    private Node createParentChainCard(PostDto parentPost, boolean isLast) {
+    private Node createParentChainCard(PostDetailDto parentPost, boolean isLast) {
         HBox cardRow = new HBox(12.0);
         cardRow.getStyleClass().add("post-card");
         cardRow.setStyle("-fx-padding: 8px 16px 0px 16px; -fx-cursor: hand;");
@@ -447,13 +495,13 @@ public class PostDetailsController extends BaseController {
             emptyBox.getChildren().addAll(title, desc);
             repliesListContainer.getChildren().add(emptyBox);
         } else {
-            for (PostDto reply : postViewModel.repliesProperty()) {
+            for (PostDetailDto reply : postViewModel.repliesProperty()) {
                 repliesListContainer.getChildren().add(createReplyCard(reply));
             }
         }
     }
 
-    private Node createReplyCard(PostDto reply) {
+    private Node createReplyCard(PostDetailDto reply) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
         card.setStyle("-fx-padding: 12px 16px 12px 36px; -fx-border-color: transparent transparent -fx-border-color-muted transparent; -fx-border-width: 1px;");
@@ -469,7 +517,7 @@ public class PostDetailsController extends BaseController {
         Circle avatar = new Circle(16.0);
         MediaUiUtils.loadAvatar(avatar, reply.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
-        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setCursor(Cursor.HAND);
         avatar.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());
@@ -502,7 +550,12 @@ public class PostDetailsController extends BaseController {
         Label timeLabel = new Label(time);
         timeLabel.getStyleClass().add("post-timestamp");
 
-        metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        if (reply.authorVerified()) {
+            ImageView badge = IconUtils.createIconView("verification_badge", themeMode, 16);
+            metaRow.getChildren().addAll(name, badge, handle, dot, timeLabel);
+        } else {
+            metaRow.getChildren().addAll(name, handle, dot, timeLabel);
+        }
         meta.getChildren().add(metaRow);
 
         Region spacer = new Region();
@@ -532,7 +585,7 @@ public class PostDetailsController extends BaseController {
 
         card.getChildren().addAll(header, bodyNode);
 
-        PostDto parentPost = postViewModel.currentPostProperty().get();
+        PostDetailDto parentPost = postViewModel.currentPostProperty().get();
         if (reply.isRepost() || reply.repostedFromUsername() != null) {
             String origAuthor = reply.repostedFromUsername() != null ? reply.repostedFromUsername() : (reply.repliedUsername() != null ? reply.repliedUsername() : "user");
             HBox repostBadge = new HBox(6.0);
@@ -577,7 +630,7 @@ public class PostDetailsController extends BaseController {
         IconUtils.setButtonIcon(repostBtn, "repost", themeMode, 14);
         repostBtn.getStyleClass().add("post-action-btn");
         repostBtn.setStyle("-fx-font-size: 12px;");
-        if (reply.repostedByMe()) {
+        if (reply.isRepostedByMe()) {
             repostBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
         }
         repostBtn.setOnAction(e -> {
@@ -587,12 +640,12 @@ public class PostDetailsController extends BaseController {
             }
         });
 
-        String likeIconName = reply.likedByMe() ? "heart_full" : "heart";
+        String likeIconName = reply.isLikedByMe() ? "heart_full" : "heart";
         Button likeBtn = new Button(" " + reply.likeCount());
         IconUtils.setButtonIcon(likeBtn, likeIconName, themeMode, 14);
         likeBtn.getStyleClass().add("post-action-btn");
         likeBtn.setStyle("-fx-font-size: 12px;");
-        if (reply.likedByMe()) {
+        if (reply.isLikedByMe()) {
             likeBtn.setStyle("-fx-text-fill: -fx-text-primary; -fx-font-weight: bold; -fx-font-size: 12px;");
         }
         likeBtn.setOnAction(e -> {
@@ -689,6 +742,26 @@ public class PostDetailsController extends BaseController {
         if (replyComposerAvatar != null && currentUser != null) {
             MediaUiUtils.loadAvatar(replyComposerAvatar, currentUser.pfpUrl(), themeMode);
         }
+        if (userVerificationBadgeIcon != null) {
+            if (currentUser != null && currentUser.isVerified()) {
+                userVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                userVerificationBadgeIcon.setVisible(true);
+                userVerificationBadgeIcon.setManaged(true);
+            } else {
+                userVerificationBadgeIcon.setVisible(false);
+                userVerificationBadgeIcon.setManaged(false);
+            }
+        }
+        if (focalVerificationBadgeIcon != null && postViewModel != null && postViewModel.currentPostProperty().get() != null) {
+            if (postViewModel.currentPostProperty().get().authorVerified()) {
+                focalVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
+                focalVerificationBadgeIcon.setVisible(true);
+                focalVerificationBadgeIcon.setManaged(true);
+            } else {
+                focalVerificationBadgeIcon.setVisible(false);
+                focalVerificationBadgeIcon.setManaged(false);
+            }
+        }
         if (focalReplyBtn != null) IconUtils.setButtonIcon(focalReplyBtn, "comment", themeMode, 20);
         if (focalRepostBtn != null) IconUtils.setButtonIcon(focalRepostBtn, "repost", themeMode, 20);
         if (deleteFocalBtn != null) IconUtils.setButtonIcon(deleteFocalBtn, "trash", themeMode, 16);
@@ -762,7 +835,7 @@ public class PostDetailsController extends BaseController {
             desc.getStyleClass().add("empty-desc");
             postsPane.getChildren().add(desc);
         } else {
-            for (PostDto reply : postViewModel.searchResultsProperty()) {
+            for (PostDetailDto reply : postViewModel.searchResultsProperty()) {
                 postsPane.getChildren().add(createReplyCard(reply));
             }
         }

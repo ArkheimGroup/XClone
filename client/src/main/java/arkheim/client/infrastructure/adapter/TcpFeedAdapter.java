@@ -1,11 +1,11 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.ports.FeedPort;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.infrastructure.ApiClient;
+import arkheim.client.infrastructure.exception.ApiException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import arkheim.client.infrastructure.LocalDateTimeAdapter;
+import com.google.gson.reflect.TypeToken;
 
 public class TcpFeedAdapter implements FeedPort {
 
@@ -32,7 +33,7 @@ public class TcpFeedAdapter implements FeedPort {
     }
 
     @Override
-    public List<PostDto> getHomeFeed(UUID userId) {
+    public List<PostDetailDto> getHomeFeed(UUID userId) {
         try (
             Socket socket = new Socket(host, port);
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -44,17 +45,24 @@ public class TcpFeedAdapter implements FeedPort {
             // Read the JSON response
             String jsonResponse = reader.readLine();
             if (jsonResponse == null || jsonResponse.isBlank()) {
-                throw new RuntimeException("Empty response from feed server");
+                throw new ApiException(500, buildException("Empty response from feed server"));
             }
             if (jsonResponse.startsWith("Error:")) {
-                throw new RuntimeException("Feed server error: " + jsonResponse);
+                throw new ApiException(500, buildException("Feed server error: " + jsonResponse));
             }
 
-            return gson.fromJson(jsonResponse, ApiClient.getPostListType());
-        } catch (RuntimeException e) {
-            throw e;
+            Type responseType = new TypeToken<List<PostDetailDto>>(){}.getType();
+            return gson.fromJson(jsonResponse, responseType);
         } catch (Exception e) {
-            throw new RuntimeException("TCP feed request failed for user " + userId, e);
+            throw new ApiException(500, buildException("TCP feed request failed for user " + userId + "\n" + e.getMessage()));
         }
+    }
+
+    private ApiResponse buildException(String msg) {
+        ApiResponse exception = new ApiResponse();
+        exception.setSuccess(false);
+        exception.setMessage(msg);
+
+        return exception;
     }
 }

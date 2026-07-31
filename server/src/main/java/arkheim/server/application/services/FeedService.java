@@ -1,11 +1,8 @@
 package arkheim.server.application.services;
 
-import arkheim.server.application.dtos.responses.PostResponse;
-import arkheim.server.domain.entities.Media;
-import arkheim.server.domain.entities.Post;
-import arkheim.server.domain.entities.User;
-import arkheim.server.domain.repository.LikeRepository;
-import arkheim.server.domain.repository.MediaRepository;
+import arkheim.server.application.features.Post.dtos.PostDetail;
+import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.PostRepository;
 import arkheim.server.domain.repository.UserRepository;
 
@@ -16,30 +13,39 @@ import java.util.UUID;
 
 public class FeedService {
     private final PostRepository postRepository;
+    private final PostService postService;
     private final UserRepository userRepository;
-    private final LikeRepository likeRepository;
-    private final MediaRepository mediaRepository;
 
-    public FeedService(PostRepository postRepository, UserRepository userRepository,
-                       LikeRepository likeRepository, MediaRepository mediaRepository) {
+    public FeedService(PostRepository postRepository, PostService postService, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.postService = postService;
         this.userRepository = userRepository;
-        this.likeRepository = likeRepository;
-        this.mediaRepository = mediaRepository;
     }
 
     /**
      * Retrieves the home feed timeline for a user (posts from users they follow).
      * @param userId the user retrieving the feed
-     * @return List of {@link PostResponse} of posts that users followings have created
+     * @return List of {@link PostDetail} of posts that users followings have created
      */
-    public List<PostResponse> getFollowingsFeed(UUID userId) {
-        List<Post> feedPosts = postRepository.findFollowingsPosts(userId);
+    public List<PostDetail> getFollowingsFeed(UUID userId) {
+        List<PostEntity> feedPostEntities = postRepository.findFollowingsPosts(userId);
 
-        List<PostResponse> responses = new ArrayList<>();
+        List<PostDetail> responses = new ArrayList<>();
 
-        for(Post post : feedPosts){
-            responses.add(toPostResponse(post, userId));
+        for(PostEntity postEntity : feedPostEntities){
+            responses.add(postService.getPostDetail(postEntity, userId));
+        }
+
+        if (userId != null && userRepository != null) {
+            UserEntity requester = userRepository.findById(userId);
+            if (requester != null && requester.getPinnedPostId() != null) {
+                UUID pinnedId = requester.getPinnedPostId();
+                responses.sort((a, b) -> {
+                    if (a.id().equals(pinnedId)) return -1;
+                    if (b.id().equals(pinnedId)) return 1;
+                    return 0;
+                });
+            }
         }
 
         return responses;
@@ -48,15 +54,15 @@ public class FeedService {
     /**
      * Retrieves a user's profile timeline (posts created by the user).
      * @param requesterId the user who is viewing the timeline (for calculating isLikedByMe/isRepostedByMe)
-     * @return List of {@link PostResponse} of created posts
+     * @return List of {@link PostDetail} of created posts
      */
-    public List<PostResponse> getUserTimeline(UUID requesterId) {
-        List<Post> posts = postRepository.getAllPosts();
+    public List<PostDetail> getUserTimeline(UUID requesterId) {
+        List<PostEntity> postEntities = postRepository.getAllPosts();
 
-        List<PostResponse> responses = new ArrayList<>();
+        List<PostDetail> responses = new ArrayList<>();
 
-        for(Post post : posts){
-            responses.add(toPostResponse(post, requesterId));
+        for(PostEntity postEntity : postEntities){
+            responses.add(postService.getPostDetail(postEntity, requesterId));
         }
 
         return responses;
@@ -66,87 +72,29 @@ public class FeedService {
      * Retrieves a single post's details.
      * @param postId the post to retrieve
      * @param requesterId the user who is viewing the post
-     * @return {@link PostResponse} of the target post
+     * @return {@link PostDetail} of the target post
      */
-    public PostResponse getPostDetails(UUID postId, UUID requesterId) {
-        Post post = postRepository.findById(postId);
-        return toPostResponse(post, requesterId);
+    public PostDetail getPostDetails(UUID postId, UUID requesterId) {
+        PostEntity postEntity = postRepository.findById(postId);
+        return postService.getPostDetail(postEntity, requesterId);
     }
 
     /**
      * Retrieves replies to a specific post.
      * @param postId the parent post id
      * @param requesterId the user who is viewing the replies
-     * @return List of {@link PostResponse} representing replies
+     * @return List of {@link PostDetail} representing replies
      */
-    public List<PostResponse> getPostReplies(UUID postId, UUID requesterId) {
-        List<Post> replies = postRepository.findReplies(postId);
+    public List<PostDetail> getPostReplies(UUID postId, UUID requesterId) {
+        List<PostEntity> replies = postRepository.findReplies(postId);
 
-        List<PostResponse> responses = new ArrayList<>();
+        List<PostDetail> responses = new ArrayList<>();
 
-        for(Post post : replies){
-            responses.add(toPostResponse(post, requesterId));
+        for(PostEntity postEntity : replies){
+            responses.add(postService.getPostDetail(postEntity, requesterId));
         }
 
         return responses;
     }
-
-    /**
-     * Maps a {@link Post} entity to a {@link PostResponse} DTO,
-     * resolving all the data needed (author details, media URLs, like/repost counts, isLikedByMe/isRepostedByMe).
-     * @param post the post to map
-     * @param requesterId the ID of the user requesting the response (for calculating isLikedByMe/isRepostedByMe)
-     * @return a {@link PostResponse} for the given post
-     */
-    public PostResponse toPostResponse(Post post, UUID requesterId){
-        User author = userRepository.findByUsername(post.getAuthorUsername());
-        List<Post> reposts = postRepository.findReposts(post.getId());
-        List<Media> medias = mediaRepository.findByPostId(post.getId());
-        int likeCount = likeRepository.countLikesForPost(post.getId());
-        boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
-        int repostCount = reposts.size();
-        User requester = requesterId != null ? userRepository.findById(requesterId) : null;
-        String requesterUsername = requester != null ? requester.getUsername() : null;
-        boolean isRepostedByMe = requesterUsername != null && reposts.stream()
-                .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername));
-        int replyCount = postRepository.findReplies(post.getId()).size();
-
-        boolean isRepost = post.getRepostPostId() != null;
-        UUID parentPostId = isRepost ? post.getRepostPostId() : post.getReplyPostId();
-        String repliedUsername = null;
-        String repostedFromUsername = null;
-        String content = post.getDescription();
-        if (parentPostId != null) {
-            Post parentPost = postRepository.findById(parentPostId);
-            if (parentPost != null) {
-                if (isRepost) {
-                    repostedFromUsername = parentPost.getAuthorUsername();
-                    if (content == null || content.isBlank()) {
-                        content = parentPost.getDescription();
-                    }
-                    if (medias.isEmpty()) {
-                        medias = mediaRepository.findByPostId(parentPost.getId());
-                    }
-                } else {
-                    repliedUsername = parentPost.getAuthorUsername();
-                }
-            }
-        }
-
-        return new PostResponse(
-                post,
-                content,
-                author,
-                medias,
-                likeCount,
-                repostCount,
-                replyCount,
-                parentPostId,
-                repliedUsername,
-                isRepost,
-                repostedFromUsername,
-                isLikedByMe,
-                isRepostedByMe
-        );
-    }
 }
+

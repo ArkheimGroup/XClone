@@ -1,9 +1,8 @@
 package arkheim.client.infrastructure;
 
-import arkheim.client.domain.ports.dtos.HashtagDto;
-import arkheim.client.domain.ports.dtos.MediaDto;
-import arkheim.client.domain.ports.dtos.PostDto;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.GenericApiResponse;
+import arkheim.client.infrastructure.exception.ApiException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -13,64 +12,117 @@ import java.lang.reflect.Type;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import arkheim.client.infrastructure.config.ClientConfig;
 
 public abstract class ApiClient {
     protected final Gson gson = new GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
-    protected final HttpClient httpClient = HttpClient.newHttpClient();
-    protected final String baseUrl = "http://127.0.0.1:8080"; // FIX ME : later on change this into a variable inside a dot file
+    protected final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(60))
+            .build();
+    protected final String baseUrl = ClientConfig.getBaseUrl();
 
-    // JSON Return type used in HttpFollowAdapter
-    protected static final Type USER_LIST_TYPE = new TypeToken<List<UserDto>>(){}.getType();
-    protected static final Type POST_LIST_TYPE = new TypeToken<List<PostDto>>(){}.getType();
-    protected static final Type HASHTAG_LIST_TYPE = new TypeToken<List<HashtagDto>>(){}.getType();
-    protected static final Type MEDIA_LIST_TYPE = new TypeToken<List<MediaDto>>() {}.getType();
-
-    public static Type getPostListType(){
-        return POST_LIST_TYPE;
-    }
 
     /**
      * @param context use domain layer entity names
      * @return Response converted to class with type {@link T}
      * @param <T> same as responseType
      */
-    protected <T> T send(HttpRequest request, Type responseType, String context){
+    protected <T> T send(HttpRequest request, Class<T> dataType, String context) {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            checkStatusHelper(response.statusCode(), response.body(), context);
-            return gson.fromJson(response.body(), responseType);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(context + "HTTP Request failed" + e);
-        }
+            String body = response.body();
+            int statusCode = response.statusCode();
 
+            Type responseType = TypeToken.getParameterized(GenericApiResponse.class, dataType).getType();
+            GenericApiResponse<T> apiResponse = parseGenericResponse(body, responseType, statusCode);
+
+            validateResponse(statusCode, apiResponse);
+            return apiResponse.getData();
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(context + " HTTP request interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException(context + " HTTP request failed", e);
+        }
     }
 
     /**
      * @param context use domain layer entity names
      */
-    protected void send(HttpRequest request, String context) {
+    protected ApiResponse send(HttpRequest request, String context) {
         try {
-            HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-            checkStatusHelper(response.statusCode(), null, context);
-        } catch (IOException | InterruptedException e) {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
+            int statusCode = response.statusCode();
+
+            ApiResponse apiResponse = parseApiResponse(body, statusCode);
+            validateResponse(statusCode, apiResponse);
+            return apiResponse;
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(context + " HTTP request interrupted", e);
+        } catch (IOException e) {
             throw new RuntimeException(context + " HTTP request failed", e);
         }
     }
 
-    private void checkStatusHelper(int statusCode, String body, String context){
-        if (statusCode < 200 || statusCode >= 300){
-            String errMsg = context + " HTTP Request failed, error code: " + statusCode;
-            if (body != null && !body.isBlank()){
-                errMsg += ".\n Body: " + body;
-            }
+    protected <T> List<T> sendList(HttpRequest request, Class<T> dataType, String context) {
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
+            int statusCode = response.statusCode();
 
-            throw new RuntimeException(errMsg);
+            Type dataListType = TypeToken.getParameterized(List.class, dataType).getType();
+            Type responseType = TypeToken.getParameterized(GenericApiResponse.class, dataListType).getType();
+            GenericApiResponse<List<T>> apiResponse = parseGenericResponse(body, responseType, statusCode);
+
+            validateResponse(statusCode, apiResponse);
+            return apiResponse.getData();
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(context + " HTTP request interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException(context + " HTTP request failed", e);
         }
+    }
+
+    private <T> GenericApiResponse<T> parseGenericResponse(String body, Type responseType, int statusCode) {
+        try {
+            return gson.fromJson(body, responseType);
+        } catch (Exception ex) {
+            throw new ApiException(statusCode, buildFallbackResponse());
+        }
+    }
+
+    private ApiResponse parseApiResponse(String body, int statusCode) {
+        try {
+            return gson.fromJson(body, ApiResponse.class);
+        } catch (Exception ex) {
+            throw new ApiException(statusCode, buildFallbackResponse());
+        }
+    }
+
+    private void validateResponse(int statusCode, ApiResponse response) {
+        if (response == null || statusCode < 200 || statusCode >= 300 || !response.isSuccess()) {
+            throw new ApiException(statusCode, response != null ? response : buildFallbackResponse());
+        }
+    }
+
+    private ApiResponse buildFallbackResponse() {
+        ApiResponse fallback = new ApiResponse();
+        fallback.setSuccess(false);
+        fallback.setMessage("Network error or invalid server response format.");
+        return fallback;
     }
 }
 

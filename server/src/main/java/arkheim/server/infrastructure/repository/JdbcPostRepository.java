@@ -1,6 +1,6 @@
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.Post;
+import arkheim.server.domain.entities.PostEntity;
 import arkheim.server.domain.repository.PostRepository;
 
 import static arkheim.server.infrastructure.utils.UuidBinaryConvertor.bytesToUuid;
@@ -25,7 +25,7 @@ public class JdbcPostRepository implements PostRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private Post mapRow(ResultSet rs) throws SQLException {
+    private PostEntity mapRow(ResultSet rs) throws SQLException {
         UUID id = bytesToUuid(rs.getBytes("id"));
         String authorUsername = rs.getString("author_username");
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
@@ -34,45 +34,45 @@ public class JdbcPostRepository implements PostRepository {
         UUID replyPostId = replyPostBytes != null ? bytesToUuid(replyPostBytes) : null;
         byte[] repostPostBytes = rs.getBytes("repost_post_id");
         UUID repostPostId = repostPostBytes != null ? bytesToUuid(repostPostBytes) : null;
-        return new Post(id, authorUsername, createdAt, description, replyPostId, repostPostId);
+        return new PostEntity(id, authorUsername, createdAt, description, replyPostId, repostPostId);
     }
 
-    private final RowMapper<Post> postRowMapper = (rs, rowNum) -> mapRow(rs);
+    private final RowMapper<PostEntity> postRowMapper = (rs, rowNum) -> mapRow(rs);
 
     @Override
-    public Post findById(UUID id) {
+    public PostEntity findById(UUID id) {
         String sql = "SELECT * FROM posts WHERE id=?";
-        List<Post> result = jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(id));
+        List<PostEntity> result = jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(id));
         return result.stream().findFirst().orElse(null);
     }
 
     @Override
-    public List<Post> findByAuthorUsername(String username) {
-        String sql = "SELECT * FROM posts WHERE author_username=?";
+    public List<PostEntity> findByAuthorUsername(String username) {
+        String sql = "SELECT * FROM posts WHERE LOWER(author_username)=LOWER(?) ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, username);
     }
 
     @Override
-    public List<Post> findByWord(String word) {
-        String sql = "SELECT * FROM posts WHERE description LIKE ?";
+    public List<PostEntity> findByWord(String word) {
+        String sql = "SELECT * FROM posts WHERE description LIKE ? ORDER BY created_at DESC";
         String pattern = "%" + word + "%";
         return jdbcTemplate.query(sql, postRowMapper, pattern);
     }
 
     @Override
-    public List<Post> findReplies(UUID postId) {
-        String sql = "SELECT * FROM posts WHERE reply_post_id=?";
+    public List<PostEntity> findReplies(UUID postId) {
+        String sql = "SELECT * FROM posts WHERE reply_post_id=? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 
     @Override
-    public List<Post> findReposts(UUID postId) {
-        String sql = "SELECT * FROM posts WHERE repost_post_id=?";
+    public List<PostEntity> findReposts(UUID postId) {
+        String sql = "SELECT * FROM posts WHERE repost_post_id=? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 
     @Override
-    public List<Post> findFollowingsPosts(UUID userId) {
+    public List<PostEntity> findFollowingsPosts(UUID userId) {
         String sql = "SELECT DISTINCT p.* FROM posts p " +
                 "JOIN users u ON p.author_username = u.username " +
                 "LEFT JOIN follows f ON u.id = f.following_id " +
@@ -83,22 +83,22 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public List<Post> getAllPosts() {
+    public List<PostEntity> getAllPosts() {
         String sql = "SELECT * FROM posts ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper);
     }
 
     @Override
-    public void save(Post post) {
+    public void save(PostEntity postEntity) {
         String sql = "INSERT INTO posts (id, author_username, created_at, description, reply_post_id, repost_post_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
-                uuidToBytes(post.getId()),
-                post.getAuthorUsername(),
-                post.getCreatedAt(),
-                post.getDescription(),
-                post.getReplyPostId() != null ? uuidToBytes(post.getReplyPostId()) : null,
-                post.getRepostPostId() != null ? uuidToBytes(post.getRepostPostId()) : null
+                uuidToBytes(postEntity.getId()),
+                postEntity.getAuthorUsername(),
+                postEntity.getCreatedAt(),
+                postEntity.getDescription(),
+                postEntity.getReplyPostId() != null ? uuidToBytes(postEntity.getReplyPostId()) : null,
+                postEntity.getRepostPostId() != null ? uuidToBytes(postEntity.getRepostPostId()) : null
         );
     }
 
@@ -113,6 +113,7 @@ public class JdbcPostRepository implements PostRepository {
                 bytes, bytes
         );
         for (byte[] childId : childIds) {
+            jdbcTemplate.update("UPDATE users SET pinned_post_id=NULL WHERE pinned_post_id=?", (Object) childId);
             jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) childId);
             jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) childId);
             jdbcTemplate.update("DELETE FROM post_media WHERE post_id=?", (Object) childId);
@@ -121,6 +122,7 @@ public class JdbcPostRepository implements PostRepository {
         jdbcTemplate.update("DELETE FROM posts WHERE repost_post_id=?", (Object) bytes);
 
         // Clean up own dependencies
+        jdbcTemplate.update("UPDATE users SET pinned_post_id=NULL WHERE pinned_post_id=?", (Object) bytes);
         jdbcTemplate.update("DELETE FROM likes WHERE post_id=?", (Object) bytes);
         jdbcTemplate.update("DELETE FROM post_hashtags WHERE post_id=?", (Object) bytes);
         jdbcTemplate.update("DELETE FROM post_media WHERE post_id=?", (Object) bytes);
@@ -132,7 +134,7 @@ public class JdbcPostRepository implements PostRepository {
     /**
      * Used in JdbcHashtagRepository
      * */
-    public RowMapper<Post> getPostRowMapper() {
+    public RowMapper<PostEntity> getPostRowMapper() {
         return postRowMapper;
     }
 }

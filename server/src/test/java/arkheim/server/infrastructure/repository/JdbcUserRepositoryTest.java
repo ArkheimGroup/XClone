@@ -2,7 +2,7 @@
 
 package arkheim.server.infrastructure.repository;
 
-import arkheim.server.domain.entities.User;
+import arkheim.server.domain.entities.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class JdbcUserRepositoryTest {
     private JdbcTemplate jdbcTemplate;
 
     private JdbcUserRepository userRepository;
-    private User testUser;
+    private UserEntity testUser;
     private UUID testId;
 
     @BeforeEach
@@ -32,7 +32,7 @@ public class JdbcUserRepositoryTest {
         testId = UUID.randomUUID();
 
         // Initialize a clean domain entity for testing
-        testUser = new User(
+        testUser = new UserEntity(
                 testId,
                 "arkheim_dev",
                 "hashed_password_123",
@@ -52,7 +52,7 @@ public class JdbcUserRepositoryTest {
     void saveAndFindById_ShouldPersistAndReturnUser() {
         // Arrange & Act
         userRepository.save(testUser);
-        User foundUser = userRepository.findById(testId);
+        UserEntity foundUser = userRepository.findById(testId);
 
         // Assert
         assertNotNull(foundUser);
@@ -63,7 +63,7 @@ public class JdbcUserRepositoryTest {
     @Test
     void findById_ShouldReturnNull_WhenUserDoesNotExist() {
         // Act
-        User foundUser = userRepository.findById(UUID.randomUUID());
+        UserEntity foundUser = userRepository.findById(UUID.randomUUID());
 
         // Assert
         assertNull(foundUser); // Ensures our .stream().findFirst().orElse(null) bugfix works!
@@ -75,7 +75,7 @@ public class JdbcUserRepositoryTest {
         userRepository.save(testUser);
 
         // Act
-        User foundUser = userRepository.findByUsername("arkheim_dev");
+        UserEntity foundUser = userRepository.findByUsername("arkheim_dev");
 
         // Assert
         assertNotNull(foundUser);
@@ -88,7 +88,7 @@ public class JdbcUserRepositoryTest {
         userRepository.save(testUser);
 
         // Create an updated user object modifying profile fields
-        User updatedUser = new User(
+        UserEntity updatedUser = new UserEntity(
                 testId,
                 testUser.getUsername(), // Keeping same
                 testUser.getPasswordHash(),
@@ -105,7 +105,7 @@ public class JdbcUserRepositoryTest {
 
         // Act
         userRepository.updateProfile(updatedUser);
-        User result = userRepository.findById(testId);
+        UserEntity result = userRepository.findById(testId);
 
         // Assert
         assertEquals("New Name", result.getName());
@@ -121,7 +121,7 @@ public class JdbcUserRepositoryTest {
 
         // Act
         userRepository.incrementFollowerCount(testId);
-        User result = userRepository.findById(testId);
+        UserEntity result = userRepository.findById(testId);
 
         // Assert
         assertEquals(1, result.getFollowerCount());
@@ -135,7 +135,7 @@ public class JdbcUserRepositoryTest {
 
         // Act
         userRepository.delete(testId);
-        User result = userRepository.findById(testId);
+        UserEntity result = userRepository.findById(testId);
 
         // Assert
         assertNull(result);
