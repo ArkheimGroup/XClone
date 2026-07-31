@@ -4,7 +4,7 @@
 </p>
 
 A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in java.  
-[![Conventional Branch](https://img.shields.io/badge/Conventional%20Branch-Spec-6192c3)](https://conventionalbranch.org) [![Conventional Commit](https://img.shields.io/badge/Conventional%20Commits-1.0.0-green)](https://www.conventionalcommits.org/en/v1.0.0/)
+[![Conventional Branch](https://img.shields.io/badge/Conventional%20Branch-Spec-6192c3)](https://conventionalbranch.org) [![Conventional Commit](https://img.shields.io/badge/Conventional%20Commits-1.0.0-green)](https://www.conventionalcommits.org/en/v1.0.0/) ![License](https://img.shields.io/badge/License-GNU_GPLv3-0052cc?logo=license)
 
 ---
 ## Table of contents
@@ -49,6 +49,7 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
 | **Database**               | ![MySQL](https://img.shields.io/badge/MySQL-black?style=for-the-badge&logo=mysql&logoColor=white)                                                           |     
 | **Networking**             | ![RESTful API](https://img.shields.io/badge/RESTful_API-black?style=for-the-badge) ![Socket](https://img.shields.io/badge/Socket-black?style=for-the-badge) |  
 | **Scripting Language**     | ![Kotlin Script](https://img.shields.io/badge/Kotlin_Script-black?style=for-the-badge&logo=Kotlin&logoColor=white)                                          |
+| **Build tool** | ![Maven](https://img.shields.io/badge/MAVEN-000000?style=for-the-badge&logo=apachemaven&logoColor=blue)                                                     |
 
 ### Client
 | Field             | Tehnology                                                                                         |     
@@ -120,7 +121,7 @@ mvn clean package
 ```
 3. run the app:
 ```bash
-java -jar target/*.jar
+java -jar target/clinet*.jar
 ```
 or you can download the jar file from [releases](https://github.com/ArkheimGroup/XClone/releases) tab.
 > **IMPORTANT**: You can configure the client properties by editing `config.properties` inside client's resource folder (if you changed server's domain name or configured ports this step is crucial.)  
