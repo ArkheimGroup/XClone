@@ -1,7 +1,8 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.User.response.UserDto;
 import arkheim.client.domain.ports.AuthPort;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -63,7 +64,7 @@ public class AuthViewModel {
             return;
         }
 
-        if (!isEmailValid(input)) {
+        if (isEmailInvalid(input)) {
             errorMessage.set(input + " is not a valid email format");
             emailIsValid.set(false);
             return;
@@ -73,7 +74,7 @@ public class AuthViewModel {
             UserDto user = authPort.login(input, password.get());
             currentUser.set(user);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -87,7 +88,7 @@ public class AuthViewModel {
         passwordRepetitionCorrect.set(true);
         errorMessage.set("");
 
-        if (!isEmailValid(registerEmailProperty().get())) {
+        if (isEmailInvalid(registerEmailProperty().get())) {
             errorMessage.set(registerEmailProperty().get() + " is not a valid email");
             emailIsValid.set(false);
             return;
@@ -113,17 +114,17 @@ public class AuthViewModel {
             );
             currentUser.set(user);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
     /**
-     * Updates name and pfpUrl of current logged in user state.
+     * Updates name and pfpUrl of current logged-in user state.
      */
     public void updateCurrentUserDetails(String newName, String newPfpUrl) {
         UserDto current = currentUser.get();
         if (current != null) {
-            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl));
+            currentUser.set(new UserDto(current.id(), current.username(), current.email(), newName, newPfpUrl, current.bannerUrl(), current.isVerified()));
         }
     }
 
@@ -158,7 +159,7 @@ public class AuthViewModel {
     // --- validation ---
     public BooleanProperty emailIsValid() { return emailIsValid; }
     public BooleanProperty passwordRepetitionCorrect() { return passwordRepetitionCorrect; }
-    private boolean isEmailValid(String email) {
-        return email != null && EMAIL_PATTERN.matcher(email).matches();
+    private boolean isEmailInvalid(String email) {
+        return email == null || !EMAIL_PATTERN.matcher(email).matches();
     }
 }

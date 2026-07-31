@@ -1,7 +1,8 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.User.response.UserDto;
 import arkheim.client.domain.ports.FollowPort;
-import arkheim.client.domain.ports.dtos.UserDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 import javafx.collections.*;
 
@@ -59,7 +60,7 @@ public class FollowViewModel {
             lastFollowedUserId.set(null);
             lastFollowedUserId.set(followingId);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -80,7 +81,7 @@ public class FollowViewModel {
             lastFollowedUserId.set(null);
             lastFollowedUserId.set(followingId);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -93,7 +94,7 @@ public class FollowViewModel {
     public void checkIsFollowing(UUID followerId, UUID followingId) {
         errorMessage.set("");
         try {
-            boolean result = followPort.isFollowing(followerId, followingId);
+            boolean result = followPort.isFollowing(followerId, followingId).isFollowing();
             if (result && followingId != null) {
                 followedUserIds.add(followingId);
             } else if (!result && followingId != null) {
@@ -101,7 +102,7 @@ public class FollowViewModel {
             }
             isFollowing.set(result);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -116,7 +117,7 @@ public class FollowViewModel {
             List<UserDto> loaded = followPort.getFollowers(userId);
             followers.setAll(loaded);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -140,7 +141,7 @@ public class FollowViewModel {
             }
             followedUserIdsLoaded = true;
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -156,7 +157,7 @@ public class FollowViewModel {
         }
         if (!followedUserIdsLoaded) {
             try {
-                boolean follows = followPort.isFollowing(followerId, targetUserId);
+                boolean follows = followPort.isFollowing(followerId, targetUserId).isFollowing();
                 if (follows) {
                     followedUserIds.add(targetUserId);
                 }

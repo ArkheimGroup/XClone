@@ -1,8 +1,9 @@
 package arkheim.client.presentation.viewmodels;
 
 
+import arkheim.client.domain.dtos.Media.response.MediaDto;
 import arkheim.client.domain.ports.MediaPort;
-import arkheim.client.domain.ports.dtos.MediaDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 import javafx.collections.*;
 
@@ -43,7 +44,7 @@ public class MediaViewModel {
             MediaDto registered = mediaPort.registerMedia(url, width, height, fileSize, uploadedBy);
             lastRegisteredMedia.set(registered);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -59,7 +60,7 @@ public class MediaViewModel {
             lastRegisteredMedia.set(registered);
             return registered;
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
             return null;
         }
     }
@@ -80,7 +81,7 @@ public class MediaViewModel {
                 postMedia.add(media);
             }
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -96,7 +97,7 @@ public class MediaViewModel {
             mediaPort.unlinkMediaFromPost(mediaId, postId);
             postMedia.removeIf(m -> m.id().equals(mediaId));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -111,7 +112,7 @@ public class MediaViewModel {
             mediaPort.deleteMedia(mediaId);
             postMedia.removeIf(m -> m.id().equals(mediaId));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -125,7 +126,7 @@ public class MediaViewModel {
             List<MediaDto> loaded = mediaPort.getMediaForPost(postId);
             postMedia.setAll(loaded);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 

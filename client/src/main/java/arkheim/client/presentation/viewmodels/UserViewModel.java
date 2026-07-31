@@ -1,7 +1,8 @@
 package arkheim.client.presentation.viewmodels;
 
+import arkheim.client.domain.dtos.User.response.UserProfileDto;
 import arkheim.client.domain.ports.UserPort;
-import arkheim.client.domain.ports.dtos.UserProfileDto;
+import arkheim.client.presentation.utils.ExceptionMessageRetriever;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -42,7 +43,7 @@ public class UserViewModel {
         try{
             currentProfile.set(userPort.getUserProfileById(userId));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -55,7 +56,7 @@ public class UserViewModel {
         try {
             currentProfile.set(userPort.getUserProfileByUsername(username));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -110,7 +111,7 @@ public class UserViewModel {
             );
             currentProfile.set(updated);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -124,7 +125,7 @@ public class UserViewModel {
             userPort.pinPost(userId, postId);
             replaceCurrentProfilePinnedPostId(postId);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -138,7 +139,7 @@ public class UserViewModel {
             userPort.unpinPost(userId);
             replaceCurrentProfilePinnedPostId(null);
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
@@ -160,10 +161,12 @@ public class UserViewModel {
                 p.biography(),
                 p.dateOfBirth(),
                 p.pfpUrl(),
+                p.bannerUrl(),
                 p.followerCount(),
                 p.followingCount(),
                 p.createdAt(),
-                pinnedPostId
+                pinnedPostId,
+                p.isVerified()
         ));
     }
 
@@ -182,13 +185,15 @@ public class UserViewModel {
                     "",
                     null,
                     null,
+                    null,
                     0,
                     0,
                     null,
-                    null
+                    null,
+                    false
             ));
         } catch (Exception e) {
-            errorMessage.set(e.getMessage());
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
         }
     }
 
