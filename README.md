@@ -8,6 +8,9 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
 
 ---
 ## Table of contents
+- [XClone](#xclone)
+  - [Table of contents](#table-of-contents)
+  - [Other Documentations](#other-documentations)
   - [Screenshots](#screenshots)
   - [Tech Stack](#tech-stack)
     - [Server](#server)
@@ -18,6 +21,7 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
     - [Server](#server-1)
     - [Client](#client-1)
   - [Credits](#credits)
+  - [License](#license)
 
 ## Other Documentations
 - [Technical Documentations Index](./docs/technical_index.md)
@@ -30,8 +34,8 @@ A full-stack clone of [X](https://x.com) (formerly known as Twitter) written in 
 ---
 ## Screenshots
 <p align="center">
-<img src="resources/screenshots/sc1.png" width="49%" /> <img src="resources/screenshots/sc2.png" width="49%" />
-<img src="resources/screenshots/sc3.png" width="49%" /> <img src="resources/screenshots/sc4.png" width="50%" />
+    <img src="resources/screenshots/sc1.png" width="45%" /> <img src="resources/screenshots/sc11.png" width="49%" /> 
+    <img src="resources/screenshots/profile.png" width="46%"> <img src="resources/screenshots/sc4.png" width="49%"> 
 </p>
 
 ---
@@ -83,10 +87,10 @@ cd XClone
 ```
 2. Run a MySQL Server
 3. Configure `application.properties` inside resources folder: `XClone/server/src/main/resources/application.properties` (edit any variable shown with a `${}` to their actual value, e.g. `${DB_HOST}` -> `127.0.0.1`)  
-> IMPORTANT: You can do the configuration using a kotlin script inside root of the project called `configure-db.kts`
-> to do this you can right click on `configure-db.kts` and `Run configure-db.kts` inside IntelliJ or you can run it in terminal using kotlin compiler:
+> **IMPORTANT**: You can do the configuration using a kotlin script inside root of the project called `configure-db.kts`
+> to do this you can right click on `configure-properties.kts` and `Run configure-properties.kts` inside IntelliJ or you can run it in terminal using kotlin compiler:
 > ```bash 
-> kotlinc -script configure-db.kts
+> kotlinc -script configure-properties.kts
 > ```
 
 > Note: You either need to change this file or declare environment variables, to declare environment variables enter every field inside the `application.properties` that is Shown like this: `${}` followed by a `=` and their value **inside your terminal**. e.g. `${DB_HOST}` -> `DB_HOST=127.0.0.1`
@@ -118,8 +122,14 @@ mvn clean package
 ```bash
 java -jar target/*.jar
 ```
-or you can download the jar file from releases tab.
+or you can download the jar file from [releases](https://github.com/ArkheimGroup/XClone/releases) tab.
+> **IMPORTANT**: You can configure the client properties by editing `config.properties` inside client's resource folder (if you changed server's domain name or configured ports this step is crucial.)  
+> if you have downloaded the jar file from [releases](https://github.com/ArkheimGroup/XClone/releases) tab, you need to put the config next to the jar file if you wan't to configure the api's url and socket's port and url.  
+> to do this:  
+> run `kotlinc -script configure-properties.kts client` inside root of the project  
+> after that copy `config.properties` from resource folder of client right next to the jar file and you should be good to go.
 
+**If you had any problems setting up the project open up an issue.**
 
 ---
 ## Credits
