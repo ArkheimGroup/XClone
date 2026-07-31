@@ -14,13 +14,13 @@ FROM eclipse-temurin:25-jdk-jammy as deps
 WORKDIR /build
 
 # Copy the mvnw wrapper with executable permissions.
-COPY --chmod=0755 mvnw mvnw
-COPY .mvn/ .mvn/
+COPY --chmod=0755 server/mvnw mvnw
+COPY server/.mvn/ .mvn/
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.m2 so that subsequent builds don't have to
 # re-download packages.
-RUN --mount=type=bind,source=pom.xml,target=pom.xml \
+RUN --mount=type=bind,source=server/pom.xml,target=pom.xml \
     --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline -DskipTests
 
 ################################################################################
@@ -35,8 +35,8 @@ FROM deps as package
 
 WORKDIR /build
 
-COPY ./src src/
-RUN --mount=type=bind,source=pom.xml,target=pom.xml \
+COPY server/src src/
+RUN --mount=type=bind,source=server/pom.xml,target=pom.xml \
     --mount=type=cache,target=/root/.m2 \
     ./mvnw package -DskipTests && \
     mv target/$(./mvnw help:evaluate -Dexpression=project.artifactId -q -DforceStdout)-$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout).jar target/app.jar
@@ -83,8 +83,12 @@ RUN adduser \
     appuser
 
 # Create uploads directory structure with ownership for appuser
-RUN mkdir -p /app/uploads/media /app/uploads/profile_pictures && \
-    chown -R appuser:appuser /app/uploads
+RUN mkdir -p /app/uploads/media /app/uploads/profile_pictures /app/uploads/banners
+
+# Copy initial uploads (default profile picture, default banner, and media) into image
+COPY --chown=appuser:appuser uploads /app/uploads
+
+RUN chown -R appuser:appuser /app/uploads && chmod -R 777 /app/uploads
 
 USER appuser
 

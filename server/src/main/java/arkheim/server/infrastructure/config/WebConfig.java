@@ -15,9 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**") // this line makes spring look for a file everytime user sends request to /uploads endpoint instead of looking for uploads configurator.
                 .addResourceLocations( // Looks for the requested file inside these paths (relative to where jar file is running from)
                         "file:uploads/",
-                        "file:server/uploads/",
-                        "file:./server/uploads/",
-                        "file:../server/uploads/"
+                        "file:../uploads/"
                 );
     }
 }

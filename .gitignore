@@ -44,3 +44,5 @@ build/
 
 ### uploads ###
 uploads/media/*
+!uploads/profile_pictures/default_pfp.png
+!uploads/banners/default_banner.png
