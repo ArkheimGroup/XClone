@@ -33,4 +33,7 @@ module arkheim.client {
 
     // Infrastructure adapters — HTTP and TCP implementations of domain ports
     exports arkheim.client.infrastructure.adapter;
+
+    // Presentation Theme Mode — consumed by utils package
+    exports arkheim.client.presentation.theme;
 }
