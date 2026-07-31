@@ -42,22 +42,26 @@ public class PostService {
      * @param username username of the user
      * @return posts posted by the user
      */
-    public List<PostResponse> getUserPosts(String username){
-        List<Post> posts;
-        posts = postRepository.findByAuthorUsername(username);
+    public List<PostResponse> getUserPosts(String username) {
+        return getUserPosts(username, null);
+    }
+
+    public List<PostResponse> getUserPosts(String username, UUID requesterId) {
+        User user = userRepository.findByUsername(username);
+        String targetUsername = user != null ? user.getUsername() : username;
+        UUID actualRequesterId = requesterId != null ? requesterId : (user != null ? user.getId() : null);
+
+        List<Post> posts = postRepository.findByAuthorUsername(targetUsername);
 
         List<PostResponse> responses = new ArrayList<>();
-
-        User user = userRepository.findByUsername(username);
-        UUID requesterId = user.getId();
 
         for(Post post : posts){
             User author = userRepository.findByUsername(post.getAuthorUsername());
             List<Post> reposts = postRepository.findReposts(post.getId());
             List<Media> medias = mediaRepository.findByPostId(post.getId());
             int likeCount = likeRepository.countLikesForPost(post.getId());
-            boolean isLikedByMe = likeRepository.isLikedByUser(requesterId, post.getId());
-            User requester = requesterId != null ? userRepository.findById(requesterId) : null;
+            boolean isLikedByMe = actualRequesterId != null && likeRepository.isLikedByUser(actualRequesterId, post.getId());
+            User requester = actualRequesterId != null ? userRepository.findById(actualRequesterId) : null;
             String requesterUsername = requester != null ? requester.getUsername() : null;
             boolean isRepostedByMe = requesterUsername != null && reposts.stream()
                     .anyMatch(r -> Objects.equals(r.getAuthorUsername(), requesterUsername));

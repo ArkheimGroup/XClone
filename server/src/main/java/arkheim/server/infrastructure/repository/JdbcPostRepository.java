@@ -48,26 +48,26 @@ public class JdbcPostRepository implements PostRepository {
 
     @Override
     public List<Post> findByAuthorUsername(String username) {
-        String sql = "SELECT * FROM posts WHERE author_username=?";
+        String sql = "SELECT * FROM posts WHERE LOWER(author_username)=LOWER(?) ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, username);
     }
 
     @Override
     public List<Post> findByWord(String word) {
-        String sql = "SELECT * FROM posts WHERE description LIKE ?";
+        String sql = "SELECT * FROM posts WHERE description LIKE ? ORDER BY created_at DESC";
         String pattern = "%" + word + "%";
         return jdbcTemplate.query(sql, postRowMapper, pattern);
     }
 
     @Override
     public List<Post> findReplies(UUID postId) {
-        String sql = "SELECT * FROM posts WHERE reply_post_id=?";
+        String sql = "SELECT * FROM posts WHERE reply_post_id=? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 
     @Override
     public List<Post> findReposts(UUID postId) {
-        String sql = "SELECT * FROM posts WHERE repost_post_id=?";
+        String sql = "SELECT * FROM posts WHERE repost_post_id=? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, postRowMapper, (Object) uuidToBytes(postId));
     }
 

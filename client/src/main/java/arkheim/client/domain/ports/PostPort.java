@@ -51,7 +51,9 @@ public interface PostPort {
     List<PostDto> findPostsByWord(String word, UUID requesterId);
 
     /**
-     * HTTP: GET /api/posts/user/{username}
+     * HTTP: GET /api/posts/user/{username}?requesterId={requesterId}
      */
+    List<PostDto> getUserPosts(String username, UUID requesterId);
+
     List<PostDto> getUserPosts(String username);
 }

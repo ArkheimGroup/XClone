@@ -134,8 +134,8 @@ public class PostController {
      * Endpoint: /api/posts/user/{username}
      */
     @GetMapping("/user/{username}")
-    public ResponseEntity<List<PostResponse>> getUserPosts(@PathVariable String username){
-        List<PostResponse> posts = postService.getUserPosts(username);
-        return  ResponseEntity.ok(posts);
+    public ResponseEntity<List<PostResponse>> getUserPosts(@PathVariable String username, @RequestParam(required = false) UUID requesterId){
+        List<PostResponse> posts = postService.getUserPosts(username, requesterId);
+        return ResponseEntity.ok(posts);
     }
 }

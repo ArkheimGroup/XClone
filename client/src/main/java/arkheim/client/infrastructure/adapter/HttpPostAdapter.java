@@ -10,10 +10,12 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -114,8 +116,22 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
 
     @Override
     public List<PostDto> getUserPosts(String username) {
+        return getUserPosts(username, null);
+    }
+
+    @Override
+    public List<PostDto> getUserPosts(String username, UUID requesterId) {
+        if (username == null || username.isBlank()) {
+            return Collections.emptyList();
+        }
+        String encodedUsername = URLEncoder.encode(username.trim(), StandardCharsets.UTF_8);
+        String uriStr = baseUrl + "/api/posts/user/" + encodedUsername;
+        if (requesterId != null) {
+            uriStr += "?requesterId=" + requesterId;
+        }
+
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/api/posts/user/" + username))
+                .uri(URI.create(uriStr))
                 .GET()
                 .build();
 

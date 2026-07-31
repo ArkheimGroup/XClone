@@ -373,9 +373,13 @@ public class PostViewModel {
      * replaces the contents of {@link #userPostsProperty()}.
      */
     public void loadUserPosts(String username) {
+        loadUserPosts(username, null);
+    }
+
+    public void loadUserPosts(String username, UUID requesterId) {
         errorMessage.set("");
         try {
-            List<PostDto> posts = postPort.getUserPosts(username);
+            List<PostDto> posts = postPort.getUserPosts(username, requesterId);
             userPosts.setAll(posts);
         } catch (Exception e) {
             errorMessage.set(e.getMessage());

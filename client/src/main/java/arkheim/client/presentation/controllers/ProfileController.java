@@ -320,7 +320,7 @@ public class ProfileController extends BaseController {
         followingCountLabel.setText(String.valueOf(profile.followingCount()));
         followersCountLabel.setText(String.valueOf(profile.followerCount()));
 
-        postViewModel.loadUserPosts(profile.username());
+        postViewModel.loadUserPosts(profile.username(), currentUser != null ? currentUser.id() : null);
     }
 
     @FXML
