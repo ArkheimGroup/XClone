@@ -1,7 +1,8 @@
 package arkheim.server.application.services;
 
-import arkheim.server.application.dtos.responses.UserResponse;
-import arkheim.server.domain.entities.User;
+import arkheim.server.application.features.User.mapper.UserMapper;
+import arkheim.server.application.models.user.MinimalUser;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.FollowRepository;
 import arkheim.server.domain.repository.UserRepository;
 
@@ -12,10 +13,12 @@ import java.util.UUID;
 public class FollowUserService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
+    private final UserMapper userMapper;
 
     public FollowUserService(UserRepository userRepository, FollowRepository followRepository) {
         this.userRepository = userRepository;
         this.followRepository = followRepository;
+        this.userMapper = new UserMapper();
     }
 
     /**
@@ -53,14 +56,14 @@ public class FollowUserService {
     /**
      * Retrieves the list of users following the specified user.
      * @param userId target user id
-     * @return List of {@link UserResponse} of the followers
+     * @return List of {@link MinimalUser} of the followers
      */
-    public List<UserResponse> getFollowers(UUID userId) {
-        List<User> followers = followRepository.findFollowers(userId);
+    public List<MinimalUser> getFollowers(UUID userId) {
+        List<UserEntity> followers = followRepository.findFollowers(userId);
 
-        List<UserResponse> responses = new ArrayList<>();
-        for(User follower : followers){
-            responses.add(new UserResponse(follower));
+        List<MinimalUser> responses = new ArrayList<>();
+        for(UserEntity follower : followers){
+            responses.add(userMapper.mapToMinimalUser(follower));
         }
 
         return responses;
@@ -69,14 +72,14 @@ public class FollowUserService {
     /**
      * Retrieves the list of users the specified user is following.
      * @param userId target user id
-     * @return List of {@link UserResponse} of users being followed
+     * @return List of {@link MinimalUser} of users being followed
      */
-    public List<UserResponse> getFollowing(UUID userId) {
-        List<User> followings = followRepository.findFollowing(userId);
+    public List<MinimalUser> getFollowing(UUID userId) {
+        List<UserEntity> followings = followRepository.findFollowing(userId);
 
-        List<UserResponse> responses = new ArrayList<>();
-        for(User following : followings){
-            responses.add(new UserResponse(following));
+        List<MinimalUser> responses = new ArrayList<>();
+        for(UserEntity following : followings){
+            responses.add(userMapper.mapToMinimalUser(following));
         }
 
         return responses;

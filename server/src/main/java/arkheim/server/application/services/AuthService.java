@@ -1,13 +1,14 @@
 package arkheim.server.application.services;
 
-import arkheim.server.application.dtos.UserLoginRequest;
-import arkheim.server.application.dtos.UserRegisterRequest;
-import arkheim.server.application.dtos.responses.UserResponse;
+import arkheim.server.application.features.Authentication.commands.LoginCommand;
+import arkheim.server.application.features.Authentication.commands.RegisterCommand;
+import arkheim.server.application.features.User.mapper.UserMapper;
+import arkheim.server.application.models.user.MinimalUser;
 import arkheim.server.application.ports.PasswordEncoderPort;
-import arkheim.server.domain.entities.User;
-import arkheim.server.application.exception.BadArgumentException;
-import arkheim.server.application.exception.ConflictException;
-import arkheim.server.application.exception.ErrorCode;
+import arkheim.server.domain.entities.UserEntity;
+import arkheim.server.domain.exception.BadArgumentException;
+import arkheim.server.domain.exception.ConflictException;
+import arkheim.server.domain.exception.ResultCode;
 import arkheim.server.domain.repository.UserRepository;
 
 
@@ -15,64 +16,64 @@ import arkheim.server.domain.repository.UserRepository;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final UserMapper userMapper;
 
     public AuthService(UserRepository userRepository, PasswordEncoderPort passwordEncoderPort) {
         this.userRepository = userRepository;
         this.passwordEncoderPort = passwordEncoderPort;
+        this.userMapper = new UserMapper();
     }
 
     /**
-     * @param loginRequest request data containing email and raw password
-     * @return {@link UserResponse} of the logged-in user
+     * @param loginCommand request data containing email and raw password
+     * @return {@link MinimalUser} of the logged-in user
      */
-    public UserResponse login(UserLoginRequest loginRequest) {
-        // Fetch user using userRepository
-        User user = userRepository.findByEmail(loginRequest.email());
-        if (user == null) {
-            throw new BadArgumentException(ErrorCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
+    public MinimalUser login(LoginCommand loginCommand) {
+        // Fetch userEntity using userRepository
+        UserEntity userEntity = userRepository.findByEmail(loginCommand.email());
+        if (userEntity == null) {
+            throw new BadArgumentException(ResultCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
         }
 
         // Verify the password matches
-        boolean matches = passwordEncoderPort.matches(loginRequest.rawPassword(), user.getPasswordHash());
+        boolean matches = passwordEncoderPort.matches(loginCommand.rawPassword(), userEntity.getPasswordHash());
         if (!matches) {
-            throw new BadArgumentException(ErrorCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
+            throw new BadArgumentException(ResultCode.INVALID_EMAIL_OR_PASSWORD, "Invalid email or password");
         }
 
-        // Confirm the login by returning a UserResponse
-        return new UserResponse(user);
+        return userMapper.mapToMinimalUser(userEntity);
     }
 
     /**
-     * @param registerRequest request data containing username, name, email, raw password and dat of birth
-     * @return {@link UserResponse} of the created/registered user
+     * @param registerCommand request data containing username, name, email, raw password and dat of birth
+     * @return {@link MinimalUser} of the created/registered user
      */
-    public UserResponse register(UserRegisterRequest registerRequest) {
+    public MinimalUser register(RegisterCommand registerCommand) {
         // Check if username already exists
-        if (userRepository.findByUsername(registerRequest.username()) != null) {
-            throw new ConflictException(ErrorCode.USERNAME_ALREADY_EXISTS, "Username already exists");
+        if (userRepository.findByUsername(registerCommand.username()) != null) {
+            throw new ConflictException(ResultCode.USERNAME_ALREADY_EXISTS, "Username already exists");
         }
 
         // Check if email already exists
-        if (userRepository.findByEmail(registerRequest.email()) != null) {
-            throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already exists");
+        if (userRepository.findByEmail(registerCommand.email()) != null) {
+            throw new ConflictException(ResultCode.EMAIL_ALREADY_EXISTS, "Email already exists");
         }
 
         // Hash the password
-        String hashedPassword = passwordEncoderPort.encode(registerRequest.rawPassword());
+        String hashedPassword = passwordEncoderPort.encode(registerCommand.rawPassword());
 
-        // Create new User entity
-        User newUser = new User(
-                registerRequest.username(),
+        // Create new UserEntity entity
+        UserEntity newUserEntity = new UserEntity(
+                registerCommand.username(),
                 hashedPassword,
-                registerRequest.name(),
-                registerRequest.email(),
-                registerRequest.dateOfBirth()
+                registerCommand.name(),
+                registerCommand.email(),
+                registerCommand.dateOfBirth()
         );
 
         // Save the user in the database
-        userRepository.save(newUser);
+        userRepository.save(newUserEntity);
 
-        // Return a UserResponse
-        return new UserResponse(newUser);
+        return userMapper.mapToMinimalUser(newUserEntity);
     }
 }
