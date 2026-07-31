@@ -57,8 +57,9 @@ public class AppConfig {
     @Bean
     public FeedService timelineService(
             PostRepository postRepository,
-            PostService postService
+            PostService postService,
+            UserRepository userRepository
     ) {
-        return new FeedService(postRepository, postService);
+        return new FeedService(postRepository, postService, userRepository);
     }
 }

@@ -47,6 +47,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class HomeController extends BaseController {
@@ -153,6 +154,7 @@ public class HomeController extends BaseController {
             if (followViewModel != null) {
                 new Thread(() -> followViewModel.loadFollowing(currentUser.id())).start();
             }
+            userViewModel.loadProfileById(currentUser.id());
             updateIcons();
         }
 
@@ -166,6 +168,7 @@ public class HomeController extends BaseController {
                 if (userHandleName != null) userHandleName.setText("@" + newVal.username());
                 if (userAvatarCircle != null) MediaUiUtils.loadAvatar(userAvatarCircle, newVal.pfpUrl(), themeMode);
                 if (composerAvatarCircle != null) MediaUiUtils.loadAvatar(composerAvatarCircle, newVal.pfpUrl(), themeMode);
+                if (userViewModel != null) userViewModel.loadProfileById(newVal.id());
                 updateIcons();
             }
         };
@@ -176,6 +179,7 @@ public class HomeController extends BaseController {
 
     private ChangeListener<UserDto> currentUserListener;
     private ChangeListener<FeedUiState> feedStateListener;
+    private ChangeListener<UserProfileDto> userProfileListener;
 
     private void initializeStateBindings() {
         if (bindingsInitialized) return;
@@ -184,6 +188,12 @@ public class HomeController extends BaseController {
         feedStateListener = (obs, oldState, newState) -> renderState(newState);
         feedViewModel.uiStateProperty().addListener(feedStateListener);
 
+        userProfileListener = (obs, oldVal, newVal) -> {
+            if (feedViewModel != null) {
+                renderState(feedViewModel.getState());
+            }
+        };
+        userViewModel.currentProfileProperty().addListener(userProfileListener);
         // Composer Input binding: Local state update only (no UI re-render on keystroke)
         composerTextArea.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && newVal.length() > MAX_POST_LENGTH) {
@@ -211,6 +221,9 @@ public class HomeController extends BaseController {
         }
         if (feedViewModel != null && feedStateListener != null) {
             feedViewModel.uiStateProperty().removeListener(feedStateListener);
+        }
+        if (userViewModel != null && userProfileListener != null) {
+            userViewModel.currentProfileProperty().removeListener(userProfileListener);
         }
         if (feedTimelineContainer != null) {
             feedTimelineContainer.getChildren().clear();
@@ -291,8 +304,14 @@ public class HomeController extends BaseController {
         } else if (state.posts().isEmpty()) {
             renderEmptyState();
         } else {
+            UUID currentUserPinnedId = (currentUser != null && userViewModel != null && userViewModel.currentProfileProperty().get() != null)
+                    ? userViewModel.currentProfileProperty().get().pinnedPostId()
+                    : null;
             for (PostDetailDto post : state.posts()) {
-                feedTimelineContainer.getChildren().add(createPostCard(post));
+                boolean isPinned = (state.activeTab() == FeedUiState.TabType.FOLLOWING)
+                        && currentUserPinnedId != null
+                        && currentUserPinnedId.equals(post.id());
+                feedTimelineContainer.getChildren().add(createPostCard(post, isPinned));
             }
         }
 
@@ -480,6 +499,10 @@ public class HomeController extends BaseController {
      * Integrates hover states, user actions, and deletes posts directly using events.
      */
     private Node createPostCard(PostDetailDto post) {
+        return createPostCard(post, false);
+    }
+
+    private Node createPostCard(PostDetailDto post, boolean isPinned) {
         VBox card = new VBox(10.0);
         card.getStyleClass().add("post-card");
         card.setOnMouseClicked(e -> {
@@ -487,6 +510,19 @@ public class HomeController extends BaseController {
                 navigator.showPostDetailsScreen(post.id());
             }
         });
+
+        // Pinned badge at top of card
+        if (isPinned) {
+            HBox pinnedBadge = new HBox(6.0);
+            pinnedBadge.setAlignment(Pos.CENTER_LEFT);
+            ImageView pinIcon = IconUtils.createIconView("pin", themeMode, 14);
+            Label pinnedLabel = new Label("Pinned");
+            pinnedLabel.getStyleClass().add("post-author-handle");
+            pinnedLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+            pinnedBadge.getChildren().addAll(pinIcon, pinnedLabel);
+            pinnedBadge.setStyle("-fx-padding: 0 0 4px 0;");
+            card.getChildren().add(pinnedBadge);
+        }
 
         HBox header = new HBox(12.0);
 
@@ -569,6 +605,26 @@ public class HomeController extends BaseController {
                 }
             });
             header.getChildren().add(followBtn);
+        }
+
+        // Pin / Unpin button (only for own posts)
+        if (currentUser != null && currentUser.id().equals(post.authorId()) && userViewModel != null) {
+            Button pinBtn = new Button();
+            String iconName = isPinned ? "unpin" : "pin";
+            IconUtils.setButtonIcon(pinBtn, iconName, themeMode, 16);
+            pinBtn.getStyleClass().add("post-action-btn");
+            pinBtn.setStyle("-fx-padding: 4px;");
+            pinBtn.setOnAction(e -> {
+                e.consume();
+                if (isPinned) {
+                    userViewModel.unpinPost(currentUser.id());
+                } else {
+                    userViewModel.pinPost(currentUser.id(), post.id());
+                }
+                userViewModel.loadProfileById(currentUser.id());
+                feedViewModel.processEvent(new FeedUiEvent.LoadFeed(currentUser.id()));
+            });
+            header.getChildren().add(pinBtn);
         }
 
         // Delete post support if current user matches post author

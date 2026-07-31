@@ -49,6 +49,15 @@ public class PostService {
             responses.add(getPostDetail(post, actualRequesterId));
         }
 
+        if (user != null && user.getPinnedPostId() != null) {
+            UUID pinnedId = user.getPinnedPostId();
+            responses.sort((a, b) -> {
+                if (a.id().equals(pinnedId)) return -1;
+                if (b.id().equals(pinnedId)) return 1;
+                return 0;
+            });
+        }
+
         return responses;
     }
 

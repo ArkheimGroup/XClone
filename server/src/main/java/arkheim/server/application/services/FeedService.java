@@ -2,7 +2,9 @@ package arkheim.server.application.services;
 
 import arkheim.server.application.features.Post.dtos.PostDetail;
 import arkheim.server.domain.entities.PostEntity;
+import arkheim.server.domain.entities.UserEntity;
 import arkheim.server.domain.repository.PostRepository;
+import arkheim.server.domain.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +14,12 @@ import java.util.UUID;
 public class FeedService {
     private final PostRepository postRepository;
     private final PostService postService;
+    private final UserRepository userRepository;
 
-    public FeedService(PostRepository postRepository, PostService postService) {
+    public FeedService(PostRepository postRepository, PostService postService, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.postService = postService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -30,6 +34,18 @@ public class FeedService {
 
         for(PostEntity postEntity : feedPostEntities){
             responses.add(postService.getPostDetail(postEntity, userId));
+        }
+
+        if (userId != null && userRepository != null) {
+            UserEntity requester = userRepository.findById(userId);
+            if (requester != null && requester.getPinnedPostId() != null) {
+                UUID pinnedId = requester.getPinnedPostId();
+                responses.sort((a, b) -> {
+                    if (a.id().equals(pinnedId)) return -1;
+                    if (b.id().equals(pinnedId)) return 1;
+                    return 0;
+                });
+            }
         }
 
         return responses;
@@ -81,3 +97,4 @@ public class FeedService {
         return responses;
     }
 }
+
