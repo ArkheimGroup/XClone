@@ -1,0 +1,42 @@
+package arkheim.client.infrastructure.exception;
+
+public enum ResultCode {
+    // --- general ---
+    DATA_RETRIEVED,
+
+    // --- User ---
+    USER_REGISTERED,
+    USER_LOGGED_IN,
+    USER_NOT_FOUND,
+    USER_NOT_AUTHORIZED_TO_DELETE_POST,
+    USERNAME_ALREADY_EXISTS,
+    EMAIL_ALREADY_EXISTS,
+    INVALID_EMAIL_OR_PASSWORD,
+    USER_RETRIEVED,
+    USER_PROFILE_RETRIEVED,
+    USER_DELETED,
+    FOLLOWED_USER,
+    UNFOLLOWED_USER,
+
+    // --- Post ---
+    POST_NOT_FOUND,
+    AUTHOR_NOT_FOUND,
+    PARENT_POST_NOT_FOUND,
+    POST_PINNED,
+    POST_CREATED,
+    POST_DELETED,
+    POST_RETRIEVED,
+    LIKE_TOGGLED,
+
+    // --- Media ---
+    MEDIA_REGISTERED,
+    MEDIA_LINKED_TO_POST,
+    MEDIA_UNLINKED_FROM_POST,
+    MEDIA_DELETED,
+    MEDIA_RETRIEVED,
+    MEDIA_NOT_FOUND,
+    INVALID_MEDIA_FILE,
+
+    // --- Hashtag ---
+    HASHTAG_RETRIEVED
+}
