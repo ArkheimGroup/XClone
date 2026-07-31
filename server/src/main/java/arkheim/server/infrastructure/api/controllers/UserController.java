@@ -99,9 +99,9 @@ public class UserController {
      * @return {@link ResponseEntity} with HTTP 200 status
      */
     @DeleteMapping("/{userId}/pin")
-    public ResponseEntity<Void> unpinPost(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse> unpinPost(@PathVariable UUID userId) {
         userService.unpinPost(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(ResultCode.POST_UNPINNED));
     }
 
     /**
