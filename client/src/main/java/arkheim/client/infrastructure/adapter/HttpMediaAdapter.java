@@ -1,7 +1,8 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.Media.response.MediaDto;
 import arkheim.client.domain.ports.MediaPort;
-import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.infrastructure.ApiClient;
 import com.google.gson.JsonObject;
 
@@ -33,33 +34,33 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
     }
 
     @Override
-    public void linkMediaToPost(UUID mediaId, UUID postId) {
+    public ApiResponse linkMediaToPost(UUID mediaId, UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId + "/link/" + postId))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
-    public void unlinkMediaFromPost(UUID mediaId, UUID postId) {
+    public ApiResponse unlinkMediaFromPost(UUID mediaId, UUID postId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId + "/link/" + postId))
                 .DELETE()
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
-    public void deleteMedia(UUID mediaId) {
+    public ApiResponse deleteMedia(UUID mediaId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/media/" + mediaId))
                 .DELETE()
                 .build();
 
-        send(request, "Media");
+        return send(request, "Media");
     }
 
     @Override
@@ -105,6 +106,6 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
                 .GET()
                 .build();
 
-        return send(request, MEDIA_LIST_TYPE, "Media");
+        return sendList(request, MediaDto.class, "Media");
     }
 }

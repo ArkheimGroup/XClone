@@ -1,18 +1,13 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.ApiResponse;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.ports.PostPort;
-import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.infrastructure.ApiClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +15,7 @@ import java.util.UUID;
 public class HttpPostAdapter extends ApiClient implements PostPort {
 
     @Override
-    public PostDto createPost(UUID authorId, String content, String mediaUrl, UUID parentPostId) {
+    public PostDetailDto createPost(UUID authorId, String content, String mediaUrl, UUID parentPostId) {
         JsonObject body = new JsonObject();
         body.addProperty("authorId", authorId.toString());
         body.addProperty("content", content);
@@ -35,61 +30,61 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(body)))
                 .build();
 
-        return send(request, PostDto.class, "Post");
+        return send(request, PostDetailDto.class, "Post");
     }
 
     @Override
-    public void deletePost(UUID postId, UUID requesterId) {
+    public ApiResponse deletePost(UUID postId, UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId + "?requesterId=" + requesterId))
                 .DELETE()
                 .build();
 
-        send(request, "Post");
+        return send(request, "Post");
     }
 
     @Override
-    public void toggleLike(UUID postId, UUID userId) {
+    public ApiResponse toggleLike(UUID postId, UUID userId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId + "/like?userId=" + userId))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        send(request, "Post");
+        return send(request, "Post");
     }
 
     @Override
-    public List<PostDto> getUserTimeline(UUID requesterId) {
+    public List<PostDetailDto> getUserTimeline(UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/timeline" + "?requesterId=" + requesterId))
                 .GET()
                 .build();
 
-        return send(request, POST_LIST_TYPE, "Post");
+        return sendList(request, PostDetailDto.class, "Post");
     }
 
     @Override
-    public PostDto getPostDetails(UUID postId, UUID requesterId) {
+    public PostDetailDto getPostDetails(UUID postId, UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId + "?requesterId=" + requesterId))
                 .GET()
                 .build();
 
-        return send(request, PostDto.class, "Post");
+        return send(request, PostDetailDto.class, "Post");
     }
 
     @Override
-    public List<PostDto> getPostReplies(UUID postId, UUID requesterId) {
+    public List<PostDetailDto> getPostReplies(UUID postId, UUID requesterId) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/" + postId + "/replies?requesterId=" + requesterId))
                 .GET()
                 .build();
 
-        return send(request, POST_LIST_TYPE, "Post");
+        return sendList(request, PostDetailDto.class, "Post");
     }
 
     @Override
-    public List<PostDto> findPostsByWord(String word, UUID requesterId) {
+    public List<PostDetailDto> findPostsByWord(String word, UUID requesterId) {
         if (word == null || word.isBlank()) {
             return java.util.Collections.emptyList();
         }
@@ -109,16 +104,16 @@ public class HttpPostAdapter extends ApiClient implements PostPort {
                 .GET()
                 .build();
 
-        return send(request, POST_LIST_TYPE, "Post");
+        return sendList(request, PostDetailDto.class, "Post");
     }
 
     @Override
-    public List<PostDto> getUserPosts(String username) {
+    public List<PostDetailDto> getUserPosts(String username) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/posts/user/" + username))
                 .GET()
                 .build();
 
-        return send(request, POST_LIST_TYPE, "Post");
+        return sendList(request, PostDetailDto.class, "Post");
     }
 }

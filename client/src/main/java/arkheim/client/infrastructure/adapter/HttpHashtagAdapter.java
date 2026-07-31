@@ -1,18 +1,12 @@
 package arkheim.client.infrastructure.adapter;
 
+import arkheim.client.domain.dtos.Hashtag.response.HashtagDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import arkheim.client.domain.ports.HashtagPort;
-import arkheim.client.domain.ports.dtos.HashtagDto;
-import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.infrastructure.ApiClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,7 +14,7 @@ public class HttpHashtagAdapter extends ApiClient implements HashtagPort {
 
 
     @Override
-    public List<PostDto> getPostsByHashtag(String hashtagName, UUID requesterId) {
+    public List<PostDetailDto> getPostsByHashtag(String hashtagName, UUID requesterId) {
         if (hashtagName == null || hashtagName.isBlank()) {
             return java.util.Collections.emptyList();
         }
@@ -43,17 +37,7 @@ public class HttpHashtagAdapter extends ApiClient implements HashtagPort {
                 .GET()
                 .build();
 
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Hashtag request failed with HTTP " + response.statusCode() + ": " + response.body());
-            }
-            return gson.fromJson(response.body(), POST_LIST_TYPE);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Hashtag HTTP request failed", e);
-        }
+        return sendList(request, PostDetailDto.class, "Hashtag");
     }
 
     @Override
@@ -63,16 +47,6 @@ public class HttpHashtagAdapter extends ApiClient implements HashtagPort {
                 .GET()
                 .build();
 
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Hashtag request failed with HTTP " + response.statusCode() + ": " + response.body());
-            }
-            return gson.fromJson(response.body(), HASHTAG_LIST_TYPE);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Hashtag HTTP request failed", e);
-        }
+        return sendList(request, HashtagDto.class, "Hashtag");
     }
 }
