@@ -92,14 +92,14 @@
         </HBox>
 
         <!-- Profile Scroll Area -->
-        <ScrollPane fx:id="profileScrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+        <ScrollPane fx:id="profileScrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
             <content>
-                <VBox spacing="0.0">
+                <VBox spacing="0.0" minWidth="0.0">
                     <!-- Profile Header Stack Pane (Banner + Avatar overlay) -->
-                    <StackPane alignment="TOP_LEFT">
+                    <StackPane alignment="TOP_LEFT" minWidth="0.0">
                         <!-- Banner Image Header -->
-                        <VBox prefHeight="160.0" maxHeight="160.0" minHeight="160.0" style="-fx-background-color: #202327;">
-                            <ImageView fx:id="profileBannerImageView" fitHeight="160.0" fitWidth="600.0" preserveRatio="false" pickOnBounds="true"/>
+                        <VBox prefHeight="160.0" maxHeight="160.0" minHeight="160.0" minWidth="0.0" style="-fx-background-color: #202327;">
+                            <ImageView fx:id="profileBannerImageView" fitHeight="160.0" preserveRatio="false" pickOnBounds="true"/>
                         </VBox>
 
                         <!-- Avatar & Action button row overlapping banner -->

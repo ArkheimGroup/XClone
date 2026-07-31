@@ -1,5 +1,6 @@
 package arkheim.client.presentation.controllers;
 
+import arkheim.client.domain.ports.dtos.MediaDto;
 import arkheim.client.domain.ports.dtos.PostDto;
 import arkheim.client.domain.ports.dtos.UserDto;
 import arkheim.client.domain.ports.dtos.UserProfileDto;
@@ -38,7 +39,10 @@ import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -148,6 +152,18 @@ public class ProfileController extends BaseController {
     @FXML
     private void initialize() {
         updateIcons();
+        if (profileBannerImageView != null && profileScrollPane != null) {
+            profileBannerImageView.fitWidthProperty().bind(
+                javafx.beans.binding.Bindings.createDoubleBinding(
+                    () -> {
+                        double viewportWidth = profileScrollPane.getViewportBounds().getWidth();
+                        return viewportWidth > 0 ? viewportWidth : (profileScrollPane.getWidth() > 0 ? profileScrollPane.getWidth() : 598.0);
+                    },
+                    profileScrollPane.viewportBoundsProperty(),
+                    profileScrollPane.widthProperty()
+                )
+            );
+        }
     }
 
     public void setViewModels(
@@ -309,17 +325,17 @@ public class ProfileController extends BaseController {
 
     @FXML
     private void onUploadAvatarClicked() {
-        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Avatar Image");
         fileChooser.getExtensionFilters().addAll(
-                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
-                new javafx.stage.FileChooser.ExtensionFilter("All Files", "*.*")
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
-        javafx.stage.Window window = profileAvatarCircle != null && profileAvatarCircle.getScene() != null
+        Window window = profileAvatarCircle != null && profileAvatarCircle.getScene() != null
                 ? profileAvatarCircle.getScene().getWindow()
                 : null;
-        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+        File selectedFile = fileChooser.showOpenDialog(window);
 
         if (selectedFile != null && currentUser != null && mediaViewModel != null) {
             long maxSizeBytes = 15L * 1024 * 1024; // 15MB
@@ -334,7 +350,7 @@ public class ProfileController extends BaseController {
 
             new Thread(() -> {
                 try {
-                    arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
                     if (uploadedMedia != null) {
                         Platform.runLater(() -> {
                             userViewModel.loadFormFromCurrentProfile();
@@ -378,7 +394,7 @@ public class ProfileController extends BaseController {
         Window window = profileAvatarCircle != null && profileAvatarCircle.getScene() != null
                 ? profileAvatarCircle.getScene().getWindow()
                 : null;
-        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+        File selectedFile = fileChooser.showOpenDialog(window);
 
         if (selectedFile != null && currentUser != null && mediaViewModel != null) {
             long maxSizeBytes = 15L * 1024 * 1024; // 15MB
@@ -393,7 +409,7 @@ public class ProfileController extends BaseController {
 
             new Thread(() -> {
                 try {
-                    arkheim.client.domain.ports.dtos.MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                    MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
                     if (uploadedMedia != null) {
                         Platform.runLater(() -> {
                             userViewModel.loadFormFromCurrentProfile();
@@ -435,7 +451,7 @@ public class ProfileController extends BaseController {
         if (userViewModel == null) return;
         boolean isVerified = userViewModel.editIsVerifiedProperty().get();
         if (isVerified) {
-            if (verifyUserBtn != null) verifyUserBtn.setText("Verified ✓");
+            if (verifyUserBtn != null) verifyUserBtn.setText("Verified");
             if (editVerificationBadgeIcon != null) {
                 editVerificationBadgeIcon.setImage(IconUtils.getIconImage("verification_badge", themeMode));
                 editVerificationBadgeIcon.setVisible(true);
@@ -490,7 +506,7 @@ public class ProfileController extends BaseController {
                     : null;
 
             // Sort pinned post to top
-            java.util.List<PostDto> sorted = new java.util.ArrayList<>(postViewModel.userPostsProperty());
+            List<PostDto> sorted = new ArrayList<>(postViewModel.userPostsProperty());
             if (pinnedId != null) {
                 sorted.sort((a, b) -> {
                     if (a.id().equals(pinnedId)) return -1;

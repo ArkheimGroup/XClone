@@ -12,10 +12,12 @@ import arkheim.client.presentation.viewmodels.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.UUID;
 
 public class JavaFxNavigator implements Navigator {
 
@@ -63,10 +65,10 @@ public class JavaFxNavigator implements Navigator {
         if (scene == null) return;
         scene.getStylesheets().clear();
         if (themeMode == ThemeMode.DARK) {
-            scene.setFill(javafx.scene.paint.Color.web("#000000"));
+            scene.setFill(Color.web("#000000"));
             scene.getStylesheets().add(darkStyle);
         } else {
-            scene.setFill(javafx.scene.paint.Color.web("#FFFFFF"));
+            scene.setFill(Color.web("#FFFFFF"));
             scene.getStylesheets().add(lightStyle);
         }
     }
@@ -169,13 +171,13 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, feedViewModel, followViewModel, mediaViewModel, userViewModel, postViewModel);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1366, 850);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }
 
     @Override
-    public void showProfileScreen(java.util.UUID userId) {
+    public void showProfileScreen(UUID userId) {
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/profile.fxml")
         );
@@ -204,13 +206,13 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, userViewModel, followViewModel, postViewModel, mediaViewModel, userId);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1366, 850);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }
 
     @Override
-    public void showPostDetailsScreen(java.util.UUID postId) {
+    public void showPostDetailsScreen(UUID postId) {
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/arkheim/client/presentation/views/post_details.fxml")
         );
@@ -235,7 +237,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setViewModels(authViewModel, postViewModel, userViewModel, postId);
         controller.setNavigator(this);
 
-        setRootOrNewScene(root, 1366, 850);
+        setRootOrNewScene(root, 1280, 850);
         stage.centerOnScreen();
         stage.show();
     }
