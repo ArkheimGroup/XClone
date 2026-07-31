@@ -9,6 +9,9 @@
     -fx-border-color-muted: #2F3336;
     -fx-text-primary: #FFFFFF;
     -fx-text-secondary: #71767B;
+    -fx-blue: rgb(0, 6, 117);
+    -fx-error: rgb(125, 0, 0);
+    -fx-error-25: rgba(125, 0, 0, 0.25);
     
     /* Interactive States */
     -fx-hover-overlay: rgba(255, 255, 255, 0.08);
@@ -29,7 +32,62 @@
     -fx-fill: -fx-text-primary;
 }
 
-.text-field, .password-field, .text-area {
+.date-picker {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -fx-border-color-muted;
+    -fx-background-color: -fx-secondary-bg;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: transparent;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-insets: 0;
+    -fx-background-radius: 5px;
+    -fx-padding: 0 10 0 10;
+    -fx-cursor: hand;
+}
+
+.date-picker > .arrow-button:hover {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.date-picker > .arrow-button:hover .arrow {
+    -fx-background-color: -fx-text-primary;
+}
+
+.date-picker-popup,
+.date-picker-popup > *,
+.date-picker-popup .calendar-grid,
+.date-picker-popup .month-year-pane,
+.date-picker-popup .month-year-pane .button,
+.date-picker-popup .month-year-pane .label,
+.date-picker-popup .day-name-cell,
+.date-picker-popup .day-cell {
+    -fx-border-color: transparent;
+    -fx-background-color: -fx-secondary-bg;
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup .day-cell:hover,
+.date-picker-popup .day-cell:pressed,
+.date-picker-popup .day-cell:focused {
+    -fx-background-color: -fx-blue;
+    -fx-background-radius: 100em;
+}
+
+.text-area {
+    -fx-background-color: transparent;
+    -fx-border: none
+}
+
+.text-field, .password-field, .text-area .content {
     -fx-background-color: -fx-secondary-bg;
     -fx-text-fill: -fx-text-primary;
     -fx-prompt-text-fill: -fx-text-secondary;
@@ -49,8 +107,18 @@
     -fx-fill: inherit;
 }
 
-.text-field:focused, .password-field:focused, .text-area:focused {
+.text-field:focused, .password-field:focused, .text-area:focused .content {
     -fx-border-color: -fx-text-primary;
+}
+
+.text-field:invalid {
+    -fx-background-color: -fx-error-25;
+    -fx-border-color: -fx-error;
+}
+
+.password-field:invalid {
+    -fx-background-color: -fx-error-25;
+    -fx-border-color: -fx-error;
 }
 
 .hyperlink {
@@ -76,10 +144,10 @@
 }
 
 .error-label {
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: -fx-error;
     -fx-font-weight: bold;
     -fx-background-color: -fx-secondary-bg;
-    -fx-border-color: -fx-text-primary;
+    -fx-border-color: -fx-error;
     -fx-border-width: 1px;
     -fx-padding: 8px;
     -fx-border-radius: 4px;
