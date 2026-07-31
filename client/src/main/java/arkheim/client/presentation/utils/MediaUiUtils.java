@@ -32,11 +32,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import arkheim.client.infrastructure.config.ClientConfig;
+
 public class MediaUiUtils {
 
-    public static final String BASE_URL = "http://127.0.0.1:8080";
     public static final String DEFAULT_PFP_URL = "uploads/profile_pictures/default_pfp.png";
     public static final String DEFAULT_BANNER_URL = "uploads/banners/default_banner.png";
+
+    public static String getBaseUrl() {
+        return ClientConfig.getBaseUrl();
+    }
 
     /**
      * Resolves a media URL string to an absolute HTTP URL usable by JavaFX Image loader.
@@ -49,10 +54,11 @@ public class MediaUiUtils {
         if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             return trimmed;
         }
+        String baseUrl = getBaseUrl();
         if (trimmed.startsWith("/")) {
-            return BASE_URL + trimmed;
+            return baseUrl + trimmed;
         }
-        return BASE_URL + "/" + trimmed;
+        return baseUrl + "/" + trimmed;
     }
 
     /**

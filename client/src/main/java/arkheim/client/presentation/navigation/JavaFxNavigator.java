@@ -2,6 +2,7 @@ package arkheim.client.presentation.navigation;
 
 import arkheim.client.domain.ports.*;
 import arkheim.client.infrastructure.adapter.*;
+import arkheim.client.infrastructure.config.ClientConfig;
 import arkheim.client.presentation.controllers.LoginController;
 import arkheim.client.presentation.controllers.RegisterController;
 import arkheim.client.presentation.controllers.HomeController;
@@ -153,7 +154,7 @@ public class JavaFxNavigator implements Navigator {
         controller.setThemeMode(themeMode);
 
         // Inject Infrastructure Adapters conforming to Domain Ports
-        FeedPort feedPort = new TcpFeedAdapter("localhost", 8082);
+        FeedPort feedPort = new TcpFeedAdapter(ClientConfig.getSocketHost(), ClientConfig.getSocketPort());
         PostPort postPort = new HttpPostAdapter();
         FollowPort followPort = new HttpFollowAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();

@@ -16,6 +16,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import arkheim.client.infrastructure.config.ClientConfig;
+
 public abstract class ApiClient {
     protected final Gson gson = new GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
@@ -24,7 +26,7 @@ public abstract class ApiClient {
     protected final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(60))
             .build();
-    protected final String baseUrl = "http://127.0.0.1:8083"; // FIX ME : later on change this into a variable inside a dot file
+    protected final String baseUrl = ClientConfig.getBaseUrl();
 
 
     /**
