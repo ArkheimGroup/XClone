@@ -1,16 +1,15 @@
-package arkheim.server.application.exception;
+package arkheim.server.domain.exception;
 
 public abstract class BaseApplicationException extends RuntimeException {
-    private final ErrorCode code;
+    private final ResultCode code;
     private final String message;
 
-    public BaseApplicationException(ErrorCode code, String message) {
-        super(message);
+    public BaseApplicationException(ResultCode code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public ErrorCode getCode() {
+    public ResultCode getCode() {
         return code;
     }
 
