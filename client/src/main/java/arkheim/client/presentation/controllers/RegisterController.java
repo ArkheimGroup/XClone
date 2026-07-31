@@ -70,12 +70,11 @@ public class RegisterController extends BaseController {
 
         registerButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> authViewModel.registerEmailProperty().get().isBlank()
-                            || authViewModel.registerPasswordProperty().get().isBlank()
-                            || authViewModel.registerPasswordRepetitionProperty().get().isBlank()
-                            || authViewModel.registerUsernameProperty().get().isBlank()
-                            || authViewModel.registerNameProperty().get().isBlank()
-                            || authViewModel.registerDateOfBirthProperty().get() == null,
+                        () -> isBlank(authViewModel.registerEmailProperty().get())
+                            || isBlank(authViewModel.registerPasswordProperty().get())
+                            || isBlank(authViewModel.registerPasswordRepetitionProperty().get())
+                            || isBlank(authViewModel.registerUsernameProperty().get())
+                            || isBlank(authViewModel.registerNameProperty().get()),
                         authViewModel.registerEmailProperty(),
                         authViewModel.registerPasswordProperty(),
                         authViewModel.registerPasswordRepetitionProperty(),
@@ -86,6 +85,10 @@ public class RegisterController extends BaseController {
         );
 
         bindingsInitialized = true;
+    }
+
+    private static boolean isBlank(String str) {
+        return str == null || str.isBlank();
     }
 
     @Override

@@ -58,14 +58,17 @@ public class LoginController extends BaseController {
 
         loginButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
-                        () -> authViewModel.emailProperty().get().isBlank()
-                                || authViewModel.passwordProperty().get().isBlank(),
+                        () -> isBlank(authViewModel.emailProperty().get())
+                                || isBlank(authViewModel.passwordProperty().get()),
                         authViewModel.emailProperty(),
                         authViewModel.passwordProperty()
                 )
         );
-
         bindingsInitialized = true;
+    }
+
+    private static boolean isBlank(String str) {
+        return str == null || str.isBlank();
     }
 
     @Override
