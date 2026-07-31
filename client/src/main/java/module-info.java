@@ -12,6 +12,10 @@ module arkheim.client {
     opens arkheim.client.presentation.Assets to javafx.graphics, javafx.fxml;
     opens arkheim.client.presentation.views to javafx.fxml;
 
+    // Gson parsing
+    opens arkheim.client.domain.dtos to com.google.gson;
+    opens arkheim.client.infrastructure.exception to com.google.gson;
+
     exports arkheim.client.presentation;
     exports arkheim.client.presentation.utils;
     exports arkheim.client;
