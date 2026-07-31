@@ -12,16 +12,26 @@ import java.util.regex.Pattern;
 
 public class HashtagService {
     private final HashtagRepository hashtagRepository;
+    private final PostRepository postRepository;
     private final PostService postService;
     private final HashtagMapper hashtagMapper;
 
     public HashtagService(
             HashtagRepository hashtagRepository,
+            PostRepository postRepository,
             PostService postService
     ) {
         this.hashtagRepository = hashtagRepository;
+        this.postRepository = postRepository;
         this.postService = postService;
         this.hashtagMapper = new HashtagMapper();
+    }
+
+    public HashtagService(
+            HashtagRepository hashtagRepository,
+            PostService postService
+    ) {
+        this(hashtagRepository, null, postService);
     }
 
     /**
@@ -34,8 +44,8 @@ public class HashtagService {
         if(postDescription == null || postDescription.isBlank())
             return;
 
-        // Find hashtags
-        Pattern HASHTAG_PATTERN = Pattern.compile("#(\\w+)"); // NOTE: make this a class field if needed somewhere else
+        // Support letters (including Unicode), digits, and underscores in hashtags
+        Pattern HASHTAG_PATTERN = Pattern.compile("#([\\p{L}\\p{N}_]+)");
         Set<String> hashtagNames = new LinkedHashSet<>();
         Matcher matcher = HASHTAG_PATTERN.matcher(postDescription);
         while(matcher.find()){
@@ -47,7 +57,6 @@ public class HashtagService {
             HashtagEntity hashtagEntity = hashtagRepository.findOrCreate(hashtagName);
             hashtagRepository.linkToPost(postId, hashtagEntity.getId());
         }
-
     }
 
     /**
@@ -63,7 +72,7 @@ public class HashtagService {
 
     /**
      * Retrieves all posts containing a specific hashtag.
-     * @param hashtagName name of the hashtag (without the leading #)
+     * @param hashtagName name of the hashtag (without or with the leading #)
      * @param requesterId the user requesting the posts (for calculating isLikedByMe/isRepostedByMe)
      * @return List of {@link PostDetail} containing the hashtag
      */
@@ -72,13 +81,34 @@ public class HashtagService {
         if (cleanTag.startsWith("#")) {
             cleanTag = cleanTag.substring(1).trim();
         }
+        if (cleanTag.isBlank()) {
+            return List.of();
+        }
         cleanTag = cleanTag.toLowerCase();
 
-        List<PostEntity> postEntities = hashtagRepository.findPostsByHashtag(cleanTag);
+        Map<UUID, PostEntity> postMap = new LinkedHashMap<>();
+
+        // posts linked in post_hashtags table
+        List<PostEntity> linkedPosts = hashtagRepository.findPostsByHashtag(cleanTag);
+        for (PostEntity post : linkedPosts) {
+            postMap.put(post.getId(), post);
+        }
+
+        // posts matching "#tag" in content
+        if (postRepository != null) {
+            List<PostEntity> wordMatches = postRepository.findByWord("#" + cleanTag);
+            for (PostEntity post : wordMatches) {
+                if (!postMap.containsKey(post.getId())) {
+                    postMap.put(post.getId(), post);
+                }
+            }
+        }
+
+        List<PostEntity> sortedEntities = new ArrayList<>(postMap.values());
+        sortedEntities.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 
         List<PostDetail> responses = new ArrayList<>();
-
-        for(PostEntity postEntity : postEntities){
+        for(PostEntity postEntity : sortedEntities){
             responses.add(postService.getPostDetail(postEntity, requesterId));
         }
 

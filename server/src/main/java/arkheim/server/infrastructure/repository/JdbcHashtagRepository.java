@@ -45,7 +45,7 @@ public class JdbcHashtagRepository implements HashtagRepository {
 
     @Override
     public HashtagEntity findByName(String name) {
-        String sql = "SELECT * FROM hashtags WHERE name=?";
+        String sql = "SELECT * FROM hashtags WHERE LOWER(name)=LOWER(?)";
         List<HashtagEntity> result = jdbcTemplate.query(sql, hashtagMapper, name);
         return  result.stream().findFirst().orElse(null);
     }
@@ -63,7 +63,7 @@ public class JdbcHashtagRepository implements HashtagRepository {
         String sql = "SELECT p.* FROM posts p " +
                 "JOIN post_hashtags ph ON ph.post_id = p.id " +
                 "JOIN hashtags h ON h.id = ph.hashtag_id " +
-                "WHERE h.name=?";
+                "WHERE LOWER(h.name)=LOWER(?) ORDER BY p.created_at DESC";
         return jdbcTemplate.query(sql, jdbcPostRepository.getPostRowMapper(), name);
     }
 

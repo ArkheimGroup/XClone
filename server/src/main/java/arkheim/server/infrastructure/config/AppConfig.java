@@ -33,9 +33,10 @@ public class AppConfig {
     @Bean
     public HashtagService hashtagService(
             HashtagRepository hashtagRepository,
+            PostRepository postRepository,
             PostService postService
     ) {
-        return new HashtagService(hashtagRepository, postService);
+        return new HashtagService(hashtagRepository, postRepository, postService);
     }
 
     @Bean
