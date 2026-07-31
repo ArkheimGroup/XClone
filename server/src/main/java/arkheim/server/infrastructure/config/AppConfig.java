@@ -33,12 +33,9 @@ public class AppConfig {
     @Bean
     public HashtagService hashtagService(
             HashtagRepository hashtagRepository,
-            PostRepository postRepository,
-            UserRepository userRepository,
-            MediaRepository mediaRepository,
-            LikeRepository likeRepository
+            PostService postService
     ) {
-        return new HashtagService(hashtagRepository, postRepository, userRepository, mediaRepository, likeRepository);
+        return new HashtagService(hashtagRepository, postService);
     }
 
     @Bean
@@ -51,19 +48,16 @@ public class AppConfig {
             PostRepository postRepository,
             MediaRepository mediaRepository,
             UserRepository userRepository,
-            LikeRepository likeRepository,
-            HashtagRepository hashtagRepository
+            LikeRepository likeRepository
     ) {
-        return new PostService(postRepository, mediaRepository, userRepository, likeRepository, hashtagRepository);
+        return new PostService(postRepository, mediaRepository, userRepository, likeRepository);
     }
 
     @Bean
     public FeedService timelineService(
             PostRepository postRepository,
-            UserRepository userRepository,
-            LikeRepository likeRepository,
-            MediaRepository mediaRepository
+            PostService postService
     ) {
-        return new FeedService(postRepository, userRepository, likeRepository, mediaRepository);
+        return new FeedService(postRepository, postService);
     }
 }
