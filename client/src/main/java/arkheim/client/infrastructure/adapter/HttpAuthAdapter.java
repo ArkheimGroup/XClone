@@ -33,7 +33,9 @@ public class HttpAuthAdapter extends ApiClient implements AuthPort {
         body.addProperty("name", name);
         body.addProperty("rawPassword", rawPassword);
         body.addProperty("email", email);
-        body.addProperty("dateOfBirth", dateOfBirth.toString());
+        if (dateOfBirth != null) {
+            body.addProperty("dateOfBirth", dateOfBirth.toString());
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/auth/register"))

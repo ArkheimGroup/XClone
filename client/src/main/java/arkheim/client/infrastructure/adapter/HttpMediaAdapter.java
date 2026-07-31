@@ -76,10 +76,15 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
                     + "Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n"
                     + "Content-Type: " + mimeType + "\r\n\r\n";
 
-            String fieldsAndFooter = "\r\n--" + boundary + "\r\n"
-                    + "Content-Disposition: form-data; name=\"uploadedBy\"\r\n\r\n"
-                    + (uploadedBy != null ? uploadedBy : "")
-                    + "\r\n--" + boundary + "--\r\n";
+            String fieldsAndFooter;
+            if (uploadedBy != null) {
+                fieldsAndFooter = "\r\n--" + boundary + "\r\n"
+                        + "Content-Disposition: form-data; name=\"uploadedBy\"\r\n\r\n"
+                        + uploadedBy
+                        + "\r\n--" + boundary + "--\r\n";
+            } else {
+                fieldsAndFooter = "\r\n--" + boundary + "--\r\n";
+            }
 
             HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.concat(
                     HttpRequest.BodyPublishers.ofString(fileHeader),

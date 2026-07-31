@@ -39,7 +39,7 @@ public class AuthController {
     public ResponseEntity<GenericApiResponse<GetUserDto>> login(@RequestBody LoginCommand loginCommand){
         MinimalUser response = authService.login(loginCommand);
 
-        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_REGISTERED, userMapper.map(response)));
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_LOGGED_IN, userMapper.map(response)));
     }
 
     /**
@@ -53,6 +53,6 @@ public class AuthController {
     public ResponseEntity<GenericApiResponse<GetUserDto>> register(@RequestBody RegisterCommand registerCommand){
         MinimalUser response = authService.register(registerCommand);
 
-        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_LOGGED_IN, userMapper.map(response)));
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.USER_REGISTERED, userMapper.map(response)));
     }
 }

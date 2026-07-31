@@ -102,11 +102,11 @@ public class MediaController {
      * @param uploadedBy the optional UUID of the user uploading the file
      */
     @PostMapping("/upload")
-    public ResponseEntity<Media> uploadMedia(
+    public ResponseEntity<GenericApiResponse<GetMediaDto>> uploadMedia(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "uploadedBy", required = false) UUID uploadedBy) {
         Media media = mediaService.uploadAndRegisterMedia(file, uploadedBy);
-        return ResponseEntity.ok(media);
+        return ResponseEntity.ok(GenericApiResponse.success(ResultCode.MEDIA_REGISTERED, mediaMapper.map(media)));
     }
 
     /**

@@ -63,7 +63,7 @@ public class  JdbcMediaRepository implements MediaRepository {
 
     @Override
     public void save(MediaEntity mediaEntity) {
-        String sql = "INSERT INTO mediaEntity (id, url, width, height, file_size, uploaded_by, created_at) " +
+        String sql = "INSERT INTO media (id, url, width, height, file_size, uploaded_by, created_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
                 uuidToBytes(mediaEntity.getId()),
