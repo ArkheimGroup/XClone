@@ -1,9 +1,9 @@
-package arkheim.server.application.dtos;
+package arkheim.client.domain.dtos.User.request;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record UpdateProfileRequest(
+public record UpdateUserProfileRequest(
         UUID userId,
         String name,
         String biography,
@@ -11,4 +11,4 @@ public record UpdateProfileRequest(
         String bannerUrl,
         boolean isVerified,
         LocalDateTime dateOfBirth
-) {}
+) { }

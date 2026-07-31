@@ -1,12 +1,9 @@
-package arkheim.client.domain.ports.dtos;
+package arkheim.client.domain.dtos.Media.response;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Client-side DTO mirroring the server's Media} entity as returned by MediaController}.
- */
-public record MediaDto(
+public record MediaDto (
         UUID id,
         String url,
         int width,
@@ -14,4 +11,4 @@ public record MediaDto(
         long fileSize,
         UUID uploadedBy,
         LocalDateTime createdAt
-) {}
+){ }

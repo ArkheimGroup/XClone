@@ -1,4 +1,4 @@
-package arkheim.server.application.dtos;
+package arkheim.client.domain.dtos.Media.request;
 
 import java.util.UUID;
 

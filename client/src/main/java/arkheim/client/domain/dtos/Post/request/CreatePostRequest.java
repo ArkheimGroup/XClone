@@ -1,4 +1,4 @@
-package arkheim.server.application.dtos;
+package arkheim.client.domain.dtos.Post.request;
 
 import java.util.UUID;
 
@@ -7,4 +7,4 @@ public record CreatePostRequest(
         String content,
         String mediaUrl,
         UUID parentPostId
-) {}
+) { }

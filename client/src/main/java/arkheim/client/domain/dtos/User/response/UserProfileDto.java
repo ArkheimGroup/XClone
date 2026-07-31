@@ -1,4 +1,4 @@
-package arkheim.client.domain.ports.dtos;
+package arkheim.client.domain.dtos.User.response;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
