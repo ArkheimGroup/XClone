@@ -18,6 +18,7 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -554,7 +555,7 @@ public class ProfileController extends BaseController {
         MediaUiUtils.loadAvatar(avatar, post.authorPfpUrl(), themeMode);
 
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
-        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setCursor(Cursor.HAND);
         avatar.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -568,7 +569,7 @@ public class ProfileController extends BaseController {
 
         Label name = new Label(post.authorName());
         name.getStyleClass().add("post-author-name");
-        name.setCursor(javafx.scene.Cursor.HAND);
+        name.setCursor(Cursor.HAND);
         name.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {
@@ -578,7 +579,7 @@ public class ProfileController extends BaseController {
 
         Label handle = new Label("@" + post.authorUsername());
         handle.getStyleClass().add("post-author-handle");
-        handle.setCursor(javafx.scene.Cursor.HAND);
+        handle.setCursor(Cursor.HAND);
         handle.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null) {

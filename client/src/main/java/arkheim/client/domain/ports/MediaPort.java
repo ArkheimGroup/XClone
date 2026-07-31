@@ -4,6 +4,7 @@ package arkheim.client.domain.ports;
 import arkheim.client.domain.dtos.ApiResponse;
 import arkheim.client.domain.dtos.Media.response.MediaDto;
 
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,10 +41,15 @@ public interface MediaPort {
     /**
      * HTTP: POST /dto/media/upload
      */
-    MediaDto uploadMedia(java.io.File file, UUID uploadedBy);
+    MediaDto uploadMedia(File file, UUID uploadedBy);
 
     /**
      * HTTP: GET /dto/media/post/{postId}
      */
     List<MediaDto> getMediaForPost(UUID postId);
+
+    /**
+     * Downloads a media file from a URL and saves it to the destination file.
+     */
+    void downloadMediaFile(String fileUrl, File destination);
 }

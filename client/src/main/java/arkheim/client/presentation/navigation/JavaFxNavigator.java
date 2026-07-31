@@ -231,9 +231,11 @@ public class JavaFxNavigator implements Navigator {
         PostPort postPort = new HttpPostAdapter();
         HashtagPort hashtagPort = new HttpHashtagAdapter();
         UserPort userPort = new HttpUserAdapter();
+        MediaPort mediaPort = new HttpMediaAdapter();
 
         PostViewModel postViewModel = new PostViewModel(postPort, hashtagPort);
         UserViewModel userViewModel = new UserViewModel(userPort);
+        MediaViewModel mediaViewModel = new MediaViewModel(mediaPort);
 
         controller.setViewModels(authViewModel, postViewModel, userViewModel, postId);
         controller.setNavigator(this);

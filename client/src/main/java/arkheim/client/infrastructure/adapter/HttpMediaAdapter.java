@@ -7,8 +7,11 @@ import arkheim.client.infrastructure.ApiClient;
 import com.google.gson.JsonObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -112,5 +115,31 @@ public class HttpMediaAdapter extends ApiClient implements MediaPort {
                 .build();
 
         return sendList(request, MediaDto.class, "Media");
+    }
+
+    @Override
+    public void downloadMediaFile(String fileUrl, File destination) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(fileUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("HTTP " + response.statusCode());
+            }
+
+            try (InputStream in = response.body();
+                FileOutputStream out = new FileOutputStream(destination)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download media file: " + e.getMessage(), e);
+        }
     }
 }

@@ -130,6 +130,19 @@ public class MediaViewModel {
         }
     }
 
+    /**
+     * Downloads a media file via {@link MediaPort#downloadMediaFile}.
+     */
+    public void downloadMediaFile(String fileUrl, File destination) {
+        errorMessage.set("");
+        try {
+            mediaPort.downloadMediaFile(fileUrl, destination);
+        } catch (Exception e) {
+            errorMessage.set(ExceptionMessageRetriever.getMessage(e));
+            throw e;
+        }
+    }
+
     // Getters
 
     // --- collection getter ---

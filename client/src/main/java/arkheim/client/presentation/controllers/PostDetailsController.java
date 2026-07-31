@@ -235,17 +235,17 @@ public class PostDetailsController extends BaseController {
         }
 
         if (post.authorId() != null) {
-            focalAuthorName.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorName.setCursor(Cursor.HAND);
             focalAuthorName.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
             });
-            focalAuthorHandle.setCursor(javafx.scene.Cursor.HAND);
+            focalAuthorHandle.setCursor(Cursor.HAND);
             focalAuthorHandle.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
             });
-            focalAvatarCircle.setCursor(javafx.scene.Cursor.HAND);
+            focalAvatarCircle.setCursor(Cursor.HAND);
             focalAvatarCircle.setOnMouseClicked(e -> {
                 e.consume();
                 if (navigator != null) navigator.showProfileScreen(post.authorId());
@@ -484,7 +484,7 @@ public class PostDetailsController extends BaseController {
         Circle avatar = new Circle(16.0);
         MediaUiUtils.loadAvatar(avatar, reply.authorPfpUrl(), themeMode);
         avatar.setStroke(Color.web(themeMode == ThemeMode.LIGHT ? "#71767B" : "#2F3336"));
-        avatar.setCursor(javafx.scene.Cursor.HAND);
+        avatar.setCursor(Cursor.HAND);
         avatar.setOnMouseClicked(e -> {
             e.consume();
             if (navigator != null && reply.authorId() != null) navigator.showProfileScreen(reply.authorId());

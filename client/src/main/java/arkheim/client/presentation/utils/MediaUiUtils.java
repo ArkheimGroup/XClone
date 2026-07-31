@@ -1,6 +1,9 @@
 package arkheim.client.presentation.utils;
 
+import arkheim.client.infrastructure.adapter.HttpMediaAdapter;
+import arkheim.client.infrastructure.config.ClientConfig;
 import arkheim.client.presentation.theme.ThemeMode;
+import arkheim.client.presentation.viewmodels.MediaViewModel;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,16 +28,18 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-
-import arkheim.client.infrastructure.config.ClientConfig;
 
 public class MediaUiUtils {
+
+    private final MediaViewModel mediaViewModel;
+
+    public MediaUiUtils(MediaViewModel mediaViewModel) {
+        this.mediaViewModel = mediaViewModel;
+    }
+
+    public MediaUiUtils() {
+        this(null);
+    }
 
     public static final String DEFAULT_PFP_URL = "uploads/profile_pictures/default_pfp.png";
     public static final String DEFAULT_BANNER_URL = "uploads/banners/default_banner.png";
@@ -67,6 +72,10 @@ public class MediaUiUtils {
      * Clicking the banner opens it in full resolution modal with download capability.
      */
     public static void loadBanner(ImageView imageView, String bannerUrl, ThemeMode themeMode) {
+        loadBanner(imageView, bannerUrl, themeMode, null);
+    }
+
+    public static void loadBanner(ImageView imageView, String bannerUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         if (imageView == null) return;
 
         String targetUrl = (bannerUrl == null || bannerUrl.isBlank()) ? DEFAULT_BANNER_URL : bannerUrl;
@@ -110,7 +119,7 @@ public class MediaUiUtils {
             imageView.setCursor(Cursor.HAND);
             imageView.setOnMouseClicked(e -> {
                 e.consume();
-                showFullResolutionDialog(fullUrl, themeMode);
+                showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
             });
         }
     }
@@ -121,6 +130,10 @@ public class MediaUiUtils {
      * Clicking the avatar opens it in full resolution modal with download capability (like post media).
      */
     public static void loadAvatar(Circle circle, String pfpUrl, ThemeMode themeMode) {
+        loadAvatar(circle, pfpUrl, themeMode, null);
+    }
+
+    public static void loadAvatar(Circle circle, String pfpUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         if (circle == null) return;
 
         String targetUrl = (pfpUrl == null || pfpUrl.isBlank()) ? DEFAULT_PFP_URL : pfpUrl;
@@ -174,12 +187,10 @@ public class MediaUiUtils {
             circle.setCursor(Cursor.HAND);
             circle.setOnMouseClicked(e -> {
                 e.consume();
-                showFullResolutionDialog(fullUrl, themeMode);
+                showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
             });
         }
     }
-
-
 
     /**
      * Creates a shrunken preview component for a post card.
@@ -187,6 +198,10 @@ public class MediaUiUtils {
      * Clicking the preview opens the media in full resolution modal with a download button.
      */
     public static Node createMediaPreviewNode(String mediaUrl, ThemeMode themeMode) {
+        return createMediaPreviewNode(mediaUrl, themeMode, null);
+    }
+
+    public static Node createMediaPreviewNode(String mediaUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         String fullUrl = resolveFullUrl(mediaUrl);
         if (fullUrl == null) {
             return new Region();
@@ -236,7 +251,7 @@ public class MediaUiUtils {
 
         container.setOnMouseClicked(e -> {
             e.consume();
-            showFullResolutionDialog(fullUrl, themeMode);
+            showFullResolutionDialog(fullUrl, themeMode, mediaViewModel);
         });
 
         // Hover feedback
@@ -264,6 +279,10 @@ public class MediaUiUtils {
      * Opens a full-resolution modal stage containing the media and a Download button.
      */
     public static void showFullResolutionDialog(String fullUrl, ThemeMode themeMode) {
+        showFullResolutionDialog(fullUrl, themeMode, null);
+    }
+
+    public static void showFullResolutionDialog(String fullUrl, ThemeMode themeMode, MediaViewModel mediaViewModel) {
         Stage modalStage = new Stage();
         modalStage.initModality(Modality.APPLICATION_MODAL);
         modalStage.setTitle("Media View - Full Resolution");
@@ -331,7 +350,12 @@ public class MediaUiUtils {
                     String fileName = getFileNameFromUrl(fullUrl);
                     File targetFile = getUniqueTargetFile(downloadsFolder, fileName);
 
-                    downloadFileFromUrl(fullUrl, targetFile);
+                    MediaViewModel vm = mediaViewModel;
+                    if (vm == null) {
+                        vm = new MediaViewModel(new HttpMediaAdapter());
+                    }
+
+                    vm.downloadMediaFile(fullUrl, targetFile);
 
                     Platform.runLater(() -> {
                         downloadBtn.setDisable(false);
@@ -405,27 +429,5 @@ public class MediaUiUtils {
             count++;
         }
         return target;
-    }
-
-    private static void downloadFileFromUrl(String fileUrl, File destination) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(fileUrl))
-                .GET()
-                .build();
-
-        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new RuntimeException("HTTP " + response.statusCode());
-        }
-
-        try (InputStream in = response.body();
-             FileOutputStream out = new FileOutputStream(destination)) {
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
-        }
     }
 }
