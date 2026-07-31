@@ -18,6 +18,7 @@ import arkheim.client.presentation.viewmodels.PostViewModel;
 import arkheim.client.presentation.viewmodels.UserViewModel;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -32,14 +33,19 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class HomeController extends BaseController {
 
@@ -94,6 +100,8 @@ public class HomeController extends BaseController {
     private Button composerPostButton;
     @FXML
     private Label feedErrorLabel;
+    @FXML
+    private HBox composerMediaPreviewContainer;
 
     @FXML
     private VBox feedTimelineContainer;
@@ -107,8 +115,8 @@ public class HomeController extends BaseController {
     @FXML
     private VBox whoToFollowContainer;
 
-    private String pendingMediaUrl = null;
-    private String pendingMediaFileName = null;
+    private static record PendingMedia(String url, String fileName) {}
+    private final List<PendingMedia> pendingMediaList = new ArrayList<>();
 
     private boolean bindingsInitialized = false;
     private UserDto currentUser;
@@ -206,7 +214,7 @@ public class HomeController extends BaseController {
         int len = text == null ? 0 : text.strip().length();
         boolean isTextEmpty = len == 0;
         boolean isOverLimit = text != null && text.length() > MAX_POST_LENGTH;
-        boolean isMediaEmpty = pendingMediaUrl == null;
+        boolean isMediaEmpty = pendingMediaList.isEmpty();
         boolean isPosting = feedViewModel != null && feedViewModel.getState().isPosting();
         composerPostButton.setDisable(isPosting || isOverLimit || (isTextEmpty && isMediaEmpty));
     }
@@ -232,9 +240,9 @@ public class HomeController extends BaseController {
             feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
             feedErrorLabel.setVisible(true);
             feedErrorLabel.setManaged(true);
-        } else if (pendingMediaUrl != null) {
-            String name = pendingMediaFileName != null ? pendingMediaFileName : "attachment";
-            feedErrorLabel.setText("✓ Media attached (" + name + ")");
+        } else if (!pendingMediaList.isEmpty()) {
+            int count = pendingMediaList.size();
+            feedErrorLabel.setText("✓ " + count + (count == 1 ? " image attached" : " images attached"));
             feedErrorLabel.setStyle("-fx-text-fill: #1D9BF0; -fx-font-weight: bold;");
             feedErrorLabel.setVisible(true);
             feedErrorLabel.setManaged(true);
@@ -242,6 +250,8 @@ public class HomeController extends BaseController {
             feedErrorLabel.setVisible(false);
             feedErrorLabel.setManaged(false);
         }
+
+        renderComposerMediaPreviews();
 
 
         // Render main feed timeline elements in center column
@@ -706,18 +716,70 @@ public class HomeController extends BaseController {
         }
     }
 
+    private void renderComposerMediaPreviews() {
+        if (composerMediaPreviewContainer == null) return;
+        composerMediaPreviewContainer.getChildren().clear();
+
+        if (pendingMediaList.isEmpty()) {
+            composerMediaPreviewContainer.setVisible(false);
+            composerMediaPreviewContainer.setManaged(false);
+            return;
+        }
+
+        composerMediaPreviewContainer.setVisible(true);
+        composerMediaPreviewContainer.setManaged(true);
+
+        for (PendingMedia media : new ArrayList<>(pendingMediaList)) {
+            StackPane previewBox = new StackPane();
+            previewBox.setPrefSize(80, 80);
+            previewBox.setMaxSize(80, 80);
+            previewBox.setStyle("-fx-background-color: #202327; -fx-background-radius: 8px; -fx-border-radius: 8px; -fx-border-color: -fx-border-color-muted; -fx-border-width: 1px;");
+
+            ImageView imgView = new ImageView();
+            imgView.setFitWidth(80);
+            imgView.setFitHeight(80);
+            imgView.setPreserveRatio(false);
+            imgView.setSmooth(true);
+
+            String fullUrl = MediaUiUtils.resolveFullUrl(media.url());
+            if (fullUrl != null) {
+                imgView.setImage(new Image(fullUrl, true));
+            }
+
+            Rectangle clip = new Rectangle(80, 80);
+            clip.setArcWidth(16);
+            clip.setArcHeight(16);
+            imgView.setClip(clip);
+
+            Button removeBtn = new Button("✕");
+            removeBtn.setStyle("-fx-background-color: rgba(15, 20, 25, 0.75); -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-background-radius: 12px; -fx-padding: 2px 6px; -fx-cursor: hand;");
+            StackPane.setAlignment(removeBtn, Pos.TOP_RIGHT);
+            StackPane.setMargin(removeBtn, new Insets(4, 4, 0, 0));
+
+            removeBtn.setOnAction(e -> {
+                pendingMediaList.remove(media);
+                renderState(feedViewModel.getState());
+            });
+
+            previewBox.getChildren().addAll(imgView, removeBtn);
+            composerMediaPreviewContainer.getChildren().add(previewBox);
+        }
+    }
+
     @FXML
     private void onComposerPostClicked() {
         if (currentUser != null) {
             String text = composerTextArea != null ? composerTextArea.getText() : "";
+            String joinedMediaUrls = pendingMediaList.isEmpty()
+                    ? null
+                    : pendingMediaList.stream().map(PendingMedia::url).collect(Collectors.joining(","));
             feedViewModel.processEvent(new FeedUiEvent.UpdateComposerText(text != null ? text : ""));
-            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), pendingMediaUrl));
+            feedViewModel.processEvent(new FeedUiEvent.SubmitPost(currentUser.id(), joinedMediaUrls));
             if (composerTextArea != null) {
                 composerTextArea.setText("");
             }
-            pendingMediaUrl = null;
-            pendingMediaFileName = null;
-            updateComposerPostButtonState();
+            pendingMediaList.clear();
+            renderState(feedViewModel.getState());
         }
     }
 
@@ -731,7 +793,7 @@ public class HomeController extends BaseController {
 
     @FXML
     private void onSidebarPostClicked() {
-        if ((composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) || pendingMediaUrl != null) {
+        if ((composerTextArea != null && composerTextArea.getText() != null && !composerTextArea.getText().strip().isEmpty()) || !pendingMediaList.isEmpty()) {
             onComposerPostClicked();
         } else if (composerTextArea != null) {
             composerTextArea.requestFocus();
@@ -741,7 +803,7 @@ public class HomeController extends BaseController {
     @FXML
     private void onMediaAttachmentClicked() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Image File");
+        fileChooser.setTitle("Select Image File(s)");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
@@ -750,39 +812,42 @@ public class HomeController extends BaseController {
         Window window = composerTextArea != null && composerTextArea.getScene() != null
                 ? composerTextArea.getScene().getWindow()
                 : null;
-        java.io.File selectedFile = fileChooser.showOpenDialog(window);
+        List<java.io.File> selectedFiles = fileChooser.showOpenMultipleDialog(window);
 
-        if (selectedFile != null && currentUser != null && mediaViewModel != null) {
+        if (selectedFiles != null && !selectedFiles.isEmpty() && currentUser != null && mediaViewModel != null) {
             long maxSizeBytes = 15L * 1024 * 1024; // 15MB
-            if (selectedFile.length() > maxSizeBytes) {
-                if (feedErrorLabel != null) {
-                    feedErrorLabel.setText("Failed to attach media: File size exceeds maximum limit of 15MB");
-                    feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
-                    feedErrorLabel.setVisible(true);
-                    feedErrorLabel.setManaged(true);
-                }
-                return;
-            }
-
             new Thread(() -> {
-                try {
-                    MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
-                    if (uploadedMedia != null) {
+                for (java.io.File selectedFile : selectedFiles) {
+                    if (selectedFile.length() > maxSizeBytes) {
                         Platform.runLater(() -> {
-                            pendingMediaUrl = uploadedMedia.url();
-                            pendingMediaFileName = selectedFile.getName();
-                            renderState(feedViewModel.getState());
+                            if (feedErrorLabel != null) {
+                                feedErrorLabel.setText("Failed to attach " + selectedFile.getName() + ": File size exceeds maximum limit of 15MB");
+                                feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                                feedErrorLabel.setVisible(true);
+                                feedErrorLabel.setManaged(true);
+                            }
+                        });
+                        continue;
+                    }
+
+                    try {
+                        MediaDto uploadedMedia = mediaViewModel.uploadMedia(selectedFile, currentUser.id());
+                        if (uploadedMedia != null) {
+                            Platform.runLater(() -> {
+                                pendingMediaList.add(new PendingMedia(uploadedMedia.url(), selectedFile.getName()));
+                                renderState(feedViewModel.getState());
+                            });
+                        }
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            if (feedErrorLabel != null) {
+                                feedErrorLabel.setText("Failed to upload media: " + e.getMessage());
+                                feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
+                                feedErrorLabel.setVisible(true);
+                                feedErrorLabel.setManaged(true);
+                            }
                         });
                     }
-                } catch (Exception e) {
-                    Platform.runLater(() -> {
-                        if (feedErrorLabel != null) {
-                            feedErrorLabel.setText("Failed to upload media: " + e.getMessage());
-                            feedErrorLabel.setStyle("-fx-text-fill: #F4212E; -fx-font-weight: bold;");
-                            feedErrorLabel.setVisible(true);
-                            feedErrorLabel.setManaged(true);
-                        }
-                    });
                 }
             }).start();
         }

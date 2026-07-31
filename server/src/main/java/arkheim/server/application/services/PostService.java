@@ -170,16 +170,21 @@ public class PostService {
 
         postRepository.save(post);
 
-        List<String> mediaUrls = Collections.emptyList();
+        List<String> mediaUrls = new ArrayList<>();
         if (createPostRequest.mediaUrl() != null && !createPostRequest.mediaUrl().trim().isEmpty()) {
-            String url = createPostRequest.mediaUrl().trim();
-            Media media = mediaRepository.findByUrl(url);
-            if (media == null) {
-                media = new Media(url, 0, 0, 0, author.getId());
-                mediaRepository.save(media);
+            String rawUrls = createPostRequest.mediaUrl().trim();
+            String[] splitUrls = rawUrls.split(",");
+            for (String urlStr : splitUrls) {
+                String url = urlStr.trim();
+                if (url.isEmpty()) continue;
+                Media media = mediaRepository.findByUrl(url);
+                if (media == null) {
+                    media = new Media(url, 0, 0, 0, author.getId());
+                    mediaRepository.save(media);
+                }
+                mediaRepository.linkToPost(post.getId(), media.getId());
+                mediaUrls.add(url);
             }
-            mediaRepository.linkToPost(post.getId(), media.getId());
-            mediaUrls = List.of(url);
         }
 
 

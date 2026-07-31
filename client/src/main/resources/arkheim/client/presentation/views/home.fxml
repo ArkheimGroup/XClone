@@ -120,6 +120,9 @@
                             <VBox HBox.hgrow="ALWAYS" spacing="8.0">
                                 <TextArea fx:id="composerTextArea" promptText="What is happening?!" styleClass="composer-textarea" prefHeight="70.0" wrapText="true" minHeight="50.0"/>
                                 
+                                <!-- Attached media preview thumbnails container -->
+                                <HBox fx:id="composerMediaPreviewContainer" spacing="8.0" visible="false" managed="false"/>
+
                                 <!-- Error message banner inside composer -->
                                 <Label fx:id="feedErrorLabel" styleClass="error-label" visible="false" managed="false"/>
                                 
