@@ -1,6 +1,6 @@
 package arkheim.client.presentation.state;
 
-import arkheim.client.domain.ports.dtos.PostDto;
+import arkheim.client.domain.dtos.Post.response.PostDetailDto;
 import java.util.List;
 
 /**
@@ -9,13 +9,13 @@ import java.util.List;
  */
 public record FeedUiState(
         boolean isLoading,
-        List<PostDto> posts,
+        List<PostDetailDto> posts,
         String error,
         String composerText,
         boolean isPosting,
         TabType activeTab,
         String searchQuery,
-        List<PostDto> searchResults
+        List<PostDetailDto> searchResults
 ) {
     public enum TabType {
         FOR_YOU,
@@ -42,7 +42,7 @@ public record FeedUiState(
         return new FeedUiState(isLoading, this.posts, this.error, this.composerText, this.isPosting, this.activeTab, this.searchQuery, this.searchResults);
     }
 
-    public FeedUiState withPosts(List<PostDto> posts) {
+    public FeedUiState withPosts(List<PostDetailDto> posts) {
         return new FeedUiState(this.isLoading, List.copyOf(posts), this.error, this.composerText, this.isPosting, this.activeTab, this.searchQuery, this.searchResults);
     }
 
@@ -63,10 +63,10 @@ public record FeedUiState(
     }
 
     public boolean isSearching() {
-        return searchQuery != null && !searchQuery.strip().isEmpty();
+        return searchQuery != null && !searchQuery.isBlank();
     }
 
-    public FeedUiState withSearch(String searchQuery, List<PostDto> searchResults) {
+    public FeedUiState withSearch(String searchQuery, List<PostDetailDto> searchResults) {
         return new FeedUiState(this.isLoading, this.posts, this.error, this.composerText, this.isPosting, this.activeTab, searchQuery, List.copyOf(searchResults));
     }
 }
