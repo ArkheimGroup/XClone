@@ -28,6 +28,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MediaUiUtils {
 
@@ -39,6 +41,19 @@ public class MediaUiUtils {
 
     public MediaUiUtils() {
         this(null);
+    }
+
+    private static final Map<String, Image> IMAGE_CACHE = new ConcurrentHashMap<>();
+
+    public static Image getCachedImage(String url) {
+        if (url == null || url.isBlank()) return null;
+        Image cached = IMAGE_CACHE.get(url);
+        if (cached != null && !cached.isError()) {
+            return cached;
+        }
+        Image newImg = new Image(url, true);
+        IMAGE_CACHE.put(url, newImg);
+        return newImg;
     }
 
     public static final String DEFAULT_PFP_URL = "uploads/profile_pictures/default_pfp.png";
@@ -82,13 +97,13 @@ public class MediaUiUtils {
         String fullUrl = resolveFullUrl(targetUrl);
 
         if (fullUrl != null) {
-            Image img = new Image(fullUrl, true);
+            Image img = getCachedImage(fullUrl);
             Runnable applyImage = () -> {
                 if (!img.isError() && img.getWidth() > 0) {
                     imageView.setImage(img);
                 } else if (!DEFAULT_BANNER_URL.equals(targetUrl)) {
                     String defaultFullUrl = resolveFullUrl(DEFAULT_BANNER_URL);
-                    Image defaultImg = new Image(defaultFullUrl, true);
+                    Image defaultImg = getCachedImage(defaultFullUrl);
                     if (defaultImg.getProgress() >= 1.0 && !defaultImg.isError()) {
                         imageView.setImage(defaultImg);
                     } else {
@@ -140,14 +155,14 @@ public class MediaUiUtils {
         String fullUrl = resolveFullUrl(targetUrl);
 
         if (fullUrl != null) {
-            Image img = new Image(fullUrl, true);
+            Image img = getCachedImage(fullUrl);
 
             Runnable applyImage = () -> {
                 if (!img.isError() && img.getWidth() > 0) {
                     circle.setFill(new ImagePattern(img));
                 } else if (!DEFAULT_PFP_URL.equals(targetUrl)) {
                     String defaultFullUrl = resolveFullUrl(DEFAULT_PFP_URL);
-                    Image defaultImg = new Image(defaultFullUrl, true);
+                    Image defaultImg = getCachedImage(defaultFullUrl);
                     if (defaultImg.getProgress() >= 1.0 && !defaultImg.isError()) {
                         circle.setFill(new ImagePattern(defaultImg));
                     } else {
@@ -231,7 +246,7 @@ public class MediaUiUtils {
         imageView.setFitHeight(260);
         imageView.setFitWidth(520);
 
-        Image image = new Image(fullUrl, true); // background loading
+        Image image = getCachedImage(fullUrl); // cached background loading
         image.progressProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() >= 1.0) {
                 container.getChildren().remove(spinner);
