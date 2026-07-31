@@ -11,8 +11,10 @@ public record GetUserProfileDto (
         String biography,
         LocalDateTime dateOfBirth,
         String pfpUrl,
+        String bannerUrl,
         int followerCount,
         int followingCount,
         LocalDateTime createdAt,
-        UUID pinnedPostId
+        UUID pinnedPostId,
+        boolean isVerified
 ){ }

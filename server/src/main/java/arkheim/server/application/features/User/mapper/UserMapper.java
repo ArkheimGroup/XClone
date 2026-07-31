@@ -37,10 +37,12 @@ public final class UserMapper {
                 source.biography(),
                 source.dateOfBirth(),
                 source.pfpUrl(),
+                source.bannerUrl(),
                 source.followerCount(),
                 source.followingCount(),
                 source.createdAt(),
-                source.pinnedPostId()
+                source.pinnedPostId(),
+                source.isVerified()
         );
     }
 
